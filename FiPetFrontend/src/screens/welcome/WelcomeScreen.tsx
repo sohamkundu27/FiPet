@@ -1,8 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Dimensions, FlatList, ViewToken, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { AntDesign } from '@expo/vector-icons';
+
+const viewabilityConfig = {
+  itemVisiblePercentThreshold: 50
+};
 
 export default function WelcomeScreen() {
   const [username, setUsername] = useState('');
@@ -10,30 +13,31 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems[0]?.index !== undefined && viewableItems[0].index !== null) {
+      setCurrentEggIndex(viewableItems[0].index);
+    }
+  }).current;
 
   const [loaded] = useFonts({
     SpaceMono: require('@/src/assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   if (!loaded) {
-    return null;
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Text>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   const eggs = [
-    { id: 1, name: 'Classic Egg', color: '#FFB6C1', gradient: ['#FFE5E5', '#FFB6C1'] },  // Light pink
-    { id: 2, name: 'Crystal Egg', color: '#87CEEB', gradient: ['#E5F2FF', '#87CEEB'] },  // Sky blue
-    { id: 3, name: 'Galaxy Egg', color: '#DDA0DD', gradient: ['#F5E6F5', '#DDA0DD'] },   // Plum
+    { id: 1, name: 'Classic Egg', color: '#FFB6C1', gradient: ['#FFE5E5', '#FFB6C1'] },
+    { id: 2, name: 'Crystal Egg', color: '#87CEEB', gradient: ['#E5F2FF', '#87CEEB'] },
+    { id: 3, name: 'Galaxy Egg', color: '#DDA0DD', gradient: ['#F5E6F5', '#DDA0DD'] },
   ];
-
-  const handleViewableItemsChanged = ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems[0]?.index !== undefined && viewableItems[0].index !== null) {
-      setCurrentEggIndex(viewableItems[0].index);
-    }
-  };
-
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50
-  };
 
   const renderEgg = ({ item, index }: { item: typeof eggs[0], index: number }) => {
     const inputRange = [
@@ -93,7 +97,7 @@ export default function WelcomeScreen() {
               <Text style={styles.eggEmoji}>🥚</Text>
               <Text style={[
                 styles.eggName,
-                { color: item.color.replace('20', '') }
+                { color: item.color }
               ]}>
                 {item.name}
               </Text>
@@ -106,7 +110,7 @@ export default function WelcomeScreen() {
 
   const handleSubmit = () => {
     if (username.length >= 3 && username.length <= 20) {
-      router.replace('home' as any);
+      router.replace('/home');
     }
   };
 
@@ -159,7 +163,7 @@ export default function WelcomeScreen() {
                   [{ nativeEvent: { contentOffset: { x: scrollX } } }],
                   { useNativeDriver: true }
                 )}
-                onViewableItemsChanged={handleViewableItemsChanged}
+                onViewableItemsChanged={onViewableItemsChanged}
                 viewabilityConfig={viewabilityConfig}
                 contentContainerStyle={styles.flatListContent}
                 snapToInterval={width}
