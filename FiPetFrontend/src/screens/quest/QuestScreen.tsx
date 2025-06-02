@@ -3,8 +3,8 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/src/components/ThemedText';
+import { ThemedView } from '@/src/components/ThemedView';
 
 // Example quest schema
 const quests = [
