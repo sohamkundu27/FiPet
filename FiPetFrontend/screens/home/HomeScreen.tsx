@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, Animated, Easing, TouchableOpacity } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 
-import { ThemedView } from '@/src/components/ThemedView';
-import { ThemedText } from '@/src/components/ThemedText';
-import { IconSymbol } from '@/src/components/ui/IconSymbol';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Dimensions } from 'react-native';
 
 const windowWidth = Dimensions.get('window').width;

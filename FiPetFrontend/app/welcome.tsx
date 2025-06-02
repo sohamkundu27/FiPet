@@ -1,2 +1,2 @@
-import WelcomeScreen from '@/src/screens/welcome/WelcomeScreen';
+import WelcomeScreen from '@/screens/welcome/WelcomeScreen';
 export default WelcomeScreen;
