@@ -1,2 +1,2 @@
-import QuestScreen from '@/screens/quest/QuestScreen';
+import QuestScreen from '@/src/screens/quest/QuestScreen';
 export default QuestScreen;

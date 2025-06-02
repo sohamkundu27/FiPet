@@ -1,4 +1,4 @@
-package com.fipet.fipetfrontend
+package com.fipetfrontend
 
 import android.app.Application
 import android.content.res.Configuration
