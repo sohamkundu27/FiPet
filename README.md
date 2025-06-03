@@ -1,14 +1,41 @@
 # FiPet
 
-To start the Frontend-
+## Starting the Frontend
 
-Download ExpoGo on your phone
+1. Move to FiPetFrontend.
 
-Navigate to the directory with cd FiPetFrontend and run one of the following npm commands.
+    ```bash
+    cd FiPetFrontend
+    ```
 
+2. Install dependencies
 
-npx expo start
+   ```bash
+   yarn add expo
+   npx expo install
+   ```
 
+3. Start the app (locally)
+
+   ```bash
+   npx expo prebuild --clean
+   npx expo run:android # (or run:ios)
+   ```
+
+4. Start the app (Expo Application Services)
+
+   ```bash
+   npm install -g eas-cli && eas login
+   eas build --platform android --profile development
+   npx expo run:android # (or run:ios)
+   ```
+   (Contact a Developer for eas login credentials)
+
+5. If the instance stops, you can restart it with:
+
+    ```bash
+    npx expo start
+    ```
 
 
 
