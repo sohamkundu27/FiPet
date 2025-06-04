@@ -1,6 +1,7 @@
 export interface Question {
   id: string;
   text: string;
+  isCompleted: boolean;
   options: QuestionOption[];
 }
 
@@ -15,6 +16,7 @@ export interface Outcome {
   id: string;
   text: string;
   xpReward: number;
+  isCorrectAnswer: boolean;
   itemReward?: { // Optional field, only use if the outome gives the player an item
     id: string;
     name: string;
@@ -32,6 +34,7 @@ export interface Quest {
   questions: Question[];
   outcomes: Outcome[];
   isActive: boolean;
+  isCompleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +51,7 @@ export interface QuestDocument {
     [key: string]: {
       id: string;
       text: string;
+      isCompleted: boolean;
       options: {
         [key: string]: {
           id: string;
@@ -63,6 +67,7 @@ export interface QuestDocument {
       id: string;
       text: string;
       xpReward: number;
+      isCorrectAnswer: boolean;
       itemReward?: {
         id: string;
         name: string;
@@ -71,6 +76,7 @@ export interface QuestDocument {
     }
   };
   isActive: boolean;
+  isCompleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -87,6 +93,7 @@ export const exampleQuest: Quest = {
     {
       id: 'q1',
       text: 'Question ex',
+      isCompleted: false,
       options: [
         {
           id: 'o1',
@@ -104,8 +111,9 @@ export const exampleQuest: Quest = {
   outcomes: [
     {
       id: 'out1',
-      text: 'Outocme ex',
+      text: 'You gain ancient knowledge!',
       xpReward: 50,
+      isCorrectAnswer: true,
       itemReward: {
         id: 'item-001',
         name: 'name of item ex',
@@ -114,11 +122,13 @@ export const exampleQuest: Quest = {
     },
     {
       id: 'out2',
-      text: 'Action ex',
-      xpReward: 10
+      text: 'You decide to leave the scroll untouched.',
+      xpReward: 10,
+      isCorrectAnswer: false
     }
   ],
   isActive: true,
+  isCompleted: false,
   createdAt: new Date(),
   updatedAt: new Date()
 }; 

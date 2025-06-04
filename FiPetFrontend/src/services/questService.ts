@@ -20,6 +20,7 @@ const questToDocument = (quest: Quest): Omit<QuestDocument, 'id'> => {
     questionsMap[q.id] = {
       id: q.id,
       text: q.text,
+      isCompleted: q.isCompleted,
       options: optionsMap
     };
   });
@@ -30,6 +31,7 @@ const questToDocument = (quest: Quest): Omit<QuestDocument, 'id'> => {
       id: o.id,
       text: o.text,
       xpReward: o.xpReward,
+      isCorrectAnswer: o.isCorrectAnswer,
       ...(o.itemReward !== undefined && { itemReward: o.itemReward })
     };
   });
@@ -43,6 +45,7 @@ const questToDocument = (quest: Quest): Omit<QuestDocument, 'id'> => {
     questions: questionsMap,
     outcomes: outcomesMap,
     isActive: quest.isActive,
+    isCompleted: quest.isCompleted,
     createdAt: quest.createdAt,
     updatedAt: quest.updatedAt
   };
@@ -53,6 +56,7 @@ const documentToQuest = (doc: QuestDocument): Quest => {
   const questions: Quest['questions'] = Object.values(doc.questions).map(q => ({
     id: q.id,
     text: q.text,
+    isCompleted: q.isCompleted,
     options: Object.values(q.options).map(o => ({
       id: o.id,
       text: o.text,
@@ -65,6 +69,7 @@ const documentToQuest = (doc: QuestDocument): Quest => {
     id: o.id,
     text: o.text,
     xpReward: o.xpReward,
+    isCorrectAnswer: o.isCorrectAnswer,
     itemReward: o.itemReward
   }));
 
@@ -78,6 +83,7 @@ const documentToQuest = (doc: QuestDocument): Quest => {
     questions,
     outcomes,
     isActive: doc.isActive,
+    isCompleted: doc.isCompleted,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt
   };
