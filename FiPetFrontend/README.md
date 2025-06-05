@@ -7,14 +7,25 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 1. Install dependencies
 
    ```bash
-   npm install
+   yarn add expo
+   npx expo install
    ```
 
-2. Start the app
+2. Start the app (locally)
 
    ```bash
-   npx expo start
+   npx expo prebuild --clean
+   npx expo run:android # (or run:ios)
    ```
+
+3. Start the app (Expo Application Services)
+
+   ```bash
+   npm install -g eas-cli && eas login
+   eas build --platform android --profile development
+   npx expo run:android # (or run:ios)
+   ```
+   (Contact a Developer for eas login credentials)
 
 In the output, you'll find options to open the app in a
 

@@ -8,6 +8,11 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+# Encouraged to ignore these for build health
+ios/
+android/
+package-lock.json
+yarn.lock
 
 # Native
 .kotlin/
@@ -25,6 +30,11 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+
+# editors
+*.swp
+.vscode/
+*.xcodeproj/
 
 # macOS
 .DS_Store
