@@ -8,7 +8,6 @@ import { ThemedText } from '@/src/components/ThemedText';
 import { ThemedView } from '@/src/components/ThemedView';
 
 import { exampleQuest, Quest } from '@/src/types/quest';
-import { useQuest } from '@/src/hooks/useQuest';
 
 // Use the first quest for now
 const quests = [ exampleQuest ];
