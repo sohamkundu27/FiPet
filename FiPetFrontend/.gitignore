@@ -14,6 +14,9 @@ android/
 package-lock.json
 yarn.lock
 
+# Editor
+.editorconfig
+
 # Native
 .kotlin/
 *.orig.*

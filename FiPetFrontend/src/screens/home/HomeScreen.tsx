@@ -75,7 +75,7 @@ export default function HomeScreen() {
       </View>
 
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <Link href="/quest" style={styles.questButton}>
+        <Link href="/quests" style={styles.questButton}>
           <ThemedText type="link">Start Quest</ThemedText>
         </Link>
       </Animated.View>
