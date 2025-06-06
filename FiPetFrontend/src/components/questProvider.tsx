@@ -16,15 +16,13 @@ import { Quest, Question, QuestionOption, Outcome, exampleQuest } from "../types
 /**
  * Helper types for saving answers in memory.
  */
-type Answer = {
+export type QuestAnswer = {
+  option: QuestionOption,
   outcome: Outcome,
   nextQuestion: Question|null
 };
-type AnswerDict = {
-  [key: string]: {
-    outcome: Outcome,
-    nextQuestion: Question | null
-  }
+type QuestAnswerDict = {
+  [key: string]: QuestAnswer
 };
 
 /***** Function types. ******/
@@ -65,7 +63,7 @@ type getOptionsFunType = ( question: Question ) => QuestionOption[];
  *
  * @returns the outcome object and the next question if there is a next question.
  */
-type selectOptionFunType = ( questionID: string, optionID: string) => Answer;
+type selectOptionFunType = ( questionID: string, optionID: string) => QuestAnswer;
 
 /**
  * Gets the current answer to the question or false if it hasn't been answered.
@@ -74,7 +72,7 @@ type selectOptionFunType = ( questionID: string, optionID: string) => Answer;
  *
  * @see hasAnswer
  */
-type getAnswerFunType = ( question: Question ) => Answer;
+type getAnswerFunType = ( question: Question ) => QuestAnswer;
 
 /**
  * Determines if a question has an answer.
@@ -101,7 +99,7 @@ export const QuestContext = React.createContext<QuestContextType>(null!);
 export const QuestProvider = ({ children, questID }: { children: any, questID: string }) => {
 
   const quest: Quest = exampleQuest;
-  const [answeredQuestions, setAnsweredQuestions] = useState<AnswerDict>({});
+  const [answeredQuestions, setAnsweredQuestions] = useState<QuestAnswerDict>({});
 
   // if _furthestQuestion is null, it is assumed that the quest is complete.
   let _furthestQuestion: Question|null = quest.questions[0];
@@ -112,7 +110,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
    */
   const _updateFurthestQuestion = () => {
     while ( _furthestQuestion != null && _furthestQuestion.id in answeredQuestions ) {
-      let answer: Answer = answeredQuestions[_furthestQuestion.id];
+      let answer: QuestAnswer = answeredQuestions[_furthestQuestion.id];
       _furthestQuestion = answer.nextQuestion;
     }
   }
@@ -181,6 +179,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     }
 
     answeredQuestions[question.id] = {
+      option: selectedOption,
       outcome: outcome,
       nextQuestion: nextQuestion,
     };
@@ -193,7 +192,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     return question.id in answeredQuestions;
   }
 
-  const getAnswer = ( question: Question ): Answer => {
+  const getAnswer = ( question: Question ): QuestAnswer => {
     if ( ! hasAnswer( question ) ) {
       throw new Error( "Question hasn't been answered" );
     }
