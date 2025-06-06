@@ -9,9 +9,9 @@ export default function Layout () {
   return (
     <QuestProvider questID={questID}>
       <Stack>
-        <Stack.Screen name="quests/[questID]/index" options={{headersShown: false}}/>
-        <Stack.Screen name="quests/[questID]/questions" options={{headersShown: false}}/>
-        <Stack.Screen name="quests/[questID]/questions/[questionID]" options={{headersShown: false}}/>
+        <Stack.Screen name="index" options={{headersShown: false}}/>
+        <Stack.Screen name="questions/index" options={{headersShown: false}}/>
+        <Stack.Screen name="questions/[questionID]" options={{headersShown: false}}/>
       </Stack>
     </QuestProvider>
   )

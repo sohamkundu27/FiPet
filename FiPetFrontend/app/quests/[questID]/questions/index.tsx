@@ -2,10 +2,11 @@
 // Status: NOT IMPLEMENTED (redirects to first question)
 
 import { useQuest } from "@/src/hooks/useQuest";
-import { Redirect } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 
 export default function Page() {
   const { getFurthestQuestion } = useQuest();
+  const { questID } = useLocalSearchParams();
   const furthestQuestion = getFurthestQuestion();
-  return (<Redirect href={`./${furthestQuestion.id}`}/>);
+  return (<Redirect href={`/quests/${questID}/questions${furthestQuestion.id}`}/>);
 }
