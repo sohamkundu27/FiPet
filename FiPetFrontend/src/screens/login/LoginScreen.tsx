@@ -17,9 +17,9 @@ export default function LoginScreen() {
         <ThemedText type="link">Go to Home</ThemedText>
       </Link>
 
-      <Link href="/quest" style={styles.link}>
-        <ThemedText type="link">Go to Quest</ThemedText>
-      </Link>
+      {/* <Link href="/quest" style={styles.link}>
+        <ThemedText type="link">Go to Home</ThemedText>
+      </Link> */}
     </ThemedView>
   );
 }

@@ -1,28 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Animated, Easing, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Animated, Easing, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-
-import { ThemedView } from '@/src/components/ThemedView';
 import { ThemedText } from '@/src/components/ThemedText';
 import { IconSymbol } from '@/src/components/ui/IconSymbol';
-import { Dimensions } from 'react-native';
 
 const windowWidth = Dimensions.get('window').width;
-const windowHeight = Dimensions.get('window').height;
 
 export default function HomeScreen() {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
   const router = useRouter();
   const petData = {
-    eggType: 'type',
-    currentXP: 20,
-    requiredXP: 100,
-    level: 1,
+    level: 3,
+    currentXP: 650,
+    requiredXP: 1000,
+    stats: {
+      coins: 1250,
+      trophies: 12,
+      streak: 7,
+    },
   };
 
   const xpPercentage = (petData.currentXP / petData.requiredXP) * 100;
   const [dropdownVisible, setDropdownVisible] = useState(false);
-
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.loop(
@@ -41,7 +40,7 @@ export default function HomeScreen() {
         }),
       ])
     ).start();
-  }, [scaleAnim]);
+  }, []);
 
   const handleLogout = () => {
     setDropdownVisible(false);
@@ -49,16 +48,18 @@ export default function HomeScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-
-      <View style={styles.topRow}>
-        <ThemedText type="subtitle" style={styles.welcomeText}>Welcome, User!</ThemedText>
+    <View style={styles.container}>
+      <View style={styles.headerRow}>
+        <View style={styles.logoRow}>
+          <Image source={require('@/src/assets/images/react-logo.png')} style={styles.logo} />
+          <ThemedText style={styles.brandText}>FiPet</ThemedText>
+        </View>
         <View>
           <TouchableOpacity
             style={styles.inlineSettingsButton}
             onPress={() => setDropdownVisible(!dropdownVisible)}
           >
-            <IconSymbol name="gearshape.fill" size={28} color="white" />
+            <IconSymbol name="gearshape.fill" size={28} color="black" />
           </TouchableOpacity>
           {dropdownVisible && (
             <View style={styles.dropdownMenu}>
@@ -70,31 +71,37 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={styles.petPlaceholder}>
-        <ThemedText type="default">Pet Avatar Name</ThemedText>
+      <ThemedText style={styles.welcome}>Welcome, User!</ThemedText>
+      <ThemedText style={styles.subtext}>Ready for today's adventure?</ThemedText>
+
+      <View style={[styles.petImage]}>
+
       </View>
 
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <Link href="/quest" style={styles.questButton}>
-          <ThemedText type="link">Start Quest</ThemedText>
+      <View style={styles.levelRow}>
+        <ThemedText style={styles.levelText}>Level {petData.level}</ThemedText>
+        <ThemedText style={styles.xpLabel}>{petData.currentXP} / {petData.requiredXP} XP</ThemedText>
+      </View>
+      <View style={styles.xpBarBg}>
+        <View style={[styles.xpBarFill, { width: `${xpPercentage}%` }]} />
+      </View>
+
+      <Animated.View style={[styles.questButton, { transform: [{ scale: scaleAnim }] }]}>
+        <Link href="/quests" >
+          <ThemedText style={styles.questButtonText}>Start Quest →</ThemedText>
         </Link>
       </Animated.View>
 
-      <View style={styles.xpContainer}>
-        <View style={[styles.xpFill, { width: `${xpPercentage}%` }]} />
-        <ThemedText type="defaultSemiBold" style={styles.xpText}>{petData.currentXP} / {petData.requiredXP} XP</ThemedText>
-      </View>
-
-      <ThemedText type="subtitle" style={styles.levelText}>Level {petData.level}</ThemedText>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
+    backgroundColor: '#ffe9ab',
     paddingHorizontal: 20,
+    paddingTop: 40,
   },
   dropdownMenu: {
     position: 'absolute',
@@ -126,55 +133,106 @@ const styles = StyleSheet.create({
   inlineSettingsButton: {
     marginLeft: 10,
   },
-  title: {
-    marginBottom: 10,
-    fontSize: 24,
-    textAlign: 'center',
-  },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  petPlaceholder: {
-    width: windowWidth * .9,
-    height: windowWidth * .9,
-    backgroundColor: 'green',
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    alignSelf: 'center',
-    marginBottom: 20,
-    borderRadius: 10,
+    marginBottom: 10,
   },
-  xpContainer: {
-    width: '90%',
-    height: 25,
-    backgroundColor: '#ddd',
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginVertical: 20,
-    alignSelf: 'center',
-    justifyContent: 'center',
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  xpFill: {
-    position: 'absolute',
-    height: '100%',
-    backgroundColor: '#4CAF50',
+  logo: {
+    width: 30,
+    height: 30,
+    marginRight: 8,
   },
-  xpText: {
-    textAlign: 'center',
+  brandText: {
+    fontSize: 18,
     fontWeight: 'bold',
-    zIndex: 1,
+    color: 'black'
+  },
+  welcome: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginTop: 10,
+    color: 'black'
+  },
+  subtext: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 10,
+  },
+  petImage: {
+    width: windowWidth * 0.8,
+    height: windowWidth * 0.8,
+    alignSelf: 'center',
+    backgroundColor: 'orange',
+    borderRadius: 10
+  },
+  levelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 5,
+    marginTop: 30,
   },
   levelText: {
-    textAlign: 'center',
-    marginBottom: 10,
+    fontWeight: '600',
+    fontSize: 14,
+    color: 'black'
+  },
+  xpLabel: {
+    fontWeight: '500',
+    fontSize: 14,
+    color: '#555',
+  },
+  xpBarBg: {
+    height: 15,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginTop: 6,
+    marginBottom: 16,
+  },
+  xpBarFill: {
+    height: '100%',
+    backgroundColor: '#FF7A00',
   },
   questButton: {
-    backgroundColor: '#ff9800',
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 25,
-    marginVertical: 20,
-    alignSelf: 'center',
+    backgroundColor: '#FF7A00',
+    paddingVertical: 25,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginBottom: 25,
+    shadowColor: '#FF7A00',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    marginTop: 30
+  },
+  questButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statIcon: {
+    width: 30,
+    height: 30,
+    marginBottom: 5,
+  },
+  statText: {
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
