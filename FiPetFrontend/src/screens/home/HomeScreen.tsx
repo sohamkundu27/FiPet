@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Animated, Easing, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { StyleSheet, View, Animated, Easing, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { ThemedText } from '@/src/components/ThemedText';
 import { IconSymbol } from '@/src/components/ui/IconSymbol';
@@ -9,9 +9,18 @@ const windowWidth = Dimensions.get('window').width;
 export default function HomeScreen() {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const router = useRouter();
+
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [xp, setXp] = useState(650);
+  const [tasks, setTasks] = useState([
+    { id: 1, title: 'Get out of bed', energy: 5, completed: false },
+    { id: 2, title: 'Brush teeth', energy: 5, completed: false },
+    { id: 3, title: 'Drink water', energy: 5, completed: false },
+  ]);
+
   const petData = {
     level: 3,
-    currentXP: 650,
+    currentXP: xp,
     requiredXP: 1000,
     stats: {
       coins: 1250,
@@ -21,7 +30,6 @@ export default function HomeScreen() {
   };
 
   const xpPercentage = (petData.currentXP / petData.requiredXP) * 100;
-  const [dropdownVisible, setDropdownVisible] = useState(false);
 
   useEffect(() => {
     Animated.loop(
@@ -47,36 +55,44 @@ export default function HomeScreen() {
     router.replace('/login');
   };
 
+  const toggleTask = (id: number) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id === id && !task.completed) {
+          setXp((prevXp) => prevXp + task.energy);
+          return { ...task, completed: true };
+        }
+        return task;
+      })
+    );
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.headerRow}>
         <View style={styles.logoRow}>
           <Image source={require('@/src/assets/images/react-logo.png')} style={styles.logo} />
           <ThemedText style={styles.brandText}>FiPet</ThemedText>
         </View>
-        <View>
-          <TouchableOpacity
-            style={styles.inlineSettingsButton}
-            onPress={() => setDropdownVisible(!dropdownVisible)}
-          >
-            <IconSymbol name="gearshape.fill" size={28} color="black" />
-          </TouchableOpacity>
-          {dropdownVisible && (
-            <View style={styles.dropdownMenu}>
-              <TouchableOpacity onPress={handleLogout} style={styles.dropdownItem}>
-                <ThemedText type="link" numberOfLines={1} style={styles.dropdownText}>Log Out</ThemedText>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+        <TouchableOpacity
+          style={styles.inlineSettingsButton}
+          onPress={() => setDropdownVisible(!dropdownVisible)}
+        >
+          <IconSymbol name="gearshape.fill" size={28} color="black" />
+        </TouchableOpacity>
+        {dropdownVisible && (
+          <View style={styles.dropdownMenu}>
+            <TouchableOpacity onPress={handleLogout} style={styles.dropdownItem}>
+              <ThemedText type="link" numberOfLines={1} style={styles.dropdownText}>Log Out</ThemedText>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
-      <ThemedText style={styles.welcome}>Welcome, User!</ThemedText>
-      <ThemedText style={styles.subtext}>Ready for today's adventure?</ThemedText>
+      {/* <ThemedText style={styles.welcome}>Welcome, Alex!</ThemedText>
+      <ThemedText style={styles.subtext}>Ready for today's adventure?</ThemedText> */}
 
-      <View style={[styles.petImage]}>
-
-      </View>
+      <View style={styles.petImage} />
 
       <View style={styles.levelRow}>
         <ThemedText style={styles.levelText}>Level {petData.level}</ThemedText>
@@ -86,13 +102,33 @@ export default function HomeScreen() {
         <View style={[styles.xpBarFill, { width: `${xpPercentage}%` }]} />
       </View>
 
-      <Animated.View style={[styles.questButton, { transform: [{ scale: scaleAnim }] }]}>
-        <Link href="/quests" >
+      {/* <Animated.View style={[styles.questButton, { transform: [{ scale: scaleAnim }] }]}>
+        <Link href="/quest">
           <ThemedText style={styles.questButtonText}>Start Quest →</ThemedText>
         </Link>
-      </Animated.View>
+      </Animated.View> */}
 
-    </View>
+      <ThemedText style={styles.todayTitle}>Today's Quests</ThemedText>
+
+      {tasks.map((task) => (
+        <TouchableOpacity
+          key={task.id}
+          style={[styles.taskCard, task.completed && styles.taskCardCompleted]}
+          onPress={() => toggleTask(task.id)}
+        >
+          <View style={styles.taskContent}>
+            <IconSymbol name="checkmark.seal" size={24} color={task.completed ? 'green' : 'gray'} />
+            <ThemedText style={styles.taskText}>{task.title}</ThemedText>
+          </View>
+          <View style={styles.taskRight}>
+            <ThemedText style={styles.energyText}>⚡ {task.energy}</ThemedText>
+            {task.completed && (
+              <IconSymbol name="checkmark.circle.fill" size={24} color="green" />
+            )}
+          </View>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
   );
 }
 
@@ -112,7 +148,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     zIndex: 10,
-    minWidth: 100
+    minWidth: 100,
   },
   dropdownItem: {
     paddingVertical: 10,
@@ -122,16 +158,6 @@ const styles = StyleSheet.create({
   dropdownText: {
     textAlign: 'left',
     fontSize: 16,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 20,
-  },
-  inlineSettingsButton: {
-    marginLeft: 10,
   },
   headerRow: {
     flexDirection: 'row',
@@ -148,16 +174,20 @@ const styles = StyleSheet.create({
     height: 30,
     marginRight: 8,
   },
+  inlineSettingsButton: {
+    marginLeft: 10,
+  },
   brandText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'black'
+    color: 'black',
+    marginLeft: 5,
   },
   welcome: {
     fontSize: 20,
     fontWeight: '600',
     marginTop: 10,
-    color: 'black'
+    color: 'black',
   },
   subtext: {
     fontSize: 16,
@@ -169,7 +199,7 @@ const styles = StyleSheet.create({
     height: windowWidth * 0.8,
     alignSelf: 'center',
     backgroundColor: 'orange',
-    borderRadius: 10
+    borderRadius: 10,
   },
   levelRow: {
     flexDirection: 'row',
@@ -180,7 +210,7 @@ const styles = StyleSheet.create({
   levelText: {
     fontWeight: '600',
     fontSize: 14,
-    color: 'black'
+    color: 'black',
   },
   xpLabel: {
     fontWeight: '500',
@@ -210,29 +240,48 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    marginTop: 30
+    marginTop: 30,
   },
   questButtonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 20,
   },
-  statsRow: {
+  todayTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: 'black',
+  },
+  taskCard: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    padding: 15,
+    backgroundColor: '#fff3d1',
+    borderRadius: 12,
+    marginBottom: 10,
   },
-  statItem: {
+  taskCardCompleted: {
+    backgroundColor: '#d1ffd6',
+  },
+  taskContent: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  statIcon: {
-    width: 30,
-    height: 30,
-    marginBottom: 5,
+  taskText: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 10,
+    color: 'black',
   },
-  statText: {
-    fontWeight: '600',
+  taskRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  energyText: {
     fontSize: 14,
+    color: 'black',
   },
 });

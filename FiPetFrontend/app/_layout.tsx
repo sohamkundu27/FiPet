@@ -11,8 +11,9 @@ export default function RootLayout() {
     <>
       <Stack>
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
-        <Stack.Screen name="home" options={{ headerShown: false }} />
-        <Stack.Screen name="quest" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        {/* <Stack.Screen name="home" options={{ headerShown: false }} />
+        <Stack.Screen name="quest" options={{ headerShown: false }} /> */}
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         <Stack.Screen name="testFirestore" options={{ title: 'Test Firestore' }} />
