@@ -7,72 +7,10 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 import { ThemedView } from '@/src/components/ThemedView';
 
-// Example quest schema
-const quests = [
-	{
-		title: 'The Lost Scroll',
-		scroll: `
-# The Lost Scroll
-
-You find yourself in the ancient library of FiPet. **Dusty tomes** line the shelves, and a mysterious scroll glows on a pedestal.
-
-## What will you do?
-
-Will you **read** the scroll, or leave it untouched? Your choice will shape your adventure.
-		`,
-		questions: [
-			{ id: 1, text: 'Do you read the scroll?' },
-			{ id: 2, text: 'Do you search the room?' },
-		],
-		outcomes: [
-			{ id: 1, result: 'You gain ancient knowledge!' },
-			{ id: 2, result: 'You find a hidden door!' },
-		],
-	},
-	{
-		title: 'The Forgotten Fountain',
-		scroll: `
-# The Forgotten Fountain
-
-In the heart of the FiPet gardens, you discover a **crumbling fountain** covered in moss. Water trickles quietly, and something glimmers at the bottom.
-
-## What will you do?
-
-Will you **reach into the water**, or simply admire the fountain from afar?
-		`,
-		questions: [
-			{ id: 1, text: 'Do you reach into the water?' },
-			{ id: 2, text: 'Do you look around the fountain?' },
-		],
-		outcomes: [
-			{ id: 1, result: 'You find a mysterious coin!' },
-			{ id: 2, result: 'You spot a hidden inscription!' },
-		],
-	},
-	{
-		title: 'The Enchanted Grove',
-		scroll: `
-# The Enchanted Grove
-
-You step into a grove where the trees whisper secrets and the air shimmers with magic. A path splits in two directions: one bathed in sunlight, the other shadowed and mysterious.
-
-## What will you do?
-
-Will you **follow the sunlit path**, or venture into the shadows?
-		`,
-		questions: [
-			{ id: 1, text: 'Do you follow the sunlit path?' },
-			{ id: 2, text: 'Do you venture into the shadows?' },
-		],
-		outcomes: [
-			{ id: 1, result: 'You find a grove of singing birds!' },
-			{ id: 2, result: 'You discover a hidden magical artifact!' },
-		],
-	},
-];
+import { exampleQuest, Quest } from '@/src/types/quest';
 
 // Use the first quest for now
-const quest = quests[0];
+const quests = [ exampleQuest ];
 
 // Simple Markdown-like parser for headings and bold
 function renderFormattedText(text: string) {
@@ -126,10 +64,10 @@ export default function QuestScreen() {
 	const [started, setStarted] = useState(Array(quests.length).fill(false));
 	const router = useRouter();
 
-	const handleBegin = (idx: number) => {
+	const handleBegin = (idx: number, quest: Quest) => {
 		const updated = [...started];
 		updated[idx] = true;
-		setStarted(updated);
+		router.push( `/quests/${quest.id}` );
 	};
 
 	return (
@@ -176,7 +114,7 @@ export default function QuestScreen() {
 								<TouchableOpacity
 									style={styles.beginButton}
 									activeOpacity={0.85}
-									onPress={() => handleBegin(idx)}
+									onPress={() => handleBegin(idx, quest)}
 								>
 									<ThemedText type="default" style={styles.beginButtonText}>
 										{'🦊 Begin Quest'}
