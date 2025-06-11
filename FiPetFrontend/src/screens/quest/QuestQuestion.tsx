@@ -1,4 +1,4 @@
-import { StyleSheet, Button } from "react-native";
+import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useQuest } from "@/src/hooks/useQuest";
 import { ThemedText } from "@/src/components/ThemedText";
@@ -9,150 +9,217 @@ import { ThemedView } from "@/src/components/ThemedView";
 
 export default function QuestQuestion() {
   const { questionID, questID } = useLocalSearchParams<{
-    questID?: string
-    questionID?: string,
+    questID?: string;
+    questionID?: string;
   }>();
-  const { getOptions, getAnswer, hasAnswer, getQuestion, selectOption } = useQuest();
-  let [answer, setAnswer] = useState<QuestAnswer|null>(null);
-  let [questionHasAnswer, setHasAnswer] = useState<boolean|null>(null);
+  const { getOptions, getAnswer, hasAnswer, getQuestion, selectOption, getAllQuestions } = useQuest();
+  let [answer, setAnswer] = useState<QuestAnswer | null>(null);
+  let [questionHasAnswer, setHasAnswer] = useState<boolean | null>(null);
 
   if (questionID === undefined) {
     throw new Error("Question ID is undefined!");
   }
+
   const question = getQuestion(questionID);
+  const allQuestions = getAllQuestions();
+  const currentIndex = allQuestions.findIndex((q) => q.id === questionID);
+  const progress = (currentIndex + 1) / allQuestions.length;
 
   function handleOptionSelect(option: QuestionOption) {
-  if ( questionHasAnswer ) {
-  	return;
-  }
-    setAnswer( selectOption(question.id, option.id) );
-    setHasAnswer( true );
+    if (questionHasAnswer) return;
+    setAnswer(selectOption(question.id, option.id));
+    setHasAnswer(true);
   }
 
   const options = getOptions(question);
   questionHasAnswer = hasAnswer(question);
-  if ( questionHasAnswer ) {
+  if (questionHasAnswer) {
     answer = getAnswer(question);
   }
 
-  function OutcomeReward({ outcome }: { outcome: Outcome}) {
-
-    if ( outcome.itemReward ) {
-  	  return (
-  		  <>
-  			  <ThemedText>You found a new item! [{outcome.itemReward.name}]</ThemedText>
-  			  <ThemedText>Description: {outcome.itemReward.description}</ThemedText>
+  function OutcomeReward({ outcome }: { outcome: Outcome }) {
+    if (outcome.itemReward) {
+      return (
+        <>
+          <ThemedText>You found a new item! [{outcome.itemReward.name}]</ThemedText>
+          <ThemedText>Description: {outcome.itemReward.description}</ThemedText>
         </>
-  	  );
+      );
     }
+    return null;
   }
 
   function OutcomeDisplay() {
-
-  	  if ( questionHasAnswer && answer != null ) {
-  		  return (
-  			  <>
-  				  <ThemedText style={{fontSize: 20, fontWeight: "bold", marginBottom: 10, textAlign: "center"}}>{answer.outcome.text}</ThemedText>
-  				  <ThemedText style={{marginBottom: 20}}>You've {answer.outcome.xpReward >= 0 ? 'gained' : 'lost'} {Math.abs(answer.outcome.xpReward)} xp!</ThemedText>
-  				  <OutcomeReward outcome={answer.outcome} />
-  			  </>
-  		  );
-  	  }
+    if (questionHasAnswer && answer != null) {
+      return (
+        <View
+          style={[
+            styles.feedbackBox,
+            { backgroundColor: answer.outcome.xpReward >= 0 ? "#d4edda" : "#f8d7da" },
+          ]}
+        >
+          <Text style={styles.feedbackText}>
+            {answer.outcome.xpReward >= 0 ? "✅ Great job!" : "❌ Try again!"}
+          </Text>
+          <Text style={styles.xpText}>
+            {answer.outcome.text}{"\n"}🎉 {Math.abs(answer.outcome.xpReward)} XP
+          </Text>
+          <OutcomeReward outcome={answer.outcome} />
+        </View>
+      );
+    }
+    return null;
   }
 
   function ContinueButton() {
-    if ( questionHasAnswer  && answer != null ) {
-  	  if ( answer.nextQuestion === null ) {
-  		  return (
-  			  <Link style={{fontSize: 26, backgroundColor: 'blue', color: 'white', borderRadius: 5, width: "70%", textAlign: "center", padding: 7, margin: 10}} href={ `/quests/${questID}`}>Continue</Link>
-  		  );
-  	  } else {
-  		  return (
-  			  <Link style={{fontSize: 26, backgroundColor: 'blue', color: 'white', borderRadius: 5, width: "70%", textAlign: "center", padding: 7, margin: 10}} href={ `/quests/${questID}/questions/${answer.nextQuestion.id}`}>Continue</Link>
-  		  );
-  	  }
+    if (questionHasAnswer && answer != null) {
+      if (answer.nextQuestion === null) {
+        return (
+          <Link style={styles.continueLink} href={`/quests/${questID}`}>
+            Finish
+          </Link>
+        );
+      } else {
+        return (
+          <Link style={styles.continueLink} href={`/quests/${questID}/questions/${answer.nextQuestion.id}`}>
+            Continue
+          </Link>
+        );
+      }
     }
-
+    return null;
   }
 
   return (
-    <ThemedView style={{height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 30}}>
-      <ThemedText style={styles.heading}>{question.text}</ThemedText>
-    <ThemedView style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "10%", paddingTop: "10%" }}>
-  	  {options.map((option) => {
-  		  if ( answer?.option.id === option.id ) {
-  			  return (
-  				  <Button color={styles.correctButton.backgroundColor} title={option.text} key={option.id} onPress={() => { handleOptionSelect(option); }}></Button>
-  			  );
-  		  } else if (questionHasAnswer) {
-  				return (
-  				  <Button disabled={true} title={option.text} key={option.id} onPress={() => { handleOptionSelect(option); }}></Button>
-  				);
-  		  } else {
-  				return (
-  				  <Button color={styles.button.backgroundColor} title={option.text} key={option.id} onPress={() => { handleOptionSelect(option); }}></Button>
-  				);
-  		  }
-  	  })}
-    </ThemedView>
-    <ThemedView style={{}}>
-  	  <OutcomeDisplay/>
-    </ThemedView>
-    <ThemedView style={{display: "flex", alignItems: "center", flexDirection: "column"}}>
-  	  <ContinueButton />
-    </ThemedView>
+    <ThemedView style={styles.screen}>
+      {/* Progress Bar */}
+      <View style={styles.progressContainer}>
+        <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+      </View>
+
+      {/* Question */}
+      <ThemedText style={styles.questionText}>{question.text}</ThemedText>
+
+      {/* Options */}
+      <View style={styles.optionsContainer}>
+        {options.map((option) => {
+          const isSelected = answer?.option.id === option.id;
+          const isDisabled = questionHasAnswer && !isSelected;
+
+          return (
+            <TouchableOpacity
+              key={option.id}
+              disabled={questionHasAnswer}
+              onPress={() => handleOptionSelect(option)}
+              style={[
+                styles.optionButton,
+                isSelected && styles.selectedOption,
+                isDisabled && styles.disabledOption,
+              ]}
+            >
+              <Text style={styles.optionText}>{option.text}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Outcome Display */}
+      <OutcomeDisplay />
+
+      {/* Continue Button */}
+      <View style={styles.continueContainer}>
+        <ContinueButton />
+      </View>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 60,
-    alignItems: 'center',
-    backgroundColor: 'black', // changed to black
+  screen: {
+    height: "100%",
+    padding: 24,
+    justifyContent: "flex-start",
   },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#632121',
-    textAlign: 'center',
-    letterSpacing: 1,
+  progressContainer: {
+    height: 8,
+    width: "100%",
+    backgroundColor: "#eee",
+    borderRadius: 10,
+    overflow: "hidden",
+    marginBottom: 24,
   },
-  button: {
-    backgroundColor: '#186eaf',
+  progressBar: {
+    height: "100%",
+    backgroundColor: "#FFD700",
   },
-  correctButton: {
-    backgroundColor: '#2fae19',
+  questionText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 24,
+    color: "#333",
   },
-  incorrectButton: {
-    backgroundColor: '#821b17',
+  optionsContainer: {
+    marginTop: 10,
+    marginBottom: 24,
+    alignItems: "center",
   },
-  unselectedButton: {
-    backgroundColor: '#324a5d',
-  color: '#999',
-  },
-  bold: {
-    fontWeight: 'bold',
-    color: '#ff7f50',
-  },
-  question: {
-    marginTop: 14,
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#222',
-    backgroundColor: '#ffe066',
+  optionButton: {
+    width: "90%",
+    backgroundColor: "#ffffff",
+    padding: 16,
     borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginBottom: 10,
-    overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: '#b5ead7',
-    shadowColor: '#ffe066',
-    shadowOpacity: 0.13,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    marginVertical: 8,
+    borderWidth: 2,
+    borderColor: "#ccc",
     elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    alignItems: "center",
+  },
+  optionText: {
+    fontSize: 18,
+    color: "#333",
+    textAlign: "center",
+  },
+  selectedOption: {
+    backgroundColor: "#c8f7c5",
+    borderColor: "#2fae19",
+  },
+  disabledOption: {
+    opacity: 0.6,
+  },
+  feedbackBox: {
+    padding: 16,
+    borderRadius: 12,
+    marginVertical: 16,
+    alignItems: "center",
+  },
+  feedbackText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 6,
+  },
+  xpText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  continueContainer: {
+    alignItems: "center",
+    marginTop: 16,
+  },
+  continueLink: {
+    fontSize: 20,
+    backgroundColor: "#58cc02",
+    color: "white",
+    borderRadius: 25,
+    textAlign: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    overflow: "hidden",
+    elevation: 4,
   },
 });

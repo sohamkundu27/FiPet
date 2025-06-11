@@ -92,6 +92,7 @@ type QuestContextType = {
   getOptions: getOptionsFunType,
   getAnswer: getAnswerFunType,
   hasAnswer: hasAnswerFunType,
+  getAllQuestions: () => Question[],
 };
 
 export const QuestContext = React.createContext<QuestContextType>(null!);
@@ -114,7 +115,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       _furthestQuestion = answer.nextQuestion;
     }
   }
-
+  
   const getFurthestQuestion: getFurthestQuestionFunType = () => {
     _updateFurthestQuestion();
 
@@ -129,7 +130,9 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     _updateFurthestQuestion();
     return _furthestQuestion === null;
   }
-
+  const getAllQuestions = () => {
+  return quest.questions;
+};
   const getQuestion: getQuestionFunType = ( questionID ) => {
     for ( let questionOpt of quest.questions ) {
       if ( questionID === questionOpt.id ) {
@@ -204,8 +207,9 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
   }
 
   return (
-    <QuestContext.Provider value={{ isComplete, getFurthestQuestion, getQuestion, getOptions, selectOption, getAnswer, hasAnswer }}>
+    <QuestContext.Provider value={{ isComplete, getFurthestQuestion, getQuestion, getOptions, selectOption, getAnswer, hasAnswer, getAllQuestions }}>
       {children}
     </QuestContext.Provider>
   );
+  
 };
