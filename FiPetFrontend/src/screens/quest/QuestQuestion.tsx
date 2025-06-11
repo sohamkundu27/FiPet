@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
+import { StyleSheet, View, TouchableOpacity, Text, Image } from "react-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useQuest } from "@/src/hooks/useQuest";
 import { ThemedText } from "@/src/components/ThemedText";
@@ -98,7 +98,12 @@ export default function QuestQuestion() {
       </View>
 
       {/* Question */}
-      <ThemedText style={styles.questionText}>{question.text}</ThemedText>
+     <View style={styles.messageRow}>
+    <Image source={require("@/src/assets/images/businessman.png")} style={styles.avatar} />
+    <View style={styles.chatBubble}>
+    <Text style={styles.chatText}>{question.text}</Text>
+    </View>
+  </View>
 
       {/* Options */}
       <View style={styles.optionsContainer}>
@@ -138,7 +143,9 @@ const styles = StyleSheet.create({
   screen: {
     height: "100%",
     padding: 24,
+    paddingTop: 100,
     justifyContent: "flex-start",
+     backgroundColor: "#fff",
   },
   progressContainer: {
     height: 8,
@@ -192,7 +199,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   feedbackBox: {
-    padding: 16,
+    padding: 8,
     borderRadius: 12,
     marginVertical: 16,
     alignItems: "center",
@@ -221,5 +228,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     overflow: "hidden",
     elevation: 4,
+    
   },
+  messageRow: {
+  flexDirection: "row",
+  alignItems: "flex-start",
+  marginBottom: 24,
+},
+
+avatar: {
+  width: 100,
+  height: 140,
+  padding: 8,
+  marginRight: 12,
+},
+  chatBubble: {
+  backgroundColor: "#faf7f7", // Light blue chat bubble
+  padding: 8,
+  borderRadius: 16,
+  maxWidth: "70%",
+  alignSelf: "flex-start", // Aligns to the left like someone is speaking
+  marginBottom: 6,
+  borderTopLeftRadius: 0, // Makes it look like a speech bubble
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.5,
+  shadowRadius: 6,
+  elevation: 2, // Android shadow
+},
+
+chatText: {
+  fontSize: 20,
+  fontWeight: "bold",
+  textAlign: "center",
+  color: "#333",
+  lineHeight: 30,
+},
 });
