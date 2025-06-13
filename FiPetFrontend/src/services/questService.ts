@@ -1,5 +1,4 @@
 import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
-import { db } from '../config/firebase';
 import { Quest, QuestDocument } from '../types/quest';
 
 const QUEST_COLLECTION = 'quests';
