@@ -1,14 +1,23 @@
-import { ThemedText } from "@/src/components/ThemedText";
+import SettingsGroup from "@/src/components/settings/SettingsGroup";
 import { ThemedView } from "@/src/components/ThemedView";
-import { Link } from "expo-router";
+import { ScrollView } from "react-native-reanimated/lib/typescript/Animated";
 
 export default function SettingsScreen() {
   return (
-    <ThemedView>
-      <ThemedText>
-        Settings Screen
-      </ThemedText>
-      <Link href="/settings/profile">Profile</Link>
+    <ThemedView style={{paddingTop: 30, height: "100%"}}>
+      <ScrollView>
+        <SettingsGroup groupName="General" settings={[
+          {
+            title: "Edit Profile",
+            action: () => {}
+          },
+          {
+            title: "Log Out",
+            action: () => {},
+            color: "#F00"
+          }
+        ]}/>
+      </ScrollView>
     </ThemedView>
   );
 

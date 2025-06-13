@@ -29,12 +29,12 @@ const MAPPING = {
 export function IconSymbol({
   name,
   size = 24,
-  color,
+  color = "#000",
   style,
 }: {
   name: IconSymbolName;
   size?: number;
-  color: string | OpaqueColorValue;
+  color?: string | OpaqueColorValue;
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {

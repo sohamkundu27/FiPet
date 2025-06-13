@@ -5,7 +5,7 @@ import type { NativeStackNavigationOptions } from '../../node_modules/@react-nav
 
 export default function SettingsLayout() {
 
-  let screenOptions: NativeStackNavigationOptions = {
+  let screenOptions/*: NativeStackNavigationOptions*/ = {
     headerStyle: {
       backgroundColor: "#ffe9ab",
     },
