@@ -1,6 +1,6 @@
 import SettingsGroup from "@/src/components/settings/SettingsGroup";
 import { ThemedView } from "@/src/components/ThemedView";
-import { ScrollView } from "react-native-reanimated/lib/typescript/Animated";
+import { ScrollView } from "react-native";
 
 export default function SettingsScreen() {
   return (
@@ -9,6 +9,7 @@ export default function SettingsScreen() {
         <SettingsGroup groupName="General" settings={[
           {
             title: "Edit Profile",
+            subtitle: "username, etc",
             action: () => {}
           },
           {

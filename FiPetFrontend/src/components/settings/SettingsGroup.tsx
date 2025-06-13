@@ -16,7 +16,7 @@ export type SettingsGroupItem = {
   subtitle?: string,
   icon?: (size: number) => React.ReactElement,
   action: (evt: GestureResponderEvent) => void,
-  color?: string | OpaqueColorValue,
+  color?: string | OpaqueColorValue | undefined,
 };
 
 export default function SettingsGroup({ groupName, settings }: SettingsGroupProps) {
@@ -34,9 +34,13 @@ export default function SettingsGroup({ groupName, settings }: SettingsGroupProp
             </View>
           )}
           <View style={{width: TITLE_WIDTH, display: "flex", flexDirection: "column"}}>
-            <ThemedText lightColor="#000" darkColor="#FFF">{item.title}</ThemedText>
+            {item.color ? (
+              <ThemedText lightColor={item.color} darkColor={item.color}>{item.title}</ThemedText>
+            ) : (
+              <ThemedText style={item.subtitle && {marginBottom: 0, lineHeight: 18}} lightColor="#000" darkColor="#FFF">{item.title}</ThemedText>
+            )}
             {item.subtitle && (
-              <ThemedText lightColor="#000" darkColor="#FFF">{item.subtitle}</ThemedText>
+              <ThemedText style={{fontSize: 14, lineHeight: 14}} lightColor="#888" darkColor="#AAA">{item.subtitle}</ThemedText>
             )}
           </View>
           <ThemeWrapper
@@ -63,6 +67,7 @@ export default function SettingsGroup({ groupName, settings }: SettingsGroupProp
       <ThemedView style={styles.container}>
         <FlatList 
           data={settings}
+          scrollEnabled={false}
           renderItem={renderSettingsItem}
           ItemSeparatorComponent={separator}
         />
