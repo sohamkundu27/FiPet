@@ -1,6 +1,13 @@
+export type QuestionType = "multiselect" | "trueFalse" | "regular"| "matching";
+
 export interface Question {
   id: string;
   text: string;
+  text2?: string; // Optional second text field for additional context
+  text3?: string[]; // Optional third text field for additional context
+  image?: string; // Optional image URL for the question
+  correctOptionIds?: string[]; // Only used if type is "multiselect"
+  type: QuestionType;
   isCompleted: boolean;
   options: QuestionOption[];
 }
@@ -102,17 +109,20 @@ The villagers of Andaros are in despair. Their sacred relic has been taken by a 
     {
       id: 'q1',
       text: 'You arrive at the edge of the Whispering Woods. What do you do?',
+      
+      type:"trueFalse",
       isCompleted: false,
+      text2: 'The forest is dense and dark, with the sounds of wildlife all around. The path ahead is unclear.',
       options: [
-        { id: 'q1o1', text: 'Enter the woods cautiously.', outcomeId: 'out1', nextQuestionId: 'q2' },
-        { id: 'q1o2', text: 'Set up camp and wait until morning.', outcomeId: 'out2' },
-        { id: 'q1o3', text: 'Shout to alert the bandits.', outcomeId: 'out3' },
+        { id: 'q1o1', text: 'True', outcomeId: 'out1', nextQuestionId: 'q2' },
+        { id: 'q1o2', text: 'False', outcomeId: 'out2' },
       ],
     },
     {
       id: 'q2',
       text: 'You find a fork in the path. One path is well-trodden, the other overgrown.',
-      isCompleted: false,
+      isCompleted: false,      
+      type:"regular",
       options: [
         { id: 'q2o1', text: 'Take the well-trodden path.', outcomeId: 'out4', nextQuestionId: 'q3' },
         { id: 'q2o2', text: 'Take the overgrown path.', outcomeId: 'out5', nextQuestionId: 'q3' },
@@ -123,27 +133,30 @@ The villagers of Andaros are in despair. Their sacred relic has been taken by a 
       id: 'q3',
       text: 'You encounter a wounded traveler who warns of traps ahead.',
       isCompleted: false,
+      type:"multiselect",
+      correctOptionIds: ['q3o1', 'q3o3'],
       options: [
-        { id: 'q3o1', text: 'Help him and ask for guidance.', outcomeId: 'out7', nextQuestionId: 'q4' },
-        { id: 'q3o2', text: 'Ignore him and proceed.', outcomeId: 'out8', nextQuestionId: 'q4' },
-        { id: 'q3o3', text: 'Threaten him to reveal more.', outcomeId: 'out9', nextQuestionId: 'q4' },
+        { id: 'q3o1', text: 'Help him.', outcomeId: 'out7', nextQuestionId: 'q4' },
+        { id: 'q3o2', text: 'Ignore him.', outcomeId: 'out8', nextQuestionId: 'q4' },
+        { id: 'q3o3', text: 'Threaten him.', outcomeId: 'out9' },
       ],
     },
     {
       id: 'q4',
-      text: 'You spot a small cave entrance hidden by vines.',
+      text: 'Match each location to its description.',
+      type: 'regular',
       isCompleted: false,
       options: [
-        { id: 'q4o1', text: 'Enter the cave.', outcomeId: 'out10', nextQuestionId: 'q5' },
-        { id: 'q4o2', text: 'Set a trap outside and wait.', outcomeId: 'out11' },
-        { id: 'q4o3', text: 'Light a fire to smoke them out.', outcomeId: 'out12', nextQuestionId: 'q5' },
-        { id: 'q4o4', text: 'Keep moving past the cave.', outcomeId: 'out13' },
-      ],
+        { id: 'q4o1', text: 'Bandit Camp', outcomeId: 'out10' , nextQuestionId: 'q5' }, // nextQuestionId is used to link to the next question
+        { id: 'q4o2', text: 'Hidden Cave', outcomeId: 'out11' },
+        { id: 'q4o3', text: 'Abandoned Cabin', outcomeId: 'out12' },
+      ], // Not used for matching, but keep for type compatibility
     },
     {
       id: 'q5',
       text: 'Inside, you find the relic guarded by a bandit captain.',
       isCompleted: false,
+      type:"regular",
       options: [
         { id: 'q5o1', text: 'Fight the captain.', outcomeId: 'out14' },
         { id: 'q5o2', text: 'Try to negotiate.', outcomeId: 'out15' },
