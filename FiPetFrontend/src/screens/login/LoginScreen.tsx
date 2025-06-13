@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Dimensions, Text, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { auth } from '@/src/config/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from '@react-native-firebase/auth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -92,9 +91,9 @@ export default function LoginScreen() {
       setIsLoading(true);
       try {
         if (isSignUp) {
-          await createUserWithEmailAndPassword(auth, email, password);
+          await createUserWithEmailAndPassword(getAuth(), email, password);
         } else {
-          await signInWithEmailAndPassword(auth, email, password);
+          await signInWithEmailAndPassword(getAuth(), email, password);
         }
         // On success, navigate to welcome screen
         router.replace('/welcome');
