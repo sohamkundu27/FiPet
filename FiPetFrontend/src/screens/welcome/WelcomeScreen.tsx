@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
-import { router } from 'expo-router';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Animated } from 'react-native';
+import { router, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Egg {
@@ -40,6 +40,18 @@ const eggs: Egg[] = [
     color: '#DDA0DD',
     gradient: ['#F5E6F5', '#DDA0DD'],
   },
+  {
+    id: 'golden',
+    name: 'Golden Egg',
+    color: '#FFD700',
+    gradient: ['#FFF8E1', '#FFD700'],
+  },
+  {
+    id: 'emerald',
+    name: 'Emerald Egg',
+    color: '#50C878',
+    gradient: ['#E8F5E9', '#50C878'],
+  },
 ];
 
 const goals: Goal[] = [
@@ -72,15 +84,49 @@ const helpOptions: HelpOption[] = [
   { value: 'tracking', label: 'Expense tracking' },
 ];
 
+// Add time options with icons
+const timeOptions = [
+  { id: '5', label: '5 mins / day', icon: 'time-outline' as const },
+  { id: '10', label: '10 mins / day', icon: 'time-outline' as const },
+  { id: '15', label: '15 mins / day', icon: 'time-outline' as const },
+  { id: '20', label: '20 mins / day', icon: 'time-outline' as const },
+];
+
+// Placeholder mascot component
+const Mascot = ({ text }: { text: string }) => (
+  <View style={styles.mascotContainer}>
+    <View style={styles.speechBubble}>
+      <Text style={styles.speechText}>{text}</Text>
+    </View>
+    <Text style={styles.mascotText}>🐾</Text>
+  </View>
+);
+
+// Progress bar component
+const ProgressBar = ({ progress, onBack }: { progress: number; onBack: () => void }) => (
+  <View style={styles.progressBarWrapper}>
+    <TouchableOpacity style={styles.backButton} onPress={onBack}>
+      <Ionicons name="arrow-back" size={24} color="#333" />
+    </TouchableOpacity>
+    <View style={styles.progressBarContainer}>
+      <View style={[styles.progressBar, { width: `${progress}%` }]} />
+    </View>
+  </View>
+);
+
 export default function WelcomeScreen() {
+  const [currentStep, setCurrentStep] = useState(0);
   const [username, setUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
   const [selectedEgg, setSelectedEgg] = useState<Egg | null>(null);
   const [petName, setPetName] = useState('');
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedHelp, setSelectedHelp] = useState('');
-  const [currentScreen, setCurrentScreen] = useState('welcome');
-  const [showHelpOptions, setShowHelpOptions] = useState(false);
+  const [dailyLearningTime, setDailyLearningTime] = useState('');
+  const router = useRouter();
+
+  const totalSteps = 7;
+  const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const handleUsernameChange = (text: string) => {
     setUsername(text);
@@ -104,8 +150,11 @@ export default function WelcomeScreen() {
   };
 
   const handleContinue = () => {
-    if (username.trim().length >= 3 && username.trim().length <= 20 && selectedEgg) {
-      setCurrentScreen('pet');
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      // Navigate to home or next screen after onboarding
+      router.replace('/home');
     }
   };
 
@@ -147,183 +196,198 @@ export default function WelcomeScreen() {
     </View>
   );
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {currentScreen === 'welcome' ? (
-        // Welcome Screen
-        <View style={styles.screen}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <View style={styles.logoIcon}>
-              <Ionicons name="paw" size={24} color="#FFA500" />
+  const renderStep = () => {
+    const renderContent = () => {
+      switch (currentStep) {
+        case 0:
+          return (
+            <View style={[styles.contentContainer, styles.welcomeContent]}>
+              <Mascot text="Welcome to FiPet! Let's get started!" />
             </View>
-            <Text style={styles.logoText}>FiPet</Text>
-          </View>
-
-          {/* Welcome Content */}
-          <View style={styles.content}>
-            <Text style={styles.title}>Welcome! Let's get started.</Text>
-            
-            <View style={[styles.inputContainer, styles.inputContainerSpacing]}>
-              <Text style={styles.inputLabel}>Enter your username</Text>
+          );
+        case 1:
+          return (
+            <View style={styles.contentContainer}>
+              <Mascot text="What should I call you?" />
               <TextInput
                 style={[styles.input, usernameError ? styles.inputError : null]}
-                placeholder="Your username"
                 value={username}
                 onChangeText={handleUsernameChange}
-                maxLength={20}
+                placeholder="Enter your username"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
               {usernameError ? (
                 <Text style={styles.errorText}>{usernameError}</Text>
               ) : null}
             </View>
-
-            <Text style={[styles.subtitle, styles.eggSubtitle]}>Pick your perfect egg companion!</Text>
-
-            <View style={styles.eggCarouselContainer}>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false} 
-                style={styles.eggCarousel}
-                contentContainerStyle={styles.eggCarouselContent}
-              >
-                {eggs.map((egg) => (
-                  <TouchableOpacity
-                    key={egg.id}
-                    style={[
-                      styles.eggOption,
-                      selectedEgg?.id === egg.id && styles.selectedEgg
-                    ]}
-                    onPress={() => handleEggSelect(egg)}
-                  >
-                    <View style={[styles.eggContainer, { borderColor: egg.color }]}>
-                      <View style={[styles.eggInner, { backgroundColor: egg.gradient[0], borderColor: egg.color }]}>
-                        <Text style={styles.eggEmoji}>🥚</Text>
+          );
+        case 2:
+          return (
+            <View style={styles.contentContainer}>
+              <Mascot text="Choose your pet egg! Each one is special!" />
+              <View style={styles.eggCarouselContainer}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.eggCarousel}
+                  contentContainerStyle={styles.eggCarouselContent}
+                >
+                  {eggs.map((egg) => (
+                    <TouchableOpacity
+                      key={egg.id}
+                      style={[
+                        styles.eggOption,
+                        selectedEgg?.id === egg.id && styles.selectedEgg
+                      ]}
+                      onPress={() => handleEggSelect(egg)}
+                    >
+                      <View style={[styles.eggContainer, { borderColor: egg.color }]}>
+                        <View style={[styles.eggInner, { backgroundColor: egg.gradient[0], borderColor: egg.color }]}>
+                          <Text style={styles.eggEmoji}>🥚</Text>
+                          <Text style={styles.eggName} numberOfLines={1} ellipsizeMode="tail">{egg.name}</Text>
+                        </View>
                       </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+          );
+        case 3:
+          return (
+            <View style={styles.contentContainer}>
+              <Mascot text="What would you like to name your pet?" />
+              <TextInput
+                style={styles.input}
+                value={petName}
+                onChangeText={setPetName}
+                placeholder="Enter pet name"
+              />
+            </View>
+          );
+        case 4:
+          return (
+            <View style={styles.contentContainer}>
+              <Mascot text="What financial goals would you like to achieve?" />
+              <View style={[styles.sectionContainer, styles.firstSection]}>
+                {goals.map((goal) => (
+                  <TouchableOpacity
+                    key={goal.id}
+                    style={[
+                      styles.goalOption,
+                      selectedGoals.includes(goal.id) && styles.selectedGoal
+                    ]}
+                    onPress={() => handleGoalToggle(goal.id)}
+                  >
+                    <View style={styles.goalContent}>
+                      <Ionicons name={goal.icon} size={24} color="#333" style={styles.goalIcon} />
+                      <Text style={styles.goalText}>{goal.label}</Text>
+                    </View>
+                    <View style={styles.checkbox}>
+                      {selectedGoals.includes(goal.id) && (
+                        <Ionicons name="checkmark" size={20} color="#FFA500" />
+                      )}
                     </View>
                   </TouchableOpacity>
                 ))}
-              </ScrollView>
+              </View>
             </View>
-          </View>
+          );
+        case 5:
+          return (
+            <View style={styles.contentContainer}>
+              <Mascot text="How can I help you on your financial journey?" />
+              <View style={styles.sectionContainer}>
+                {helpOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.goalOption,
+                      selectedHelp === option.value && styles.selectedGoal
+                    ]}
+                    onPress={() => setSelectedHelp(option.value)}
+                  >
+                    <Text style={styles.goalText}>{option.label}</Text>
+                    <View style={styles.checkbox}>
+                      {selectedHelp === option.value && (
+                        <Ionicons name="checkmark" size={20} color="#FFA500" />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          );
+        case 6:
+          return (
+            <View style={styles.contentContainer}>
+              <Mascot text="How much time would you like to spend learning each day?" />
+              <View style={styles.sectionContainer}>
+                {timeOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[
+                      styles.goalOption,
+                      dailyLearningTime === option.id && styles.selectedGoal
+                    ]}
+                    onPress={() => setDailyLearningTime(option.id)}
+                  >
+                    <View style={styles.goalContent}>
+                      <Ionicons name={option.icon} size={24} color="#333" style={styles.goalIcon} />
+                      <Text style={styles.goalText}>{option.label}</Text>
+                    </View>
+                    <View style={styles.checkbox}>
+                      {dailyLearningTime === option.id && (
+                        <Ionicons name="checkmark" size={20} color="#FFA500" />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          );
+        default:
+          return null;
+      }
+    };
 
-          {/* Continue Button and Helper Text */}
-          <View style={styles.bottomContainer}>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                (!username.trim() || usernameError !== '' || !selectedEgg) && styles.buttonDisabled
-              ]}
-              onPress={handleContinue}
-              disabled={!username.trim() || usernameError !== '' || !selectedEgg}
-            >
-              <Text style={styles.buttonText}>Continue</Text>
-              <Ionicons name="arrow-forward" size={20} color="white" style={styles.buttonIcon} />
-            </TouchableOpacity>
-            <Text style={styles.helperText}>Select an egg to continue your journey</Text>
-          </View>
+    const renderButton = () => {
+      const isDisabled = 
+        (currentStep === 1 && (!username || !!usernameError)) ||
+        (currentStep === 2 && !selectedEgg) ||
+        (currentStep === 3 && !petName) ||
+        (currentStep === 4 && selectedGoals.length === 0) ||
+        (currentStep === 5 && !selectedHelp) ||
+        (currentStep === 6 && !dailyLearningTime);
+
+      return (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, isDisabled && styles.buttonDisabled]}
+            onPress={currentStep === 6 ? handleFinish : handleContinue}
+            disabled={isDisabled}
+          >
+            <Text style={styles.buttonText}>
+              {currentStep === 6 ? 'Finish' : 'Continue'}
+            </Text>
+          </TouchableOpacity>
         </View>
-      ) : (
-        // Pet Customization Screen
-        <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <View style={styles.logoIcon}>
-              <Ionicons name="paw" size={24} color="#FFA500" />
-            </View>
-            <Text style={styles.logoText}>FiPet</Text>
-          </View>
+      );
+    };
 
-          {/* Pet Content */}
-          <View style={styles.content}>
-            <Text style={styles.title}>Meet your new friend!</Text>
+    return (
+      <View style={styles.stepContainer}>
+        {renderContent()}
+        {renderButton()}
+      </View>
+    );
+  };
 
-            {selectedEgg && renderPet(selectedEgg)}
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Name your pet</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter pet name"
-                value={petName}
-                onChangeText={setPetName}
-              />
-            </View>
-
-            <View style={[styles.sectionContainer, styles.firstSection]}>
-              <Text style={styles.inputLabel}>Choose your financial learning goals</Text>
-              {goals.map((goal) => (
-                <TouchableOpacity
-                  key={goal.id}
-                  style={styles.goalOption}
-                  onPress={() => handleGoalToggle(goal.id)}
-                >
-                  <View style={styles.goalContent}>
-                    <Ionicons name={goal.icon} size={24} color="#333" style={styles.goalIcon} />
-                    <Text style={styles.goalText}>{goal.label}</Text>
-                  </View>
-                  <View style={styles.checkbox}>
-                    {selectedGoals.includes(goal.id) && (
-                      <Ionicons name="checkmark" size={20} color="#FFA500" />
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View style={styles.sectionContainer}>
-              <Text style={styles.inputLabel}>My pet wants to help me...</Text>
-              <TouchableOpacity
-                style={styles.helpSelect}
-                onPress={() => setShowHelpOptions(!showHelpOptions)}
-              >
-                <Text style={styles.helpText}>
-                  {selectedHelp ? helpOptions.find(opt => opt.value === selectedHelp)?.label : 'Select an option'}
-                </Text>
-                <Ionicons 
-                  name={showHelpOptions ? "chevron-up" : "chevron-down"} 
-                  size={20} 
-                  color="#333" 
-                />
-              </TouchableOpacity>
-              {showHelpOptions && (
-                <View style={styles.helpOptionsContainer}>
-                  {helpOptions.map((option) => (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={[
-                        styles.helpOption,
-                        selectedHelp === option.value && styles.selectedHelp
-                      ]}
-                      onPress={() => {
-                        setSelectedHelp(option.value);
-                        setShowHelpOptions(false);
-                      }}
-                    >
-                      <Text style={styles.helpText}>{option.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* Finish Button */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                (!petName.trim() || selectedGoals.length === 0 || !selectedHelp) && styles.buttonDisabled
-              ]}
-              onPress={handleFinish}
-              disabled={!petName.trim() || selectedGoals.length === 0 || !selectedHelp}
-            >
-              <Text style={styles.buttonText}>Finish</Text>
-              <Ionicons name="checkmark" size={20} color="white" style={styles.buttonIcon} />
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      )}
+  return (
+    <SafeAreaView style={styles.container}>
+      <ProgressBar progress={progress} onBack={() => setCurrentStep(Math.max(0, currentStep - 1))} />
+      {renderStep()}
     </SafeAreaView>
   );
 }
@@ -333,25 +397,74 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFF5E6',
   },
-  screen: {
-    flex: 1,
-    paddingHorizontal: 24,
+  progressBarWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    paddingTop: 40,
+    backgroundColor: '#FFF5E6',
   },
-  scrollContent: {
+  backButton: {
+    marginRight: 10,
+  },
+  progressBarContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#ddd',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#FFA500',
+  },
+  spacer: {
+    height: 20,
+  },
+  stepContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
   },
-  inputContainer: {
+  contentContainer: {
+    flex: 1,
     width: '100%',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  mascotContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+    marginTop: 20,
+  },
+  speechBubble: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 12,
     marginBottom: 15,
+    maxWidth: '80%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  inputContainerSpacing: {
-    marginTop: 30,
-  },
-  inputLabel: {
+  speechText: {
     fontSize: 16,
     color: '#333',
-    marginBottom: 8,
+    textAlign: 'center',
     fontWeight: '500',
+  },
+  mascotText: {
+    fontSize: 80,
   },
   input: {
     width: '100%',
@@ -360,7 +473,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 25,
     paddingHorizontal: 20,
-    fontSize: 16,
+    marginBottom: 20,
   },
   inputError: {
     borderColor: '#FF6B6B',
@@ -410,44 +523,52 @@ const styles = StyleSheet.create({
     top: 20,
     left: 20,
   },
-  logoContainer: {
-    flexDirection: 'row',
+  eggContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    padding: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 40,
-    marginBottom: 40,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 10,
   },
-  logoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFF5E6',
+  eggInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
+    borderWidth: 2,
+    padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
   },
-  logoText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  eggEmoji: {
+    fontSize: 42,
+  },
+  eggName: {
+    fontSize: 10,
     color: '#333',
+    marginTop: 5,
+    textAlign: 'center',
+    width: '100%',
   },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    paddingTop: 20,
+  sectionContainer: {
+    width: '100%',
+    marginTop: 15,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  firstSection: {
+    marginTop: 15,
+  },
+  inputLabel: {
+    fontSize: 16,
     color: '#333',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 20,
-    textAlign: 'center',
+    marginBottom: 8,
+    fontWeight: '500',
   },
   goalOption: {
     flexDirection: 'row',
@@ -483,64 +604,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 10,
   },
-  helpSelect: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    marginBottom: 10,
-    width: '100%',
-  },
-  helpOptionsContainer: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginTop: -10,
-  },
-  helpOption: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    backgroundColor: '#fff',
-  },
-  selectedHelp: {
-    backgroundColor: '#FFF5E6',
-  },
-  helpText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  buttonContainer: {
-    padding: 20,
-    marginBottom: 20,
+  selectedGoal: {
+    backgroundColor: '#FFE5E5',
   },
   button: {
     backgroundColor: '#FFA500',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 15,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
     borderRadius: 25,
     width: '100%',
-    marginBottom: 15,
-    height: 60,
+    alignItems: 'center',
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
   },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginRight: 10,
-  },
-  buttonIcon: {
-    marginLeft: 5,
+  buttonDisabledText: {
+    color: '#666',
   },
   petContainer: {
     alignItems: 'center',
@@ -590,53 +669,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     marginLeft: 10,
   },
-  bottomContainer: {
-    padding: 20,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  helperText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-  eggSubtitle: {
+  buttonContainer: {
     width: '100%',
-    paddingHorizontal: 20,
-    marginBottom: 25,
+    paddingBottom: 40,
   },
-  eggContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    padding: 4,
-    alignItems: 'center',
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  welcomeContent: {
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  eggInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 60,
-    borderWidth: 2,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  eggEmoji: {
-    fontSize: 42,
-  },
-  sectionContainer: {
-    width: '100%',
-    marginTop: 15,
-  },
-  firstSection: {
-    marginTop: 15,
   },
 }); 
