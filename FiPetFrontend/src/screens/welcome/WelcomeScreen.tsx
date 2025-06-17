@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Animated } from 'react-native';
 import { router, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { auth, db } from '../../config/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface Egg {
   id: string;
@@ -23,31 +25,31 @@ interface HelpOption {
 
 const eggs: Egg[] = [
   {
-    id: 'classic',
+    id: '1',
     name: 'Classic Egg',
     color: '#FFB6C1',
     gradient: ['#FFE5E5', '#FFB6C1'],
   },
   {
-    id: 'crystal',
+    id: '2',
     name: 'Crystal Egg',
     color: '#87CEEB',
     gradient: ['#E5F2FF', '#87CEEB'],
   },
   {
-    id: 'galaxy',
+    id: '3',
     name: 'Galaxy Egg',
     color: '#DDA0DD',
     gradient: ['#F5E6F5', '#DDA0DD'],
   },
   {
-    id: 'golden',
+    id: '4',
     name: 'Golden Egg',
     color: '#FFD700',
     gradient: ['#FFF8E1', '#FFD700'],
   },
   {
-    id: 'emerald',
+    id: '5',
     name: 'Emerald Egg',
     color: '#50C878',
     gradient: ['#E8F5E9', '#50C878'],
@@ -56,40 +58,40 @@ const eggs: Egg[] = [
 
 const goals: Goal[] = [
   { 
-    id: 'save', 
+    id: '0',
     label: 'Save more money',
     icon: 'cash-outline'
   },
   { 
-    id: 'budget', 
+    id: '1',
     label: 'Create better budgets',
     icon: 'calculator-outline'
   },
   { 
-    id: 'credit', 
+    id: '2',
     label: 'Build my credit score',
     icon: 'trending-up-outline'
   },
   { 
-    id: 'invest', 
+    id: '3',
     label: 'Learn about investing',
     icon: 'stats-chart-outline'
   },
 ];
 
 const helpOptions: HelpOption[] = [
-  { value: 'daily', label: 'Daily financial reminders' },
-  { value: 'challenges', label: 'Financial challenges' },
-  { value: 'tips', label: 'Money-saving tips' },
-  { value: 'tracking', label: 'Expense tracking' },
+  { value: '0', label: 'Daily financial reminders' },
+  { value: '1', label: 'Financial challenges' },
+  { value: '2', label: 'Money-saving tips' },
+  { value: '3', label: 'Expense tracking' },
 ];
 
 // Add time options with icons
 const timeOptions = [
-  { id: '5', label: '5 mins / day', icon: 'time-outline' as const },
-  { id: '10', label: '10 mins / day', icon: 'time-outline' as const },
-  { id: '15', label: '15 mins / day', icon: 'time-outline' as const },
-  { id: '20', label: '20 mins / day', icon: 'time-outline' as const },
+  { id: '0', label: '5 mins / day', icon: 'time-outline' as const },
+  { id: '1', label: '10 mins / day', icon: 'time-outline' as const },
+  { id: '2', label: '15 mins / day', icon: 'time-outline' as const },
+  { id: '3', label: '20 mins / day', icon: 'time-outline' as const },
 ];
 
 // Placeholder mascot component
@@ -114,6 +116,16 @@ const ProgressBar = ({ progress, onBack }: { progress: number; onBack: () => voi
   </View>
 );
 
+// LoadingScreen component outside of main component
+const LoadingScreen = () => (
+  <View style={styles.loadingContainer}>
+    <Text style={styles.loadingText}>Setting up your financial journey...</Text>
+    <View style={styles.loadingAnimation}>
+      <Text style={styles.loadingEmoji}>🐾</Text>
+    </View>
+  </View>
+);
+
 export default function WelcomeScreen() {
   const [currentStep, setCurrentStep] = useState(0);
   const [username, setUsername] = useState('');
@@ -123,6 +135,7 @@ export default function WelcomeScreen() {
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedHelp, setSelectedHelp] = useState('');
   const [dailyLearningTime, setDailyLearningTime] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const totalSteps = 7;
@@ -159,20 +172,47 @@ export default function WelcomeScreen() {
   };
 
   const handleFinish = async () => {
-    if (petName.trim() && selectedGoals.length > 0 && selectedHelp && selectedEgg) {
+    if (petName.trim() && selectedGoals.length > 0 && selectedHelp !== undefined && selectedEgg) {
+      const user = auth.currentUser;
+      
+      if (!user) {
+        console.error('No user logged in');
+        return;
+      }
+
+      setIsLoading(true);
+
+      console.log('Current user:', user.uid);
+
       const petData = {
         username: username.trim(),
-        eggType: selectedEgg.id,
-        petName: petName.trim(),
-        goals: selectedGoals,
-        petHelp: selectedHelp,
+        egg_type: Number(selectedEgg.id),
+        pet_name: petName.trim(),
+        financial_goals: selectedGoals.map(goal => Number(goal)),
+        financial_journey_help: Number(selectedHelp),
+        learning_time: Number(dailyLearningTime),
+        current_level: 0,
+        current_xp: 0
       };
 
-      // TODO: Save pet data to Firebase
-      console.log('Pet data:', petData);
-      
-      // Navigate to home screen
-      router.replace('/(tabs)/home');
+      console.log('Saving data to Firestore:', petData);
+
+      try {
+        await setDoc(doc(db, 'users', user.uid), petData);
+        console.log('User data saved successfully to Firestore');
+        
+        router.replace('/(tabs)/home');
+      } catch (error) {
+        console.error('Error saving user data:', error);
+        setIsLoading(false);
+      }
+    } else {
+      console.log('Validation failed:', {
+        hasPetName: !!petName.trim(),
+        hasGoals: selectedGoals.length > 0,
+        hasHelp: selectedHelp !== undefined,
+        hasEgg: !!selectedEgg
+      });
     }
   };
 
@@ -386,8 +426,14 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ProgressBar progress={progress} onBack={() => setCurrentStep(Math.max(0, currentStep - 1))} />
-      {renderStep()}
+      {isLoading ? (
+        <LoadingScreen />
+      ) : (
+        <>
+          <ProgressBar progress={progress} onBack={() => setCurrentStep(Math.max(0, currentStep - 1))} />
+          {renderStep()}
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -680,5 +726,26 @@ const styles = StyleSheet.create({
   },
   welcomeContent: {
     justifyContent: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF5E6',
+  },
+  loadingText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+  },
+  loadingAnimation: {
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingEmoji: {
+    fontSize: 60,
   },
 }); 
