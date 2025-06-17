@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Animated, Easing, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
+import { StyleSheet, View, Animated, Easing, TouchableOpacity, ScrollView, Dimensions, Image, Modal, TextInput, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { ThemedText } from '@/src/components/ThemedText';
 import { IconSymbol } from '@/src/components/ui/IconSymbol';
@@ -17,6 +17,9 @@ export default function HomeScreen() {
     { id: 2, title: 'Brush teeth', energy: 5, completed: false },
     { id: 3, title: 'Drink water', energy: 5, completed: false },
   ]);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
 
   const petData = {
     level: 3,
@@ -61,6 +64,9 @@ export default function HomeScreen() {
         if (task.id === id && !task.completed) {
           setXp((prevXp) => prevXp + task.energy);
           return { ...task, completed: true };
+        } else if (task.id === id && task.completed) {
+          setXp((prevXp) => prevXp + task.energy);
+          return { ...task, completed: false };
         }
         return task;
       })
@@ -128,6 +134,72 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
       ))}
+
+      <TouchableOpacity style={styles.buttonContainer} onPress={() => setModalVisible(true)}>
+        <IconSymbol name="plus" size={24} color="#fff" />
+        <ThemedText style={styles.buttonText}>Add a quest</ThemedText>
+      </TouchableOpacity>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => {
+          setModalVisible(false);
+          Keyboard.dismiss();
+        }}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={() => { }}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.modalContainer}
+              >
+                <ThemedText style={styles.modalTitle}>Add a New Quest</ThemedText>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter quest title"
+                  placeholderTextColor="#888"
+                  value={newTaskTitle}
+                  onChangeText={setNewTaskTitle}
+                />
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={styles.modalButton}
+                    onPress={() => {
+                      if (newTaskTitle.trim()) {
+                        setTasks((prevTasks) => [
+                          ...prevTasks,
+                          {
+                            id: Date.now(),
+                            title: newTaskTitle.trim(),
+                            energy: 5,
+                            completed: false,
+                          },
+                        ]);
+                        setNewTaskTitle('');
+                        setModalVisible(false);
+                      }
+                    }}
+                  >
+                    <ThemedText style={styles.modalButtonText}>Add</ThemedText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, { backgroundColor: '#ccc' }]}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <ThemedText style={[styles.modalButtonText, { color: '#000' }]}>Cancel</ThemedText>
+                  </TouchableOpacity>
+                </View>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+
+
     </ScrollView>
   );
 }
@@ -284,4 +356,64 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'black',
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#00C2A8',
+    borderRadius: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    width: '100%',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'black',
+    marginBottom: 10,
+  },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    color: 'black',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+    paddingBottom: 25
+  },
+  modalButton: {
+    flex: 1,
+    backgroundColor: '#00C2A8',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+
 });
