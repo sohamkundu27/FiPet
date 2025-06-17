@@ -30,8 +30,8 @@ export default function TextInputModal({
   const [validationError, setValidationError] = useState<string>( _validationError )
 
   function onChange( textInput: string ) {
-    let _validationError = validation ? validation(defaultValue || "") : "";
-    setValidationError( validationError );
+    let _validationError = validation ? validation(value || "") : "";
+    setValidationError( _validationError );
     setDisable( _validationError !== "" );
     setValue(textInput);
   }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Animated } from 'react-native';
 import { router, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { validateUsername } from '@/src/functions/validation';
 
 interface Egg {
   id: string;
@@ -130,8 +131,9 @@ export default function WelcomeScreen() {
 
   const handleUsernameChange = (text: string) => {
     setUsername(text);
-    if (text.length > 0 && (text.length < 3 || text.length > 20)) {
-      setUsernameError('Username must be between 3-20 characters');
+    let userValidation = validateUsername(text);
+    if (text.length > 0 && userValidation) {
+      setUsernameError(userValidation);
     } else {
       setUsernameError('');
     }
