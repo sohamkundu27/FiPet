@@ -33,7 +33,7 @@ export default function SettingsGroup({ groupName, settings }: SettingsGroupProp
               {item.icon(ICON_SIZE)}
             </View>
           )}
-          <View style={{width: TITLE_WIDTH, display: "flex", flexDirection: "column"}}>
+          <View style={{width: TITLE_WIDTH, display: "flex", flexDirection: "column", gap: 2}}>
             {item.color ? (
               <ThemedText lightColor={item.color} darkColor={item.color}>{item.title}</ThemedText>
             ) : (
@@ -88,12 +88,14 @@ const styles = StyleSheet.create({
     borderRadius: CONTAINER_BORDER_RADIUS,
   },
   itemContainer: {
-    padding: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
     borderRadius: CONTAINER_BORDER_RADIUS,
     width: "100%",
     display: "flex",
     flexDirection: "row",
     alignContent: "center",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: 3,
   }
