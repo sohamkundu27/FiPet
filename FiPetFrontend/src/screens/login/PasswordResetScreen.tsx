@@ -3,15 +3,14 @@ import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { auth } from '@/src/config/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function LoginScreen() {
+export default function PasswordResetScreen() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailSent, setIsEmailSent] = useState(false);
   const router = useRouter();
 
   const [loaded] = useFonts({
@@ -42,68 +41,44 @@ export default function LoginScreen() {
     return true;
   };
 
-  const validatePassword = (password: string) => {
-    if (!password) {
-      setPasswordError('Password is required');
-      return false;
-    }
-    if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
-      return false;
-    }
-    setPasswordError('');
-    return true;
-  };
-
-  const handleAuthError = (error: any) => {
-    console.error('Auth error:', error);
-    let errorMessage = 'An error occurred. Please try again.';
-    
-    switch (error.code) {
-      case 'auth/email-already-in-use':
-        errorMessage = 'This email is already registered. Please login instead.';
-        break;
-      case 'auth/invalid-email':
-        errorMessage = 'Invalid email address.';
-        break;
-      case 'auth/operation-not-allowed':
-        errorMessage = 'Email/password accounts are not enabled. Please contact support.';
-        break;
-      case 'auth/weak-password':
-        errorMessage = 'Password is too weak. Please use a stronger password.';
-        break;
-      case 'auth/user-disabled':
-        errorMessage = 'This account has been disabled. Please contact support.';
-        break;
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-        errorMessage = 'Invalid email or password.';
-        break;
-    }
-    
-    Alert.alert('Authentication Error', errorMessage);
-  };
-
-  const handleSubmit = async () => {
+  const handlePasswordReset = async () => {
     const isEmailValid = validateEmail(email);
-    const isPasswordValid = validatePassword(password);
 
-    if (isEmailValid && isPasswordValid) {
+    if (isEmailValid) {
       setIsLoading(true);
       try {
-        if (isSignUp) {
-          await createUserWithEmailAndPassword(auth, email, password);
-        } else {
-          await signInWithEmailAndPassword(auth, email, password);
-        }
-        // On success, navigate to welcome screen
-        router.replace('/welcome');
+        await sendPasswordResetEmail(auth, email);
+        setIsEmailSent(true);
+        Alert.alert(
+          'Password Reset Email Sent',
+          'Check your email for a link to reset your password. If you don\'t see it, check your spam folder.',
+          [{ text: 'OK' }]
+        );
       } catch (error: any) {
-        handleAuthError(error);
+        console.error('Password reset error:', error);
+        let errorMessage = 'An error occurred. Please try again.';
+        
+        switch (error.code) {
+          case 'auth/invalid-email':
+            errorMessage = 'Invalid email address.';
+            break;
+          case 'auth/user-not-found':
+            errorMessage = 'No account found with this email address.';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Too many requests. Please try again later.';
+            break;
+        }
+        
+        Alert.alert('Password Reset Error', errorMessage);
       } finally {
         setIsLoading(false);
       }
     }
+  };
+
+  const handleBackToLogin = () => {
+    router.back();
   };
 
   return (
@@ -114,7 +89,14 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>✨ {isSignUp ? 'Create Account' : 'Welcome Back!'} ✨</Text>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackToLogin}>
+            <Ionicons name="arrow-back" size={24} color="#4A5568" />
+          </TouchableOpacity>
+
+          <Text style={styles.title}>🔐 Reset Password</Text>
+          <Text style={styles.subtitle}>
+            Enter your email address and we'll send you a link to reset your password.
+          </Text>
           
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email</Text>
@@ -136,64 +118,44 @@ export default function LoginScreen() {
             ) : null}
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                validatePassword(text);
-              }}
-              placeholder="Enter your password"
-              secureTextEntry
-              placeholderTextColor="#A0AEC0"
-              editable={!isLoading}
-            />
-            {passwordError ? (
-              <Text style={styles.errorText}>{passwordError}</Text>
-            ) : null}
-            <TouchableOpacity
-              style={styles.forgotPasswordButton}
-              onPress={() => router.push('/password-reset')}
-              disabled={isLoading}
-            >
-              <Text style={[
-                styles.forgotPasswordText,
-                isLoading && styles.forgotPasswordTextDisabled
-              ]}>
-                Forgot Password?
-              </Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                ((!email || !password) || isLoading) && styles.submitButtonDisabled,
+                ((!email || !!emailError) || isLoading) && styles.submitButtonDisabled,
               ]}
-              onPress={handleSubmit}
-              disabled={!email || !password || isLoading}
+              onPress={handlePasswordReset}
+              disabled={!email || !!emailError || isLoading}
             >
               <Text style={styles.submitButtonText}>
-                {isLoading ? '⏳ Loading...' : isSignUp ? '🚀 Create Account' : '🎮 Login'}
+                {isLoading ? '⏳ Sending...' : '📧 Send Reset Link'}
               </Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={styles.switchButton}
-            onPress={() => setIsSignUp(!isSignUp)}
+            style={styles.backToLoginButton}
+            onPress={handleBackToLogin}
             disabled={isLoading}
           >
             <Text style={[
-              styles.switchButtonText,
-              isLoading && styles.switchButtonTextDisabled
+              styles.backToLoginText,
+              isLoading && styles.backToLoginTextDisabled
             ]}>
-              {isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'}
+              ← Back to Login
             </Text>
           </TouchableOpacity>
+
+          {isEmailSent && (
+            <View style={styles.successContainer}>
+              <Text style={styles.successText}>
+                ✅ Password reset email sent successfully!
+              </Text>
+              <Text style={styles.successSubtext}>
+                Please check your email and follow the instructions to reset your password.
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -220,14 +182,21 @@ const styles = StyleSheet.create({
     minHeight: '100%',
     justifyContent: 'center',
   },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 1,
+    padding: 10,
+  },
   title: {
     fontFamily: 'SpaceMono',
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 16,
     color: '#4A5568',
-    marginTop: 20,
+    marginTop: 60,
     ...Platform.select({
       ios: {
         textShadowColor: 'rgba(0, 0, 0, 0.1)',
@@ -239,6 +208,14 @@ const styles = StyleSheet.create({
       },
     }),
     paddingHorizontal: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#718096',
+    marginBottom: 40,
+    paddingHorizontal: 20,
+    lineHeight: 24,
   },
   label: {
     fontSize: 18,
@@ -307,29 +284,38 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'SpaceMono',
   },
-  switchButton: {
+  backToLoginButton: {
     marginTop: 20,
     alignItems: 'center',
   },
-  switchButtonText: {
+  backToLoginText: {
     color: '#4C1D95',
     fontSize: 16,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
-  switchButtonTextDisabled: {
+  backToLoginTextDisabled: {
     opacity: 0.5,
   },
-  forgotPasswordButton: {
-    alignItems: 'flex-end',
-    marginTop: 8,
+  successContainer: {
+    marginTop: 30,
+    padding: 20,
+    backgroundColor: '#F0FFF4',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#9AE6B4',
   },
-  forgotPasswordText: {
-    color: '#4C1D95',
-    fontSize: 14,
+  successText: {
+    fontSize: 18,
     fontWeight: '600',
+    color: '#22543D',
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  forgotPasswordTextDisabled: {
-    opacity: 0.5,
+  successSubtext: {
+    fontSize: 14,
+    color: '#38A169',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 }); 
