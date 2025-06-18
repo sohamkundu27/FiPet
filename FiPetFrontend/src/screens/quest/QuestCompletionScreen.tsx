@@ -1,6 +1,6 @@
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   TouchableOpacity,
@@ -13,17 +13,27 @@ import {
 import { ThemedView } from '@/src/components/ThemedView';
 import { ThemedText } from '@/src/components/ThemedText';
 
-// temporary reward and XP data
+// temporary badges abd xp values
 const xpEarned = 150;
-const rewards = ['Temporary Reward', 'Badge'];
+const rewards = [
+  { name: 'Temporary Reward', icon: require('@/src/assets/images/react-logo.png') },
+  { name: 'Badge', icon: require('@/src/assets/images/react-logo.png') },
+];
 
-export default function PetEvolutionScreen() {
+const currentXP = 850;
+const xpToNextLevel = 1000;
+
+export default function QuestCompletionScreen() {
   const router = useRouter();
   const [evolved, setEvolved] = useState(false);
-  const scaleAnim = new Animated.Value(1);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const newXP = currentXP + xpEarned;
+  const xpProgress = Math.min(newXP / xpToNextLevel, 1);
+  const progressAnim = useRef(new Animated.Value(currentXP / xpToNextLevel)).current;
 
   useEffect(() => {
-    // Trigger evolution animation
+    // Pet evolution animation
     Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 1.2,
@@ -42,7 +52,24 @@ export default function PetEvolutionScreen() {
         useNativeDriver: true,
       }).start();
     });
+
+    // Animate XP bar
+    Animated.timing(progressAnim, {
+      toValue: xpProgress,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
   }, []);
+
+  const handleReturnHome = () => {
+    router.replace({
+      pathname: '/home',
+      params: {
+        newXP: xpEarned,
+        petEvolved: evolved ? 'true' : 'false',
+      },
+    });
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -59,7 +86,7 @@ export default function PetEvolutionScreen() {
           <Image
             source={
               evolved
-                ? require('@/src/assets/images/react-logo.png') // change these to actual icons
+                ? require('@/src/assets/images/react-logo.png')
                 : require('@/src/assets/images/react-logo.png')
             }
             style={styles.petImage}
@@ -71,19 +98,38 @@ export default function PetEvolutionScreen() {
           +{xpEarned} XP earned!
         </ThemedText>
 
+        {/* XP Progress Bar */}
+        <View style={styles.xpBarWrapper}>
+          <View style={styles.xpBarBackground}>
+            <Animated.View
+              style={[
+                styles.xpBarFill,
+                {
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0%', '100%'],
+                  }),
+                },
+              ]}
+            />
+          </View>
+          <Text style={styles.xpBarLabel}>
+            {newXP} / {xpToNextLevel} XP
+          </Text>
+        </View>
+
         <ThemedText type="subtitle" style={styles.rewardLabel}>
           Rewards Unlocked:
         </ThemedText>
+
         {rewards.map((reward, index) => (
-          <ThemedText key={index} style={styles.rewardText}>
-            🏅 {reward} {/* add reward badge image */}
-          </ThemedText>
+          <View key={index} style={styles.rewardRow}>
+            <Image source={reward.icon} style={styles.rewardIcon} />
+            <ThemedText style={styles.rewardText}>{reward.name}</ThemedText>
+          </View>
         ))}
 
-        <TouchableOpacity
-          style={styles.returnButton}
-          onPress={() => router.replace('/home')}
-        >
+        <TouchableOpacity style={styles.returnButton} onPress={handleReturnHome}>
           <Text style={styles.returnText}>Return to Home</Text>
         </TouchableOpacity>
       </View>
@@ -139,19 +185,52 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#215732',
   },
+  xpBarWrapper: {
+    width: '100%',
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  xpBarBackground: {
+    width: '100%',
+    height: 18,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  xpBarFill: {
+    height: '100%',
+    backgroundColor: '#4caf50',
+    borderRadius: 10,
+  },
+  xpBarLabel: {
+    marginTop: 6,
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '600',
+  },
   rewardLabel: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 6,
+    color: '#333',
+  },
+  rewardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  rewardIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
   },
   rewardText: {
     fontSize: 15,
     color: '#4a4a4a',
-    marginBottom: 2,
   },
   returnButton: {
     marginTop: 24,
-    backgroundColor: 'rgba(10, 126, 164, 1.00)',
+    backgroundColor: '#0a7ea4',
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 10,
