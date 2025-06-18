@@ -4,17 +4,21 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme as useNativeColorScheme } from 'react-native';
 import 'react-native-reanimated';
 import { AuthProvider } from '@/src/components/AuthProvider';
+import { Colors } from '@/src/constants/Colors';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
 
 export default function RootLayout() {
   const colorScheme = useNativeColorScheme();
+  const headerBG = useThemeColor({light: Colors.primary.default, dark: Colors.primary.darker}, 'background')
+  const headerText = useThemeColor({light: "#000", dark: "#FFF"}, 'background')
 
   const settingsOptions = {
       headerStyle: {
-        backgroundColor: "#ffe9ab",
+        backgroundColor: headerBG,
       },
       headerShadowVisible: false,
       headerTitleAlign: "center",
-      headerTintColor: "#000",
+      headerTintColor: headerText,
   }
 
   return (

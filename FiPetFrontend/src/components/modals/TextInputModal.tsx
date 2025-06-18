@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import BaseModal from './BaseModal';
+import { Colors } from '@/src/constants/Colors';
 
 type TextInputModalProps = {
   isVisible: boolean,
@@ -28,6 +29,13 @@ export default function TextInputModal({
   let _validationError = validation ? validation(defaultValue || "") : "";
   const [buttonDisabled, setDisable] = useState<boolean>( _validationError !== "" );
   const [validationError, setValidationError] = useState<string>( _validationError )
+
+  useEffect(() => {
+    setValue(defaultValue || "");
+    let _validationError = validation ? validation(defaultValue || "") : "";
+    setValidationError( _validationError );
+    setDisable( _validationError !== "" );
+  }, [defaultValue, validation]);
 
   function onChange( textInput: string ) {
     let _validationError = validation ? validation(value || "") : "";
@@ -70,21 +78,9 @@ export default function TextInputModal({
   );
 }
 
-const colors = {
-  dark: "#ddb98b",
-  light: "#fff9cb",
-  primary: "#EDD287",
-  primaryText: "#CEA022",
-  green: "#3a3",
-  paleGreen: "#595",
-  white: "#fff",
-  red: "#d33",
-  black: "#000",
-}
-
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: colors.primaryText,
+    backgroundColor: Colors.green,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -94,18 +90,18 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: colors.white,
+    color: "#FFF",
     fontSize: 18,
     fontWeight: 'bold',
   },
   buttonDisabled: {
-    backgroundColor: colors.paleGreen,
+    backgroundColor: Colors.paleGreen,
   },
   validationError: {
     width: "100%",
     textAlign: "center",
     fontSize: 16,
-    color: colors.red,
+    color: Colors.red,
   },
   innerContent: {
     padding: 20,
@@ -119,11 +115,11 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 50,
-    borderWidth: 3,
-    borderColor: colors.dark,
+    borderWidth: 1,
+    borderColor: Colors.primary.subtleDark,
     borderRadius: 25,
     paddingHorizontal: 20,
-    backgroundColor: colors.white,
+    backgroundColor: "#FFF",
     fontSize: 16,
   },
 });

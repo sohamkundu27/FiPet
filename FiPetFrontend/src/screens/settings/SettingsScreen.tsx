@@ -1,7 +1,7 @@
 import SettingsGroup from "@/src/components/settings/SettingsGroup";
 import { ThemedView } from "@/src/components/ThemedView";
 import { useRouter } from "expo-router";
-import { ScrollView, Linking, View, Text, Alert } from "react-native";
+import { ScrollView, Linking, View, Alert } from "react-native";
 import TextInputModal from "@/src/components/modals/TextInputModal";
 import { useEffect, useState } from "react";
 import ConfirmModal from "@/src/components/modals/ConfirmModal";
@@ -11,6 +11,9 @@ import { signOut } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { validateUsername } from "@/src/functions/validation";
 import { useAuth } from "@/src/hooks/useAuth";
+import { ThemedText } from "@/src/components/ThemedText";
+import { useThemeColor } from "@/src/hooks/useThemeColor";
+import { Colors } from "@/src/constants/Colors";
 
 export default function SettingsScreen() {
   const version = "0.0.0";
@@ -74,14 +77,14 @@ export default function SettingsScreen() {
               signOut( auth ).then(() => {
               });
             },
-            color: "#a00"
+            color: useThemeColor({light: Colors.red, dark: Colors.lightred}, "text" )
           },
           {
             title: "Reset Pet",
             action: () => {
               openModal("reset")
             },
-            color: "#a00"
+            color: useThemeColor({light: Colors.red, dark: Colors.lightred}, "text" )
           },
         ]}/>
       </ScrollView>
@@ -89,6 +92,7 @@ export default function SettingsScreen() {
       <TextInputModal
         isVisible={modalVisibility.username}
         title="Change Username"
+        defaultValue={username}
         onClose={()=>closeModal("username")}
         onConfirm={(inputText)=>{
           updateDoc(userdoc, {"username": inputText}).then(()=>{
@@ -121,7 +125,7 @@ export default function SettingsScreen() {
         />
       <BaseModal isVisible={modalVisibility.version} title="App Info" onClose={()=>closeModal("version")}>
         <View style={{padding: 30}}>
-          <Text>Version: {version}</Text>
+          <ThemedText lightColor="#000" darkColor="#FFF">Version: {version}</ThemedText>
         </View>
       </BaseModal>
 
