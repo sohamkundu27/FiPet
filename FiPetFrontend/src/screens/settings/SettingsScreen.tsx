@@ -108,11 +108,9 @@ export default function SettingsScreen() {
         isVisible={modalVisibility.reset}
         onClose={()=>closeModal("reset")}
         onConfirm={()=>{
-          setDoc(userdoc, {
+          updateDoc(userdoc, {
             "current_level": 0,
             "current_xp": 0,
-            "financial_goals": [],
-            "pet_name": "",
           }).then(()=>{
             router.navigate("/welcome")
           }).catch((err)=>{
