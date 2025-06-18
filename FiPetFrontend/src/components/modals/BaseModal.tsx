@@ -1,6 +1,8 @@
 import { Modal, View, Text, Pressable, StyleSheet, SafeAreaView, TouchableWithoutFeedback, DimensionValue, Dimensions } from 'react-native';
 import { IconSymbol } from '../ui/IconSymbol';
 import { PropsWithChildren } from 'react';
+import { Colors } from '@/src/constants/Colors';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
 
 type Props = PropsWithChildren<{
   isVisible: boolean,
@@ -25,29 +27,17 @@ export default function BaseModal({ isVisible, onClose, title, children, modalHe
   let relativeCenterOffset = 50 - (relativeModalHeight / 2);
   let centerOffset: DimensionValue = `${relativeCenterOffset}%`;
 
-  const colors = {
-    dark: "#ddb98b",
-    light: "#fff9cb",
-    primary: "#EDD287",
-    primaryText: "#CEA022",
-    green: "#3a3",
-    paleGreen: "#595",
-    white: "#fff",
-    red: "#d33",
-    black: "#000",
-  }
-
   const styles = StyleSheet.create({
     modalContent: {
       height: modalHeight,
       width: '100%',
-      backgroundColor: colors.light,
+      backgroundColor: useThemeColor({light: Colors.primary.lightest, dark: Colors.primary.darkest}, 'background'),
       borderRadius: 18,
       position: 'absolute',
       top: centerOffset,
     },
     titleContainer: {
-      backgroundColor: colors.primary,
+      backgroundColor: useThemeColor({light: Colors.primary.subtleLight, dark: Colors.primary.darker}, 'background'),
       height: headerHeight,
       borderTopRightRadius: 10,
       borderTopLeftRadius: 10,
@@ -59,7 +49,7 @@ export default function BaseModal({ isVisible, onClose, title, children, modalHe
     },
     title: {
       fontWeight: "bold",
-      color: colors.black,
+      color: useThemeColor({light: "#000", dark: "#FFF"}, "text"),
       fontSize: 20,
       flexGrow: 2,
       textAlign: "center",

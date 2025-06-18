@@ -4,9 +4,22 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme as useNativeColorScheme } from 'react-native';
 import 'react-native-reanimated';
 import { AuthProvider } from '@/src/components/AuthProvider';
+import { Colors } from '@/src/constants/Colors';
+import { useThemeColor } from '@/src/hooks/useThemeColor';
 
 export default function RootLayout() {
   const colorScheme = useNativeColorScheme();
+  const headerBG = useThemeColor({light: Colors.primary.default, dark: Colors.primary.darker}, 'background')
+  const headerText = useThemeColor({light: "#000", dark: "#FFF"}, 'background')
+
+  const settingsOptions = {
+      headerStyle: {
+        backgroundColor: headerBG,
+      },
+      headerShadowVisible: false,
+      headerTitleAlign: "center",
+      headerTintColor: headerText,
+  }
 
   return (
     <>
@@ -14,7 +27,10 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="settings/index" options={{
+          title: "Settings",
+          ...settingsOptions
+        }} />
         {/* <Stack.Screen name="home" options={{ headerShown: false }} />}
          */}
          <Stack.Screen name="quests/[questID]" options={{ headerShown: false }} />
