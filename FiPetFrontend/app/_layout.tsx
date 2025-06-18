@@ -8,13 +8,25 @@ import { AuthProvider } from '@/src/components/AuthProvider';
 export default function RootLayout() {
   const colorScheme = useNativeColorScheme();
 
+  const settingsOptions = {
+      headerStyle: {
+        backgroundColor: "#ffe9ab",
+      },
+      headerShadowVisible: false,
+      headerTitleAlign: "center",
+      headerTintColor: "#000",
+  }
+
   return (
     <>
       <AuthProvider>
       <Stack>
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="settings/index" options={{
+          title: "Settings",
+          ...settingsOptions
+        }} />
         {/* <Stack.Screen name="home" options={{ headerShown: false }} />}
          */}
          <Stack.Screen name="quests/[questID]" options={{ headerShown: false }} />
