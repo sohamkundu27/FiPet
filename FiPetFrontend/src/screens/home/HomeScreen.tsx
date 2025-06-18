@@ -10,7 +10,6 @@ export default function HomeScreen() {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const router = useRouter();
 
-  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [xp, setXp] = useState(650);
   const [tasks, setTasks] = useState([
     { id: 1, title: 'Get out of bed', energy: 5, completed: false },
@@ -51,12 +50,7 @@ export default function HomeScreen() {
         }),
       ])
     ).start();
-  }, []);
-
-  const handleLogout = () => {
-    setDropdownVisible(false);
-    router.replace('/login');
-  };
+  }, [scaleAnim]);
 
   const toggleTask = (id: number) => {
     setTasks((prevTasks) =>
@@ -82,17 +76,10 @@ export default function HomeScreen() {
         </View>
         <TouchableOpacity
           style={styles.inlineSettingsButton}
-          onPress={() => setDropdownVisible(!dropdownVisible)}
+          onPress={() => router.navigate( "/settings" ) }
         >
           <IconSymbol name="gearshape.fill" size={28} color="black" />
         </TouchableOpacity>
-        {dropdownVisible && (
-          <View style={styles.dropdownMenu}>
-            <TouchableOpacity onPress={handleLogout} style={styles.dropdownItem}>
-              <ThemedText type="link" numberOfLines={1} style={styles.dropdownText}>Log Out</ThemedText>
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
 
       {/* <ThemedText style={styles.welcome}>Welcome, Alex!</ThemedText>
@@ -114,7 +101,7 @@ export default function HomeScreen() {
         </Link>
       </Animated.View> */}
 
-      <ThemedText style={styles.todayTitle}>Today's Quests</ThemedText>
+      <ThemedText style={styles.todayTitle}>Today&apos;s Quests</ThemedText>
 
       {tasks.map((task) => (
         <TouchableOpacity
