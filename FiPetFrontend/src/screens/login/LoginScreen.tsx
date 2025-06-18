@@ -55,10 +55,28 @@ export default function LoginScreen() {
     return true;
   };
 
-  const handleAuthError = (error: any) => {
-    console.error('Auth error:', error);
+  const handleLoginError = (error: any) => {
+    console.log('Login error object:', error);
     let errorMessage = 'An error occurred. Please try again.';
-    
+    switch (error.code) {
+      case 'auth/user-not-found':
+      case 'auth/invalid-credential':
+        errorMessage = 'Invalid email or password.';
+        break;
+      case 'auth/invalid-email':
+        errorMessage = 'Invalid email address.';
+        break;
+      case 'auth/user-disabled':
+        errorMessage = 'This account has been disabled. Please contact support.';
+        break;
+      default:
+        break;
+    }
+    Alert.alert('Login Error', errorMessage);
+  };
+
+  const handleSignUpError = (error: any) => {
+    let errorMessage = 'An error occurred. Please try again.';
     switch (error.code) {
       case 'auth/email-already-in-use':
         errorMessage = 'This email is already registered. Please login instead.';
@@ -72,34 +90,38 @@ export default function LoginScreen() {
       case 'auth/weak-password':
         errorMessage = 'Password is too weak. Please use a stronger password.';
         break;
-      case 'auth/user-disabled':
-        errorMessage = 'This account has been disabled. Please contact support.';
-        break;
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-        errorMessage = 'Invalid email or password.';
+      default:
         break;
     }
-    
-    Alert.alert('Authentication Error', errorMessage);
+    Alert.alert('Sign Up Error', errorMessage);
   };
 
-  const handleSubmit = async () => {
+  const handleLogin = async () => {
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
-
     if (isEmailValid && isPasswordValid) {
       setIsLoading(true);
       try {
-        if (isSignUp) {
-          await createUserWithEmailAndPassword(auth, email, password);
-        } else {
-          await signInWithEmailAndPassword(auth, email, password);
-        }
-        // On success, navigate to welcome screen
+        await signInWithEmailAndPassword(auth, email, password);
         router.replace('/welcome');
       } catch (error: any) {
-        handleAuthError(error);
+        handleLoginError(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleSignUp = async () => {
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+    if (isEmailValid && isPasswordValid) {
+      setIsLoading(true);
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        router.replace('/welcome');
+      } catch (error: any) {
+        handleSignUpError(error);
       } finally {
         setIsLoading(false);
       }
@@ -173,7 +195,7 @@ export default function LoginScreen() {
                 styles.submitButton,
                 ((!email || !password) || isLoading) && styles.submitButtonDisabled,
               ]}
-              onPress={handleSubmit}
+              onPress={isSignUp ? handleSignUp : handleLogin}
               disabled={!email || !password || isLoading}
             >
               <Text style={styles.submitButtonText}>

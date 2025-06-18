@@ -35,6 +35,7 @@ export default function RootLayout() {
          */}
          <Stack.Screen name="quests/[questID]" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="password-reset" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
