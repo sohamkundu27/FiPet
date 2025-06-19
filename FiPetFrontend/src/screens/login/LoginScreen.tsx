@@ -56,7 +56,6 @@ export default function LoginScreen() {
   };
 
   const handleLoginError = (error: any) => {
-    console.log('Login error object:', error);
     let errorMessage = 'An error occurred. Please try again.';
     switch (error.code) {
       case 'auth/user-not-found':
@@ -103,7 +102,7 @@ export default function LoginScreen() {
       setIsLoading(true);
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        router.replace('/welcome');
+        router.replace('/');
       } catch (error: any) {
         handleLoginError(error);
       } finally {
@@ -177,7 +176,7 @@ export default function LoginScreen() {
             ) : null}
             <TouchableOpacity
               style={styles.forgotPasswordButton}
-              onPress={() => router.push('/password-reset')}
+              onPress={() => router.navigate('/password-reset')}
               disabled={isLoading}
             >
               <Text style={[
