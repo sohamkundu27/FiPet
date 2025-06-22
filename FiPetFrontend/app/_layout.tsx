@@ -25,17 +25,18 @@ export default function RootLayout() {
     <>
       <AuthProvider>
       <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="splash" options={{ headerShown: false }} />
+        <Stack.Screen name="landing" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="password-reset" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings/index" options={{
           title: "Settings",
           ...settingsOptions
         }} />
-        {/* <Stack.Screen name="home" options={{ headerShown: false }} />}
-         */}
-         <Stack.Screen name="quests/[questID]" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="password-reset" options={{ headerShown: false }} />
+        <Stack.Screen name="quests/[questID]" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
