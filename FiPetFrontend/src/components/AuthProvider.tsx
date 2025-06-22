@@ -6,7 +6,7 @@ import { createContext, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
 type AuthContextType = {
-  userState: User,
+  userState: User | null,
   authState: Auth,
   ready: boolean,
 };
@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }: { children: any }) => {
   const [userState, setUser] = useState<User|null>(null);
   const [authState, setAuth] = useState<Auth|null>(null);
   const [ready, setReady] = useState<boolean>(false);
-  const router = useRouter();
 
   useEffect(() => {
     auth.authStateReady().then(()=>{
@@ -29,15 +28,12 @@ export const AuthProvider = ({ children }: { children: any }) => {
     });
 
     let unsubscribe = auth.onAuthStateChanged((user) => {
-      if ( ! user ) {
-        router.navigate("/login");
-        return;
-      }
       setUser(user);
+      // Don't automatically redirect - let the app handle navigation
     });
 
     return unsubscribe;
-  }, [router]);
+  }, []);
 
   if ( ! ready ) {
     return (
@@ -45,9 +41,13 @@ export const AuthProvider = ({ children }: { children: any }) => {
     );
   }
 
+  // Only show LoginScreen if user is not authenticated and we're on a protected route
+  // For now, let the app handle navigation naturally
   if ( !userState || !authState ) {
     return (
-      <LoginScreen/>
+      <AuthContext.Provider value={{ userState: null, authState: auth, ready }}>
+        {children}
+      </AuthContext.Provider>
     );
   }
 

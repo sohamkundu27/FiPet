@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Animated } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Animated, Image, Alert, Keyboard } from 'react-native';
 import { router, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { validateUsername } from '@/src/functions/validation';
 import { auth, db } from '../../config/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 interface Egg {
   id: string;
@@ -22,6 +23,12 @@ interface Goal {
 interface HelpOption {
   value: string;
   label: string;
+}
+
+interface ReferralSource {
+  id: string;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
 }
 
 const eggs: Egg[] = [
@@ -95,6 +102,18 @@ const timeOptions = [
   { id: '3', label: '20 mins / day', icon: 'time-outline' as const },
 ];
 
+// Add referral source options
+const referralSources: ReferralSource[] = [
+  { id: '0', label: 'Social Media (Instagram, TikTok, etc.)', icon: 'share-social-outline' },
+  { id: '1', label: 'Friend or Family Recommendation', icon: 'people-outline' },
+  { id: '2', label: 'App Store Search', icon: 'search-outline' },
+  { id: '3', label: 'Online Advertisement', icon: 'megaphone-outline' },
+  { id: '4', label: 'Financial Blog or Website', icon: 'globe-outline' },
+  { id: '5', label: 'School or University', icon: 'school-outline' },
+  { id: '6', label: 'Work or Employer', icon: 'business-outline' },
+  { id: '7', label: 'Other', icon: 'ellipsis-horizontal-outline' },
+];
+
 // Placeholder mascot component
 const Mascot = ({ text }: { text: string }) => (
   <View style={styles.mascotContainer}>
@@ -131,16 +150,100 @@ export default function WelcomeScreen() {
   const [currentStep, setCurrentStep] = useState(0);
   const [username, setUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [age, setAge] = useState('');
+  const [ageError, setAgeError] = useState('');
   const [selectedEgg, setSelectedEgg] = useState<Egg | null>(null);
   const [petName, setPetName] = useState('');
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedHelp, setSelectedHelp] = useState('');
   const [dailyLearningTime, setDailyLearningTime] = useState('');
+  const [selectedReferralSource, setSelectedReferralSource] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const totalSteps = 7;
+  const totalSteps = 9;
   const progress = ((currentStep + 1) / totalSteps) * 100;
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError('');
+      return false;
+    }
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) {
+      setPasswordError('');
+      return false;
+    }
+    if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      return false;
+    }
+    setPasswordError('');
+    return true;
+  };
+
+  const validateConfirmPassword = (confirmPassword: string) => {
+    if (!confirmPassword) {
+      setConfirmPasswordError('');
+      return false;
+    }
+    if (confirmPassword !== password) {
+      setConfirmPasswordError('Passwords do not match');
+      return false;
+    }
+    setConfirmPasswordError('');
+    return true;
+  };
+
+  const validateAge = (age: string) => {
+    const ageNum = parseInt(age);
+    if (!age) {
+      setAgeError('');
+      return false;
+    }
+    if (isNaN(ageNum) || ageNum < 13 || ageNum > 120) {
+      setAgeError('Please enter a valid age (13-120)');
+      return false;
+    }
+    setAgeError('');
+    return true;
+  };
+
+  const handleSignUpError = (error: any) => {
+    let errorMessage = 'An error occurred. Please try again.';
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        errorMessage = 'This email is already registered. Please login instead.';
+        break;
+      case 'auth/invalid-email':
+        errorMessage = 'Invalid email address.';
+        break;
+      case 'auth/operation-not-allowed':
+        errorMessage = 'Email/password accounts are not enabled. Please contact support.';
+        break;
+      case 'auth/weak-password':
+        errorMessage = 'Password is too weak. Please use a stronger password.';
+        break;
+      default:
+        break;
+    }
+    Alert.alert('Sign Up Error', errorMessage);
+  };
 
   const handleUsernameChange = (text: string) => {
     setUsername(text);
@@ -150,6 +253,29 @@ export default function WelcomeScreen() {
     } else {
       setUsernameError('');
     }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    validateEmail(text);
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    validatePassword(text);
+    if (confirmPassword) {
+      validateConfirmPassword(confirmPassword);
+    }
+  };
+
+  const handleConfirmPasswordChange = (text: string) => {
+    setConfirmPassword(text);
+    validateConfirmPassword(text);
+  };
+
+  const handleAgeChange = (text: string) => {
+    setAge(text);
+    validateAge(text);
   };
 
   const handleEggSelect = (egg: Egg) => {
@@ -164,8 +290,32 @@ export default function WelcomeScreen() {
     );
   };
 
-  const handleContinue = () => {
-    if (currentStep < totalSteps - 1) {
+  const handleContinue = async () => {
+    if (currentStep === 2) {
+      // Validate account creation fields
+      const isEmailValid = validateEmail(email);
+      const isPasswordValid = validatePassword(password);
+      const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
+      const isAgeValid = validateAge(age);
+      const isUsernameValid = !usernameError && username.trim();
+
+      if (!isEmailValid || !isPasswordValid || !isConfirmPasswordValid || !isAgeValid || !isUsernameValid) {
+        return;
+      }
+
+      // Create account
+      setIsLoading(true);
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        console.log('Account created successfully:', userCredential.user.uid);
+        setIsLoading(false);
+        setCurrentStep(currentStep + 1);
+      } catch (error: any) {
+        setIsLoading(false);
+        handleSignUpError(error);
+        return;
+      }
+    } else if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1);
     } else {
       // Navigate to home or next screen after onboarding
@@ -193,6 +343,7 @@ export default function WelcomeScreen() {
         financial_goals: selectedGoals.map(goal => Number(goal)),
         financial_journey_help: Number(selectedHelp),
         learning_time: Number(dailyLearningTime),
+        referral_source: Number(selectedReferralSource),
         current_level: 0,
         current_xp: 0
       };
@@ -244,27 +395,157 @@ export default function WelcomeScreen() {
         case 0:
           return (
             <View style={[styles.contentContainer, styles.welcomeContent]}>
-              <Mascot text="Welcome to FiPet! Let's get started!" />
+              <View style={styles.welcomeHeader}>
+                <View style={styles.titleContainer}>
+                  <Text style={styles.welcomeTitle}>Welcome to</Text>
+                  <Text style={styles.appName}>FiPet</Text>
+                </View>
+                <View style={styles.iconContainer}>
+                  <Text style={styles.welcomeIcon}>🐾</Text>
+                </View>
+              </View>
+              <View style={styles.welcomeDescription}>
+                <View style={styles.descriptionCard}>
+                  <Text style={styles.descriptionText}>
+                    FiPet is your personal financial companion that helps you build better money habits through interactive lessons, challenges, and a cute digital pet that grows as you learn!
+                  </Text>
+                  <Text style={styles.descriptionText}>
+                    Complete daily tasks, earn experience points, and watch your financial knowledge and your pet grow together.
+                  </Text>
+                </View>
+              </View>
             </View>
           );
         case 1:
           return (
-            <View style={styles.contentContainer}>
-              <Mascot text="What should I call you?" />
-              <TextInput
-                style={[styles.input, usernameError ? styles.inputError : null]}
-                value={username}
-                onChangeText={handleUsernameChange}
-                placeholder="Enter your username"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              {usernameError ? (
-                <Text style={styles.errorText}>{usernameError}</Text>
-              ) : null}
+            <View style={[styles.contentContainer, styles.welcomeContent]}>
+              <View style={styles.mascotContainer}>
+                <View style={styles.speechBubbleContainer}>
+                  <View style={styles.speechBubble}>
+                    <Text style={styles.speechText}>Just a few quick questions</Text>
+                  </View>
+                </View>
+                <View style={styles.fillerImageContainer}>
+                  <Image 
+                    source={require('@/src/assets/images/temp-fox-logo.png')} 
+                    style={styles.fillerImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              </View>
             </View>
           );
         case 2:
+          return (
+            <View style={styles.contentContainer}>
+              <Mascot text="Let's create your account!" />
+              <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                <TextInput
+                  style={[styles.input, usernameError ? styles.inputError : null]}
+                  value={username}
+                  onChangeText={handleUsernameChange}
+                  placeholder="Enter your username"
+                  placeholderTextColor="#A0AEC0"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {usernameError ? (
+                  <Text style={styles.errorText}>{usernameError}</Text>
+                ) : null}
+
+                <TextInput
+                  style={[styles.input, emailError ? styles.inputError : null]}
+                  value={email}
+                  onChangeText={handleEmailChange}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#A0AEC0"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {emailError ? (
+                  <Text style={styles.errorText}>{emailError}</Text>
+                ) : null}
+
+                <TextInput
+                  style={[styles.input, passwordError ? styles.inputError : null]}
+                  value={password}
+                  onChangeText={handlePasswordChange}
+                  placeholder="Create a password"
+                  placeholderTextColor="#A0AEC0"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {passwordError ? (
+                  <Text style={styles.errorText}>{passwordError}</Text>
+                ) : null}
+
+                <TextInput
+                  style={[styles.input, confirmPasswordError ? styles.inputError : null]}
+                  value={confirmPassword}
+                  onChangeText={handleConfirmPasswordChange}
+                  placeholder="Confirm your password"
+                  placeholderTextColor="#A0AEC0"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {confirmPasswordError ? (
+                  <Text style={styles.errorText}>{confirmPasswordError}</Text>
+                ) : null}
+
+                <TextInput
+                  style={[styles.input, ageError ? styles.inputError : null]}
+                  value={age}
+                  onChangeText={handleAgeChange}
+                  placeholder="Enter your age"
+                  placeholderTextColor="#A0AEC0"
+                  keyboardType="numeric"
+                  returnKeyType="done"
+                  onSubmitEditing={() => {
+                    // Dismiss keyboard when Done is pressed
+                    Keyboard.dismiss();
+                  }}
+                  autoCorrect={false}
+                />
+                {ageError ? (
+                  <Text style={styles.errorText}>{ageError}</Text>
+                ) : null}
+              </ScrollView>
+            </View>
+          );
+        case 3:
+          return (
+            <View style={styles.contentContainer}>
+              <Mascot text="How did you hear about FiPet?" />
+              <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                <View style={styles.sectionContainer}>
+                  {referralSources.map((source) => (
+                    <TouchableOpacity
+                      key={source.id}
+                      style={[
+                        styles.goalOption,
+                        selectedReferralSource === source.id && styles.selectedGoal
+                      ]}
+                      onPress={() => setSelectedReferralSource(source.id)}
+                    >
+                      <View style={styles.goalContent}>
+                        <Ionicons name={source.icon} size={24} color="#333" style={styles.goalIcon} />
+                        <Text style={styles.goalText}>{source.label}</Text>
+                      </View>
+                      <View style={styles.checkbox}>
+                        {selectedReferralSource === source.id && (
+                          <Ionicons name="checkmark" size={20} color="#FFA500" />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          );
+        case 4:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="Choose your pet egg! Each one is special!" />
@@ -296,7 +577,7 @@ export default function WelcomeScreen() {
               </View>
             </View>
           );
-        case 3:
+        case 5:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="What would you like to name your pet?" />
@@ -305,10 +586,11 @@ export default function WelcomeScreen() {
                 value={petName}
                 onChangeText={setPetName}
                 placeholder="Enter pet name"
+                placeholderTextColor="#A0AEC0"
               />
             </View>
           );
-        case 4:
+        case 6:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="What financial goals would you like to achieve?" />
@@ -336,7 +618,7 @@ export default function WelcomeScreen() {
               </View>
             </View>
           );
-        case 5:
+        case 7:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="How can I help you on your financial journey?" />
@@ -361,7 +643,7 @@ export default function WelcomeScreen() {
               </View>
             </View>
           );
-        case 6:
+        case 8:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="How much time would you like to spend learning each day?" />
@@ -396,22 +678,24 @@ export default function WelcomeScreen() {
 
     const renderButton = () => {
       const isDisabled = 
-        (currentStep === 1 && (!username || !!usernameError)) ||
-        (currentStep === 2 && !selectedEgg) ||
-        (currentStep === 3 && !petName) ||
-        (currentStep === 4 && selectedGoals.length === 0) ||
-        (currentStep === 5 && !selectedHelp) ||
-        (currentStep === 6 && !dailyLearningTime);
+        (currentStep === 2 && (!username || !!usernameError || !email || !!emailError || !password || !!passwordError || !confirmPassword || !!confirmPasswordError || !age || !!ageError)) ||
+        (currentStep === 3 && !selectedReferralSource) ||
+        (currentStep === 4 && !selectedEgg) ||
+        (currentStep === 5 && !petName) ||
+        (currentStep === 6 && selectedGoals.length === 0) ||
+        (currentStep === 7 && !selectedHelp) ||
+        (currentStep === 8 && !dailyLearningTime) ||
+        isLoading;
 
       return (
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, isDisabled && styles.buttonDisabled]}
-            onPress={currentStep === 6 ? handleFinish : handleContinue}
+            onPress={currentStep === 8 ? handleFinish : handleContinue}
             disabled={isDisabled}
           >
             <Text style={styles.buttonText}>
-              {currentStep === 6 ? 'Finish' : 'Continue'}
+              {isLoading ? 'Creating Account...' : currentStep === 8 ? 'Finish' : 'Continue'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -432,7 +716,13 @@ export default function WelcomeScreen() {
         <LoadingScreen />
       ) : (
         <>
-          <ProgressBar progress={progress} onBack={() => setCurrentStep(Math.max(0, currentStep - 1))} />
+          <ProgressBar progress={progress} onBack={() => {
+            if (currentStep === 0) {
+              router.push('/landing');
+            } else {
+              setCurrentStep(Math.max(0, currentStep - 1));
+            }
+          }} />
           {renderStep()}
         </>
       )}
@@ -489,6 +779,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
     marginTop: 20,
+  },
+  speechBubbleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   speechBubble: {
     backgroundColor: '#FFFFFF',
@@ -749,5 +1043,84 @@ const styles = StyleSheet.create({
   },
   loadingEmoji: {
     fontSize: 60,
+  },
+  fillerImageContainer: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fillerImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  scrollView: {
+    width: '100%',
+    maxHeight: 400,
+  },
+  welcomeHeader: {
+    alignItems: 'center',
+    marginBottom: 40,
+    marginTop: 20,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: '600',
+    color: '#4A5568',
+    textAlign: 'center',
+  },
+  welcomeIcon: {
+    fontSize: 60,
+    marginTop: 15,
+  },
+  welcomeDescription: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  descriptionText: {
+    fontSize: 16,
+    color: '#4A5568',
+    textAlign: 'center',
+    marginBottom: 15,
+    lineHeight: 24,
+    fontWeight: '400',
+  },
+  titleContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  appName: {
+    fontSize: 42,
+    fontWeight: 'bold',
+    color: '#FF6B35',
+    textAlign: 'center',
+    marginTop: 5,
+    textShadowColor: 'rgba(255, 107, 53, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  iconContainer: {
+    backgroundColor: '#FFF5E6',
+    borderRadius: 50,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  descriptionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    padding: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#F7FAFC',
   },
 }); 

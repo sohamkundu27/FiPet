@@ -14,24 +14,15 @@ import { useAuth } from "@/src/hooks/useAuth";
 import { ThemedText } from "@/src/components/ThemedText";
 import { useThemeColor } from "@/src/hooks/useThemeColor";
 import { Colors } from "@/src/constants/Colors";
+import React from "react";
 
 export default function SettingsScreen() {
   const version = "0.0.0";
   const router = useRouter();
   const [username, setUsername] = useState<string>("");
   const {userState} = useAuth();
-  const userdoc = doc(
-    db,
-    'users',
-    userState.uid
-  );
-
-  useEffect(() => {
-    getDoc( userdoc ).then((doc) => {
-      setUsername(doc.get("username"));
-    });
-  }, [router, userdoc]);
-
+  const hasNavigated = React.useRef(false);
+  
   const _modalVisibility = {
     "username": false,
     "reset": false,
@@ -39,6 +30,33 @@ export default function SettingsScreen() {
   }
   const [modalVisibility, setVisibility] = useState(_modalVisibility);
 
+  // Move useThemeColor hook to the top to prevent conditional calls
+  const redColor = useThemeColor({light: Colors.red, dark: Colors.lightred}, "text");
+
+  // Create userdoc only if userState exists and has uid
+  const userdoc = userState && userState.uid ? doc(db, 'users', userState.uid) : null;
+
+  // Handle navigation when user is not authenticated
+  useEffect(() => {
+    if (!userState && !hasNavigated.current) {
+      hasNavigated.current = true;
+      router.replace('/login');
+    }
+  }, [userState, router]);
+
+  useEffect(() => {
+    if (userdoc) {
+      getDoc(userdoc).then((doc) => {
+        if (doc.exists()) {
+          setUsername(doc.get("username") || "");
+        }
+      }).catch((error) => {
+        console.error("Error fetching username:", error);
+      });
+    } else {
+      setUsername("");
+    }
+  }, [userdoc]);
 
   function closeModal(modalName: keyof typeof _modalVisibility) {
     setVisibility((prev)=>({...prev, [modalName]: false }));
@@ -46,6 +64,17 @@ export default function SettingsScreen() {
 
   function openModal(modalName: keyof typeof _modalVisibility) {
     setVisibility((prev)=>({...prev, [modalName]: true }));
+  }
+
+  // If no user, show redirect message
+  if (!userState) {
+    return (
+      <ThemedView style={{paddingTop: 30, height: "100%", paddingHorizontal: 10}}>
+        <ScrollView>
+          <ThemedText>Redirecting to login...</ThemedText>
+        </ScrollView>
+      </ThemedView>
+    );
   }
 
   return (
@@ -74,17 +103,19 @@ export default function SettingsScreen() {
           {
             title: "Log Out",
             action: () => {
-              signOut( auth ).then(() => {
+              signOut(auth).then(() => {
+              }).catch((error) => {
+                console.error("Error signing out:", error);
               });
             },
-            color: useThemeColor({light: Colors.red, dark: Colors.lightred}, "text" )
+            color: redColor
           },
           {
             title: "Reset Pet",
             action: () => {
               openModal("reset")
             },
-            color: useThemeColor({light: Colors.red, dark: Colors.lightred}, "text" )
+            color: redColor
           },
         ]}/>
       </ScrollView>
@@ -95,12 +126,14 @@ export default function SettingsScreen() {
         defaultValue={username}
         onClose={()=>closeModal("username")}
         onConfirm={(inputText)=>{
-          updateDoc(userdoc, {"username": inputText}).then(()=>{
-            setUsername(inputText);
-          }).catch((err)=>{
-            Alert.alert("Couldn't Change Username", "Please try again later, or report an issue.");
-            console.error(`Error setting Username: ${err}`)
-          })
+          if (userdoc) {
+            updateDoc(userdoc, {"username": inputText}).then(()=>{
+              setUsername(inputText);
+            }).catch((err)=>{
+              Alert.alert("Couldn't Change Username", "Please try again later, or report an issue.");
+              console.error(`Error setting Username: ${err}`)
+            })
+          }
         }}
         validation={validateUsername}
         />
@@ -108,15 +141,17 @@ export default function SettingsScreen() {
         isVisible={modalVisibility.reset}
         onClose={()=>closeModal("reset")}
         onConfirm={()=>{
-          updateDoc(userdoc, {
-            "current_level": 0,
-            "current_xp": 0,
-          }).then(()=>{
-            router.navigate("/welcome")
-          }).catch((err)=>{
-            Alert.alert("Couldn't Reset Your Pet", "Please try again later, or report an issue.");
-            console.error(`Error resetting pet: ${err}`)
-          });
+          if (userdoc) {
+            updateDoc(userdoc, {
+              "current_level": 0,
+              "current_xp": 0,
+            }).then(()=>{
+              router.navigate("/welcome")
+            }).catch((err)=>{
+              Alert.alert("Couldn't Reset Your Pet", "Please try again later, or report an issue.");
+              console.error(`Error resetting pet: ${err}`)
+            });
+          }
         }}
         onCancel={()=>{}}
         text="Resetting your pet will delete any progress you have made!"

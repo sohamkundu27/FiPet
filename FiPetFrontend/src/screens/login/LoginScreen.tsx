@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Dimensions, Text, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
 import { auth } from '@/src/config/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -74,27 +74,6 @@ export default function LoginScreen() {
     Alert.alert('Login Error', errorMessage);
   };
 
-  const handleSignUpError = (error: any) => {
-    let errorMessage = 'An error occurred. Please try again.';
-    switch (error.code) {
-      case 'auth/email-already-in-use':
-        errorMessage = 'This email is already registered. Please login instead.';
-        break;
-      case 'auth/invalid-email':
-        errorMessage = 'Invalid email address.';
-        break;
-      case 'auth/operation-not-allowed':
-        errorMessage = 'Email/password accounts are not enabled. Please contact support.';
-        break;
-      case 'auth/weak-password':
-        errorMessage = 'Password is too weak. Please use a stronger password.';
-        break;
-      default:
-        break;
-    }
-    Alert.alert('Sign Up Error', errorMessage);
-  };
-
   const handleLogin = async () => {
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
@@ -102,7 +81,7 @@ export default function LoginScreen() {
       setIsLoading(true);
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        router.replace('/');
+        router.replace('/(tabs)/home');
       } catch (error: any) {
         handleLoginError(error);
       } finally {
@@ -111,31 +90,23 @@ export default function LoginScreen() {
     }
   };
 
-  const handleSignUp = async () => {
-    const isEmailValid = validateEmail(email);
-    const isPasswordValid = validatePassword(password);
-    if (isEmailValid && isPasswordValid) {
-      setIsLoading(true);
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        router.replace('/welcome');
-      } catch (error: any) {
-        handleSignUpError(error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push('/landing')}
+        disabled={isLoading}
+      >
+        <Ionicons name="arrow-back" size={24} color="#4A5568" />
+      </TouchableOpacity>
+      
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>✨ {isSignUp ? 'Create Account' : 'Welcome Back!'} ✨</Text>
+          <Text style={styles.title}>✨ Welcome Back! ✨</Text>
           
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email</Text>
@@ -194,27 +165,14 @@ export default function LoginScreen() {
                 styles.submitButton,
                 ((!email || !password) || isLoading) && styles.submitButtonDisabled,
               ]}
-              onPress={isSignUp ? handleSignUp : handleLogin}
+              onPress={handleLogin}
               disabled={!email || !password || isLoading}
             >
               <Text style={styles.submitButtonText}>
-                {isLoading ? '⏳ Loading...' : isSignUp ? '🚀 Create Account' : '🎮 Login'}
+                {isLoading ? '⏳ Loading...' : '🎮 Login'}
               </Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={styles.switchButton}
-            onPress={() => setIsSignUp(!isSignUp)}
-            disabled={isLoading}
-          >
-            <Text style={[
-              styles.switchButtonText,
-              isLoading && styles.switchButtonTextDisabled
-            ]}>
-              {isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'}
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -352,5 +310,12 @@ const styles = StyleSheet.create({
   },
   forgotPasswordTextDisabled: {
     opacity: 0.5,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 1,
+    padding: 10,
   },
 }); 
