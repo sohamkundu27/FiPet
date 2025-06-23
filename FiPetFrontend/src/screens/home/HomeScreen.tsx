@@ -1,406 +1,381 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Animated, Easing, TouchableOpacity, ScrollView, Dimensions, Image, Modal, TextInput, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { ThemedText } from '@/src/components/ThemedText';
-import { IconSymbol } from '@/src/components/ui/IconSymbol';
-
-const windowWidth = Dimensions.get('window').width;
+"use client"
+import { useState } from "react"
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native"
+import { LinearGradient } from "expo-linear-gradient"
+import { AnimatedCircularProgress } from 'react-native-circular-progress'
 
 export default function HomeScreen() {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const router = useRouter();
-
-  const [xp, setXp] = useState(650);
-  const [tasks, setTasks] = useState([
-    { id: 1, title: 'Get out of bed', energy: 5, completed: false },
-    { id: 2, title: 'Brush teeth', energy: 5, completed: false },
-    { id: 3, title: 'Drink water', energy: 5, completed: false },
-  ]);
-
-  const [modalVisible, setModalVisible] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-
+  const [xp, setXp] = useState(650)
+  const [level, setLevel] = useState(6)
+  const [mood, setMood] = useState(65)
   const petData = {
     level: 3,
     currentXP: xp,
     requiredXP: 1000,
     stats: {
-      coins: 1250,
-      trophies: 12,
-      streak: 7,
+      coins: 1400,
+      trophies: 6,
+      streak: 3,
     },
-  };
+  }
 
-  const xpPercentage = (petData.currentXP / petData.requiredXP) * 100;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.05,
-          duration: 500,
-          useNativeDriver: true,
-          easing: Easing.inOut(Easing.ease),
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-          easing: Easing.inOut(Easing.ease),
-        }),
-      ])
-    ).start();
-  }, [scaleAnim]);
-
-  const toggleTask = (id: number) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) => {
-        if (task.id === id && !task.completed) {
-          setXp((prevXp) => prevXp + task.energy);
-          return { ...task, completed: true };
-        } else if (task.id === id && task.completed) {
-          setXp((prevXp) => prevXp + task.energy);
-          return { ...task, completed: false };
-        }
-        return task;
-      })
-    );
-  };
+  const xpPercentage = (petData.currentXP / petData.requiredXP) * 100
+  const levelProgress = 65
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.headerRow}>
-        <View style={styles.logoRow}>
-          <Image source={require('@/src/assets/images/react-logo.png')} style={styles.logo} />
-          <ThemedText style={styles.brandText}>FiPet</ThemedText>
+    <View style={styles.container}>
+      <LinearGradient colors={["#F97216", "#F99F16"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.header}>
+        <Text style={styles.headerText}>Home</Text>
+        <View style={styles.stats}>
+          <View style={styles.statItem}>
+            <Image source={require("@/src/assets/images/temp-fox-logo.png")} style={styles.icon} />
+            <Text style={styles.statText}>6</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Image source={require("@/src/assets/images/temp-fox-logo.png")} style={styles.icon} />
+            <Text style={styles.statText}>3</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Image source={require("@/src/assets/images/temp-fox-logo.png")} style={styles.icon} />
+            <Text style={styles.statText}>1400</Text>
+          </View>
         </View>
-        <TouchableOpacity
-          style={styles.inlineSettingsButton}
-          onPress={() => router.navigate( "/settings" ) }
-        >
-          <IconSymbol name="gearshape.fill" size={28} color="black" />
-        </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
-      {/* <ThemedText style={styles.welcome}>Welcome, Alex!</ThemedText>
-      <ThemedText style={styles.subtext}>Ready for today's adventure?</ThemedText> */}
+      <View style={styles.petSection}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', }}>
+          <Text style={[styles.levelText, { marginBottom: -20 }]}>Level</Text>
+          <View style={styles.petContainer}>
+            <AnimatedCircularProgress
+              size={320}
+              width={14}
+              fill={levelProgress}
+              tintColor="#FBBF24"
+              backgroundColor="#E5E7EB"
+              rotation={210}
+              arcSweepAngle={110}
+              lineCap="round"
+              style={[styles.progressArc, { transform: [{ scaleX: -1 }] }]}
+            />
 
-      <View style={styles.petImage} />
-
-      <View style={styles.levelRow}>
-        <ThemedText style={styles.levelText}>Level {petData.level}</ThemedText>
-        <ThemedText style={styles.xpLabel}>{petData.currentXP} / {petData.requiredXP} XP</ThemedText>
-      </View>
-      <View style={styles.xpBarBg}>
-        <View style={[styles.xpBarFill, { width: `${xpPercentage}%` }]} />
-      </View>
-
-      {/* <Animated.View style={[styles.questButton, { transform: [{ scale: scaleAnim }] }]}>
-        <Link href="/quest">
-          <ThemedText style={styles.questButtonText}>Start Quest →</ThemedText>
-        </Link>
-      </Animated.View> */}
-
-      <ThemedText style={styles.todayTitle}>Today&apos;s Quests</ThemedText>
-
-      {tasks.map((task) => (
-        <TouchableOpacity
-          key={task.id}
-          style={[styles.taskCard, task.completed && styles.taskCardCompleted]}
-          onPress={() => toggleTask(task.id)}
-        >
-          <View style={styles.taskContent}>
-            <IconSymbol name="checkmark.seal" size={24} color={task.completed ? 'green' : 'gray'} />
-            <ThemedText style={styles.taskText}>{task.title}</ThemedText>
+            <AnimatedCircularProgress
+              size={320}
+              width={14}
+              fill={mood}
+              tintColor="#3B82F6"
+              backgroundColor="#E5E7EB"
+              rotation={210}
+              arcSweepAngle={110}
+              lineCap="round"
+              style={styles.progressArc}
+            />
+            <View style={styles.petCircle}>
+              <Image source={require("@/src/assets/images/temp-fox-logo.png")} style={styles.petImage} />
+            </View>
           </View>
-          <View style={styles.taskRight}>
-            <ThemedText style={styles.energyText}>⚡ {task.energy}</ThemedText>
-            {task.completed && (
-              <IconSymbol name="checkmark.circle.fill" size={24} color="green" />
-            )}
+          <Text style={[styles.levelText, { marginBottom: -20 }]}>Mood</Text>
+        </View>
+
+        <View style={styles.levelIndicator}>
+          <Text style={styles.levelText}>Level {level}</Text>
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Daily Streak</Text>
+        <Text style={styles.sectionSubtitle}>Earn XP to add to your daily streak</Text>
+        <LinearGradient
+          colors={["#D26AFF", "#2D8EFF"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.progressCard}
+        >
+          <View style={{ justifyContent: "center" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.left}>🔥</Text>
+                <Text style={styles.left}>F</Text>
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.left}>🔥</Text>
+                <Text style={styles.left}>S</Text>
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.left}>🔥</Text>
+                <Text style={styles.left}>S</Text>
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.left}>🔥</Text>
+                <Text style={styles.left}>M</Text>
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.left}>🔥</Text>
+                <Text style={styles.left}>T</Text>
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.left}>🔥</Text>
+                <Text style={styles.left}>W</Text>
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.left}>🔥</Text>
+                <Text style={styles.left}>T</Text>
+              </View>
+            </View>
+            <Text style={styles.left}>Weekly Streak Calendar</Text>
           </View>
-        </TouchableOpacity>
-      ))}
-
-      <TouchableOpacity style={styles.buttonContainer} onPress={() => setModalVisible(true)}>
-        <IconSymbol name="plus" size={24} color="#fff" />
-        <ThemedText style={styles.buttonText}>Add a quest</ThemedText>
-      </TouchableOpacity>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => {
-          setModalVisible(false);
-          Keyboard.dismiss();
-        }}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={() => { }}>
-              <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.modalContainer}
-              >
-                <ThemedText style={styles.modalTitle}>Add a New Quest</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter quest title"
-                  placeholderTextColor="#888"
-                  value={newTaskTitle}
-                  onChangeText={setNewTaskTitle}
+          <View>
+            <View style={styles.progressBarContainer}>
+              <View style={styles.progressBarBackground}>
+                <LinearGradient
+                  colors={["#F97216", "#F9C116"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.progressBarFill, { width: `${xpPercentage}%` }]}
                 />
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    style={styles.modalButton}
-                    onPress={() => {
-                      if (newTaskTitle.trim()) {
-                        setTasks((prevTasks) => [
-                          ...prevTasks,
-                          {
-                            id: Date.now(),
-                            title: newTaskTitle.trim(),
-                            energy: 5,
-                            completed: false,
-                          },
-                        ]);
-                        setNewTaskTitle('');
-                        setModalVisible(false);
-                      }
-                    }}
-                  >
-                    <ThemedText style={styles.modalButtonText}>Add</ThemedText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.modalButton, { backgroundColor: '#ccc' }]}
-                    onPress={() => setModalVisible(false)}
-                  >
-                    <ThemedText style={[styles.modalButtonText, { color: '#000' }]}>Cancel</ThemedText>
-                  </TouchableOpacity>
-                </View>
-              </KeyboardAvoidingView>
-            </TouchableWithoutFeedback>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.right}>
+              <Text style={styles.cardButton}>Today's Progress</Text>
+            </TouchableOpacity>
           </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        </LinearGradient>
+      </View>
 
-
-
-    </ScrollView>
-  );
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Quests</Text>
+        <Text style={styles.sectionSubtitle}>Complete quests to earn extra XP</Text>
+        <LinearGradient
+          colors={["#F97216", "#F9C116"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.quest}
+        >
+          <View>
+            <Text style={styles.questTitle}>Spend It or Save It?</Text>
+            <Text style={styles.questSubtitle}>Understand the difference between spending or saving.</Text>
+          </View>
+          <TouchableOpacity style={styles.playButton}>
+            <Text style={styles.playText}>Play</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffe9ab',
+    backgroundColor: "#fff"
+  },
+  header: {
+    paddingTop: 60,
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingBottom: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 35,
-    right: 0,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    zIndex: 10,
-    minWidth: 100,
+  headerText: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#fff",
   },
-  dropdownItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    alignItems: 'center',
-  },
-  dropdownText: {
-    textAlign: 'left',
-    fontSize: 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 30,
-    height: 30,
-    marginRight: 8,
-  },
-  inlineSettingsButton: {
-    marginLeft: 10,
-  },
-  brandText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'black',
-    marginLeft: 5,
-  },
-  welcome: {
-    fontSize: 20,
-    fontWeight: '600',
+  stats: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
     marginTop: 10,
-    color: 'black',
   },
-  subtext: {
+  statItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 15,
+    backgroundColor: "#fff",
+    borderRadius: 25,
+    paddingHorizontal: 7,
+  },
+  icon: {
+    width: 22,
+    height: 22,
+    marginRight: 5,
+  },
+  statText: {
+    color: "black",
+    fontWeight: "bold",
     fontSize: 16,
-    color: '#888',
-    marginBottom: 10,
+  },
+  petSection: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 20
+  },
+  petContainer: {
+    position: "relative",
+    alignItems: "center",
+  },
+  petCircle: {
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 0,
+    borderColor: "#E5E7EB",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 15
   },
   petImage: {
-    width: windowWidth * 0.8,
-    height: windowWidth * 0.8,
-    alignSelf: 'center',
-    backgroundColor: 'orange',
+    width: 220,
+    height: 220,
+    resizeMode: "contain",
+  },
+  section: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#222",
+  },
+  sectionSubtitle: {
+    color: "#666",
+    marginBottom: 10,
+  },
+  progressCard: {
+    borderRadius: 20,
+    padding: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  left: {
+    color: "#fff",
+    fontSize: 14,
+    lineHeight: 22,
+    fontWeight: "bold",
+  },
+  right: {
+    backgroundColor: "#fff",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 10,
   },
-  levelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 5,
-    marginTop: 30,
+  cardButton: {
+    color: "#2D8EFF",
+    fontWeight: "bold",
+  },
+  quest: {
+    borderRadius: 20,
+    padding: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  questTitle: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  questSubtitle: {
+    color: "#fff",
+    fontSize: 13,
+    marginTop: 2,
+    maxWidth: 200,
+  },
+  playButton: {
+    backgroundColor: "#fff",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+  playText: {
+    color: "#F97216",
+    fontWeight: "bold",
+  },
+  progressBarContainer: {
+    marginBottom: 10,
+    alignItems: "center",
+    width: "100%",
+  },
+  progressBarBackground: {
+    height: 8,
+    width: "100%",
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: 8,
+    backgroundColor: "black",
+    borderRadius: 4,
+  },
+  leftProgressContainer: {
+    position: "absolute",
+    left: -20,
+    top: 20,
+    alignItems: "center",
+    zIndex: 1,
+  },
+  rightProgressContainer: {
+    position: "absolute",
+    right: -20,
+    top: 20,
+    alignItems: "center",
+    zIndex: 1,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  leftProgressBar: {
+    width: 8,
+    height: 120,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 4,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+  },
+  rightProgressBar: {
+    width: 8,
+    height: 120,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 4,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+  },
+  leftProgressFill: {
+    width: "100%",
+    backgroundColor: "#3B82F6",
+    borderRadius: 4,
+  },
+  rightProgressFill: {
+    width: "100%",
+    backgroundColor: "#FBBF24",
+    borderRadius: 4,
+  },
+  levelIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 25,
   },
   levelText: {
-    fontWeight: '600',
-    fontSize: 14,
-    color: 'black',
-  },
-  xpLabel: {
-    fontWeight: '500',
-    fontSize: 14,
-    color: '#555',
-  },
-  xpBarBg: {
-    height: 15,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 999,
-    overflow: 'hidden',
-    marginTop: 6,
-    marginBottom: 16,
-  },
-  xpBarFill: {
-    height: '100%',
-    backgroundColor: '#FF7A00',
-  },
-  questButton: {
-    backgroundColor: '#FF7A00',
-    paddingVertical: 25,
-    borderRadius: 30,
-    alignItems: 'center',
-    marginBottom: 25,
-    shadowColor: '#FF7A00',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    marginTop: 30,
-  },
-  questButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 20,
-  },
-  todayTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: 'black',
-  },
-  taskCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    backgroundColor: '#fff3d1',
-    borderRadius: 12,
-    marginBottom: 10,
-  },
-  taskCardCompleted: {
-    backgroundColor: '#d1ffd6',
-  },
-  taskContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  taskText: {
     fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 10,
-    color: 'black',
+    fontWeight: "600",
+    color: "#374151",
   },
-  taskRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  progressArc: {
+    position: "absolute",
+    marginTop: -20
   },
-  energyText: {
-    fontSize: 14,
-    color: 'black',
+  divider: {
+    height: 2,
+    backgroundColor: "#D1D5DB",
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#00C2A8',
-    borderRadius: 12,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    width: '100%',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-    marginLeft: 10,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    paddingBottom: 40,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'black',
-    marginBottom: 10,
-  },
-  input: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    color: 'black',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
-    paddingBottom: 25
-  },
-  modalButton: {
-    flex: 1,
-    backgroundColor: '#00C2A8',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
+})
 
-});
