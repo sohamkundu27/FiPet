@@ -3,25 +3,25 @@ import { ThemedView } from "@/src/components/ThemedView";
 import { useRouter } from "expo-router";
 import { ScrollView, Linking, View, Alert } from "react-native";
 import TextInputModal from "@/src/components/modals/TextInputModal";
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import ConfirmModal from "@/src/components/modals/ConfirmModal";
 import BaseModal from "@/src/components/modals/BaseModal";
-import { auth, db } from "@/src/config/firebase";
-import { signOut } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { db } from "@/src/config/firebase";
+import { signOut } from "@firebase/auth";
+import { doc, getDoc, updateDoc } from "@firebase/firestore";
 import { validateUsername } from "@/src/functions/validation";
 import { useAuth } from "@/src/hooks/useAuth";
 import { ThemedText } from "@/src/components/ThemedText";
 import { useThemeColor } from "@/src/hooks/useThemeColor";
 import { Colors } from "@/src/constants/Colors";
-import React from "react";
 
 export default function SettingsScreen() {
   const version = "0.0.0";
   const router = useRouter();
   const [username, setUsername] = useState<string>("");
-  const {userState} = useAuth();
-  const hasNavigated = React.useRef(false);
+  const {userState, authState} = useAuth();
+  const auth = authState;
+  const hasNavigated = useRef(false);
   
   const _modalVisibility = {
     "username": false,
