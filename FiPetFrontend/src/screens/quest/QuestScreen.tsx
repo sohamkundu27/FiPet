@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { Feather, MaterialCommunityIcons, FontAwesome5, AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import firebase from '@react-native-firebase/app';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs } from '@firebase/firestore';
 import { db } from '../../config/firebase'; // adjust path if needed
 
 const ProgressBar = ({ progressText }: { progressText: string }) => {

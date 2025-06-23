@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Dimensions, Text, Alert } from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Text, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
-import { auth } from '@/src/config/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from '@firebase/auth';
+import { useAuth } from '@/src/hooks/useAuth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -13,6 +13,8 @@ export default function LoginScreen() {
   const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const _auth = useAuth();
+  const auth = _auth.authState;
 
   const [loaded] = useFonts({
     SpaceMono: require('@/src/assets/fonts/SpaceMono-Regular.ttf'),
@@ -178,8 +180,6 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {

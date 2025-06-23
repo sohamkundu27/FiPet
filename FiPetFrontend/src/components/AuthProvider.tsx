@@ -1,7 +1,5 @@
-import LoginScreen from "@/app/login";
 import { auth } from "@/src/config/firebase";
-import { useRouter } from "expo-router";
-import { Auth, User } from "firebase/auth";
+import { Auth, User } from "@firebase/auth";
 import { createContext, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
