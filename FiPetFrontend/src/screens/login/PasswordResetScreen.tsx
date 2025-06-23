@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Dimensions, Text, Alert } from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Text, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { auth } from '@/src/config/firebase';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail } from '@firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/src/hooks/useAuth';
 
 export default function PasswordResetScreen() {
   const [email, setEmail] = useState('');
@@ -12,6 +12,7 @@ export default function PasswordResetScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
   const router = useRouter();
+  const auth = useAuth().authState;
 
   const [loaded] = useFonts({
     SpaceMono: require('@/src/assets/fonts/SpaceMono-Regular.ttf'),
@@ -161,8 +162,6 @@ export default function PasswordResetScreen() {
     </SafeAreaView>
   );
 }
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {

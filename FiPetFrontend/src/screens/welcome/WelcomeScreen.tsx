@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Animated, Image, Alert, Keyboard } from 'react-native';
-import { router, useRouter } from 'expo-router';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image, Alert, Keyboard } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { validateUsername } from '@/src/functions/validation';
-import { auth, db } from '../../config/firebase';
-import { doc, setDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { db } from '../../config/firebase';
+import { doc, setDoc } from '@firebase/firestore';
+import { createUserWithEmailAndPassword } from '@firebase/auth';
+import { useAuth } from '@/src/hooks/useAuth';
 
 interface Egg {
   id: string;
@@ -166,6 +167,9 @@ export default function WelcomeScreen() {
   const [selectedReferralSource, setSelectedReferralSource] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const _auth = useAuth();
+  const auth = _auth.authState;
+  const user = _auth.userState;
 
   const totalSteps = 9;
   const progress = ((currentStep + 1) / totalSteps) * 100;
@@ -325,7 +329,6 @@ export default function WelcomeScreen() {
 
   const handleFinish = async () => {
     if (petName.trim() && selectedGoals.length > 0 && selectedHelp !== undefined && selectedEgg) {
-      const user = auth.currentUser;
       
       if (!user) {
         console.error('No user logged in');

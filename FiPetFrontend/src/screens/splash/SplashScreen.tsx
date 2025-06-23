@@ -1,19 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
   Animated,
-  Dimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-
-const { width, height } = Dimensions.get('window');
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 
 export default function SplashScreen() {
   const router = useRouter();
-  const fadeAnim = new Animated.Value(0);
+  const fadeAnim = useMemo(() => new Animated.Value(0), []);
+
+  let {page} = useLocalSearchParams<{page: string}>();
+  let _page: Href = "/";
+  switch (page) {
+    case "landing":
+      _page = "/landing";
+      break;
+    case "home":
+      _page = "/home";
+      break;
+    default:
+      console.error(`Cannot navigate to ${page}`);
+    break;
+  }
 
   useEffect(() => {
     // Fade in animation
@@ -25,11 +36,11 @@ export default function SplashScreen() {
 
     // Navigate to landing after 2.5 seconds
     const timer = setTimeout(() => {
-      router.replace('/landing');
+      router.replace(_page);
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [_page, fadeAnim, router]);
 
   return (
     <SafeAreaView style={styles.container}>
