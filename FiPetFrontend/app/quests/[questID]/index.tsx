@@ -10,6 +10,6 @@ export default function Page() {
     const furthestQuestion = getFurthestQuestion();
     return (<Redirect href={`/quests/${questID}/questions/${furthestQuestion.id}`}/>);
   } else {
-    return (<QuestComplete/>);
+    return (<QuestComplete />);
   }
 }

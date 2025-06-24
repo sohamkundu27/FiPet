@@ -116,6 +116,8 @@ type QuestContextType = {
   getAllQuestions: () => ExtendedQuestion[],
   loading: boolean,
   error: string | null,
+  quest: Quest | null,
+  getCorrectAnswerRatio: () => number,
 };
 
 export const QuestContext = React.createContext<QuestContextType>(null!);
@@ -331,6 +333,18 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     return question.optionObjects.map(opt => ({ id: opt.id, text: opt.text }));
   }
 
+  // Helper to get correct answer ratio
+  const getCorrectAnswerRatio = () => {
+    const total = questions.length;
+    if (total === 0) return 0;
+    let correct = 0;
+    for (const q of questions) {
+      const ans = answeredQuestions[q.id];
+      if (ans && ans.outcome.isCorrectAnswer) correct++;
+    }
+    return correct / total;
+  };
+
   // Show loading or error state
   if (loading) {
     return (
@@ -368,7 +382,9 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       hasAnswer, 
       getAllQuestions,
       loading,
-      error
+      error,
+      quest,
+      getCorrectAnswerRatio,
     }}>
       {children}
     </QuestContext.Provider>

@@ -221,7 +221,7 @@ export default function QuestQuestion() {
                 resizeMode="contain"
               />
               <Image
-                source={require('@/src/assets/images/fox-shadow.png')}
+                source={require('@/src/assets/images/green-Vector.png')}
                 style={styles.foxShadow}
                 resizeMode="contain"
               />
@@ -247,7 +247,7 @@ export default function QuestQuestion() {
                 resizeMode="contain"
               />
               <Image
-                source={require('@/src/assets/images/fox-shadow.png')}
+                source={require('@/src/assets/images/red-Vector.png')}
                 style={styles.foxShadow}
                 resizeMode="contain"
               />
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     left: '50%',
     marginLeft: -109.5,
     zIndex: 1,
-    opacity: 0.4,
+    opacity: 1,
   },
   correctModalOverlay: {
     flex: 1,
