@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Animated,
+  Image,
 } from 'react-native';
 import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -46,7 +47,11 @@ export default function SplashScreen() {
     <SafeAreaView style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <View style={styles.logoContainer}>
-          {/* You can add a logo here if needed */}
+          <Image 
+            source={require('@/src/assets/images/foxHead.png')} 
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.appName}>FiPet</Text>
@@ -59,7 +64,7 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FF6B35', // Orange background
+    backgroundColor: '#F97216', // Orange background
   },
   content: {
     flex: 1,
@@ -71,6 +76,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logoImage: {
+    width: 250,
+    height: 250,
   },
   textContainer: {
     alignItems: 'center',
