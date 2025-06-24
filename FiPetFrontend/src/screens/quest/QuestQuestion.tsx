@@ -2,11 +2,24 @@ import { StyleSheet, View, TouchableOpacity, Text, Image } from "react-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useQuest } from "@/src/hooks/useQuest";
 import { ThemedText } from "@/src/components/ThemedText";
-import { Outcome, QuestionOption } from "@/src/types/quest";
 import { QuestAnswer } from "@/src/components/questProvider";
 import { useState } from "react";
 import { ThemedView } from "@/src/components/ThemedView";
 import QuestionRenderer from "@/src/components/questions/QuestionRenderer";
+
+// Option type for internal use
+interface QuestionOption {
+  id: string;
+  text: string;
+}
+
+// Simple outcome type
+interface SimpleOutcome {
+  id: string;
+  text: string;
+  xpReward: number;
+  isCorrectAnswer: boolean;
+}
 
 export default function QuestQuestion() {
   const { questionID, questID } = useLocalSearchParams<{
@@ -15,8 +28,8 @@ export default function QuestQuestion() {
   }>();
   const { getOptions, getAnswer, hasAnswer, getQuestion, selectOption, getAllQuestions } = useQuest();
   const [selectedOptions, setSelectedOptions] = useState<QuestionOption[]>([]);
+  const [checked, setChecked] = useState(false);
   let [answer, setAnswer] = useState<QuestAnswer | null>(null);
-  let [questionHasAnswer, setHasAnswer] = useState<boolean | null>(null);
 
   if (questionID === undefined) {
     throw new Error("Question ID is undefined!");
@@ -28,10 +41,8 @@ export default function QuestQuestion() {
   const progress = (currentIndex + 1) / allQuestions.length;
 
   function handleOptionSelect(option: QuestionOption) {
-    if (questionHasAnswer) return;
-
+    if (checked) return;
     if (question.type === "multiselect") {
-      // Toggle option in array
       setSelectedOptions((prev) => {
         const exists = prev.some((o) => o.id === option.id);
         if (exists) {
@@ -41,57 +52,31 @@ export default function QuestQuestion() {
         }
       });
     } else {
-      // Single select
-      setAnswer(selectOption(question.id, option.id));
-      setHasAnswer(true);
+      setSelectedOptions([option]);
     }
   }
 
-
-
-  function submitMultiselect() {
-    if (questionHasAnswer || selectedOptions.length === 0) return;
-    // You may want to pass all selected option IDs to your backend or scoring logic
-    // For now, just select the first one for demonstration
-    setAnswer(selectOption(question.id, selectedOptions[0].id));
-    setHasAnswer(true);
-  }
-  const options = getOptions(question);
-  questionHasAnswer = hasAnswer(question);
-  if (questionHasAnswer) {
-    answer = getAnswer(question);
-  }
-  const selectedOptionProp =
-    question.type === "multiselect" ? selectedOptions : answer?.option ?? null;
-
-  function OutcomeReward({ outcome }: { outcome: Outcome }) {
-    if (outcome.itemReward) {
-      return (
-        <>
-          <ThemedText>You found a new item! [{outcome.itemReward.name}]</ThemedText>
-          <ThemedText>Description: {outcome.itemReward.description}</ThemedText>
-        </>
-      );
+  function checkAnswer() {
+    if (checked) return;
+    if (question.type === "multiselect" && selectedOptions.length > 0) {
+      setAnswer(selectOption(question.id, selectedOptions[0].id));
+      setChecked(true);
+    } else if (selectedOptions.length > 0) {
+      setAnswer(selectOption(question.id, selectedOptions[0].id));
+      setChecked(true);
     }
-    return null;
   }
 
   function OutcomeDisplay() {
-    if (questionHasAnswer && answer != null) {
+    if (checked && answer) {
       return (
-        <View
-          style={[
-            styles.feedbackBox,
-            { backgroundColor: answer.nextQuestion != null ? "#d4edda" : "#f8d7da" },
-          ]}
-        >
+        <View style={styles.feedbackBox}>
           <Text style={styles.feedbackText}>
-            {answer.nextQuestion != null ? "✅ Great job!" : "❌ Try again!"}
+            {answer.outcome.isCorrectAnswer ? "✅ Correct!" : "❌ Incorrect"}
           </Text>
           <Text style={styles.xpText}>
             {answer.outcome.text}{"\n"}🎉 {Math.abs(answer.outcome.xpReward)} XP
           </Text>
-          <OutcomeReward outcome={answer.outcome} />
         </View>
       );
     }
@@ -99,7 +84,7 @@ export default function QuestQuestion() {
   }
 
   function ContinueButton() {
-    if (questionHasAnswer && answer != null) {
+    if (checked && answer) {
       if (answer.nextQuestion === null) {
         return (
           <Link style={styles.continueLink} href={`/quests/${questID}`}>
@@ -117,55 +102,74 @@ export default function QuestQuestion() {
     return null;
   }
 
+  const options = getOptions(question);
+  const selectedOptionProp =
+    question.type === "multiselect"
+      ? selectedOptions.length > 0 ? selectedOptions[0] : null
+      : selectedOptions.length > 0 ? selectedOptions[0] : null;
+
   return (
-    <ThemedView style={styles.screen}>
+    <ThemedView style={styles.container}>
       {/* Progress Bar */}
-      <View style={styles.progressContainer}>
+      <View style={styles.progressBarContainer}>
         <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
       </View>
 
-      {/* Question */}
-      <View style={styles.messageRow}>
-        <Image source={require("@/src/assets/images/businessman.png")} style={styles.avatar} />
-        <View style={styles.chatBubble}>
-          <Text style={styles.chatText}>{question.text}</Text>
-        </View>
-      </View>
-      {question.text2 && (
-        <View style={styles.messageRow}>
-          <View style={styles.chatBubble2}>
-            <Text style={styles.chatText}>{question.text2}</Text>
-          </View>
-          <Image source={require("@/src/assets/images/Student.png")} style={styles.avatar} />
-        </View>
-      )}
+      {/* Question Number */}
+      <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
+
+      {/* Question Text */}
+      <Text style={styles.questionText}>{question.prompt}</Text>
+
       {/* Options */}
-      <QuestionRenderer
-        question={question}
-        options={options}
-        onSelect={(option) => {
-         
-            handleOptionSelect(option as QuestionOption);
-      
-        }}
-        selectedOption={selectedOptionProp}
-        disabled={questionHasAnswer ?? false}
-      />
-      {question.type === "multiselect" && !questionHasAnswer && (
+      <View style={styles.optionsContainer}>
+        {options.map((option) => {
+          const isSelected =
+            question.type === "multiselect"
+              ? selectedOptions.some((o) => o.id === option.id)
+              : selectedOptionProp?.id === option.id;
+
+          return (
+            <TouchableOpacity
+              key={option.id}
+              style={[
+                styles.optionButton,
+                isSelected && styles.selectedOptionButton,
+                checked && styles.disabledOptionButton,
+              ]}
+              onPress={() => handleOptionSelect(option)}
+              disabled={checked}
+            >
+              <Text style={styles.optionText}>{option.text}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Check Answer Button */}
+      {!checked && (
         <TouchableOpacity
-          style={styles.continueLink}
-          onPress={submitMultiselect}
-          disabled={selectedOptions.length === 0}
+          style={[
+            styles.checkAnswerButton,
+            (question.type === "multiselect" && selectedOptions.length === 0) ||
+            (!selectedOptionProp)
+              ? styles.disabledCheckAnswerButton
+              : null,
+          ]}
+          onPress={checkAnswer}
+          disabled={
+            (question.type === "multiselect" && selectedOptions.length === 0) ||
+            !selectedOptionProp
+          }
         >
-          <Text style={{ color: "white", textAlign: "center", fontSize: 20 }}>
-            Submit
-          </Text>
+          <Text style={styles.checkAnswerText}>CHECK ANSWER</Text>
         </TouchableOpacity>
       )}
-      {/* Outcome Display */}
+
+      {/* Feedback */}
       <OutcomeDisplay />
 
-      {/* Continue Button */}
+      {/* Continue/Next Button */}
       <View style={styles.continueContainer}>
         <ContinueButton />
       </View>
@@ -174,66 +178,98 @@ export default function QuestQuestion() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    height: "100%",
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
     padding: 24,
-    paddingTop: 100,
-    justifyContent: "flex-start",
-    backgroundColor: "#fff",
+    justifyContent: 'flex-start',
   },
-  progressContainer: {
+  progressBarContainer: {
     height: 8,
-    width: "100%",
-    backgroundColor: "#eee",
-    borderRadius: 10,
-    overflow: "hidden",
-    marginBottom: 24,
+    backgroundColor: '#eee',
+    borderRadius: 8,
+    marginBottom: 32,
+    overflow: 'hidden',
+    marginTop: 48,
   },
   progressBar: {
-    height: "100%",
-    backgroundColor: "#FFD700",
+    height: '100%',
+    backgroundColor: '#6C63FF',
+    borderRadius: 8,
+  },
+  questionNumber: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   questionText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 24,
-    color: "#333",
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 32,
+    textAlign: 'center',
   },
   optionsContainer: {
-    marginTop: 10,
-    marginBottom: 24,
-    alignItems: "center",
+    marginBottom: 32,
   },
   optionButton: {
-    width: "90%",
-    backgroundColor: "#ffffff",
-    padding: 16,
-    borderRadius: 16,
-    marginVertical: 8,
-    borderWidth: 2,
-    borderColor: "#ccc",
-    elevation: 2,
-    shadowColor: "#000",
+    backgroundColor: '#fff',
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: '#eee',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    marginBottom: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    alignItems: "center",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  optionText: {
-    fontSize: 18,
-    color: "#333",
-    textAlign: "center",
+  selectedOptionButton: {
+    borderColor: '#6C63FF',
+    backgroundColor: '#f0f0ff',
   },
-  selectedOption: {
-    backgroundColor: "#c8f7c5",
-    borderColor: "#2fae19",
-  },
-  disabledOption: {
+  disabledOptionButton: {
     opacity: 0.6,
   },
+  optionText: {
+    fontSize: 16,
+    color: '#222',
+  },
+  checkAnswerButton: {
+    backgroundColor: '#6C63FF',
+    borderRadius: 32,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 'auto',
+  },
+  disabledCheckAnswerButton: {
+    backgroundColor: '#ccc',
+  },
+  checkAnswerText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    letterSpacing: 1,
+  },
+  continueContainer: {
+    marginTop: 24,
+    alignItems: "center",
+  },
+  continueLink: {
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 24,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+    textDecorationLine: "none",
+  },
   feedbackBox: {
-    padding: 8,
+    padding: 16,
     borderRadius: 12,
     marginVertical: 16,
     alignItems: "center",
@@ -241,74 +277,10 @@ const styles = StyleSheet.create({
   feedbackText: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   xpText: {
     fontSize: 16,
     textAlign: "center",
-    marginBottom: 4,
-  },
-  continueContainer: {
-    alignItems: "center",
-    marginTop: 16,
-  },
-  continueLink: {
-    fontSize: 20,
-    backgroundColor: "#58cc02",
-    color: "white",
-    borderRadius: 25,
-    textAlign: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    overflow: "hidden",
-    elevation: 4,
-  },
-  messageRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 24,
-  },
-
-  avatar: {
-    width: 100,
-    height: 140,
-    padding: 8,
-    marginRight: 12,
-  },
-  chatBubble: {
-    backgroundColor: "#faf7f7", // Light blue chat bubble
-    padding: 8,
-    borderRadius: 16,
-    maxWidth: "70%",
-    alignSelf: "flex-start", // Aligns to the left like someone is speaking
-    marginBottom: 6,
-    borderTopLeftRadius: 0, // Makes it look like a speech bubble
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 2, // Android shadow
-  },
-  chatBubble2: {
-    backgroundColor: "#faf7f7", // Light blue chat bubble
-    padding: 8,
-    borderRadius: 16,
-    maxWidth: "70%",
-    alignSelf: "flex-start", // Aligns to the left like someone is speaking
-    marginBottom: 6,
-    borderTopRightRadius: 0, // Makes it look like a speech bubble
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 2, // Android shadow
-  },
-
-  chatText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#333",
-    lineHeight: 30,
   },
 });
