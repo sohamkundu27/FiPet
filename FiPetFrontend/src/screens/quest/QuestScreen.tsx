@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Feather, FontAwesome5 } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import firebase from '@react-native-firebase/app';
 import { collection, getDocs } from '@firebase/firestore';
 import { db } from '../../config/firebase';
@@ -19,7 +19,7 @@ type Quest = {
 };
 
 export default function QuestScreen() {
-    const navigation = useNavigation();
+    const router = useRouter();
     const [quests, setQuests] = useState<Quest[]>([]);
 
     useEffect(() => {
@@ -105,7 +105,7 @@ export default function QuestScreen() {
                         <TouchableOpacity
                             style={styles.playButton}
                             activeOpacity={0.85}
-                            onPress={() => navigation.navigate('QuestQuestion', { questID: q.id })}
+                            onPress={() => router.push(`/quests/${q.id}`)}
                         >
                             <GradientPlayIcon colors={idx % 2 === 0 ? ['#A259FF', '#3B82F6'] : ['#3B82F6', '#38BDF8']} />
                             <Text
