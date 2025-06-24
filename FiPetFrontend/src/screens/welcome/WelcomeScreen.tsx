@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image, Alert, Keyboard } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image, Alert, Keyboard, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { validateUsername } from '@/src/functions/validation';
@@ -7,6 +7,7 @@ import { db } from '../../config/firebase';
 import { doc, setDoc } from '@firebase/firestore';
 import { createUserWithEmailAndPassword } from '@firebase/auth';
 import { useAuth } from '@/src/hooks/useAuth';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Egg {
   id: string;
@@ -170,6 +171,7 @@ export default function WelcomeScreen() {
   const _auth = useAuth();
   const auth = _auth.authState;
   const user = _auth.userState;
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const totalSteps = 9;
   const progress = ((currentStep + 1) / totalSteps) * 100;
@@ -193,8 +195,8 @@ export default function WelcomeScreen() {
       setPasswordError('');
       return false;
     }
-    if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+    if (password.length < 12) {
+      setPasswordError('Password must be at least 12 characters');
       return false;
     }
     setPasswordError('');
@@ -300,10 +302,8 @@ export default function WelcomeScreen() {
       const isEmailValid = validateEmail(email);
       const isPasswordValid = validatePassword(password);
       const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
-      const isAgeValid = validateAge(age);
-      const isUsernameValid = !usernameError && username.trim();
 
-      if (!isEmailValid || !isPasswordValid || !isConfirmPasswordValid || !isAgeValid || !isUsernameValid) {
+      if (!isEmailValid || !isPasswordValid || !isConfirmPasswordValid || !termsAccepted) {
         return;
       }
 
@@ -398,23 +398,56 @@ export default function WelcomeScreen() {
         case 0:
           return (
             <View style={[styles.contentContainer, styles.welcomeContent]}>
+              <TouchableOpacity style={styles.backButtonTop} onPress={() => router.push('/landing')}>
+                <Ionicons name="arrow-back" size={24} color="#333" />
+              </TouchableOpacity>
               <View style={styles.welcomeHeader}>
-                <View style={styles.titleContainer}>
-                  <Text style={styles.welcomeTitle}>Welcome to</Text>
-                  <Text style={styles.appName}>FiPet</Text>
-                </View>
-                <View style={styles.iconContainer}>
-                  <Text style={styles.welcomeIcon}>🐾</Text>
+                <Text style={styles.welcomeTitle}>Welcome</Text>
+                <Text style={styles.welcomeSubtitle}>We're happy you're here</Text>
+                <Text style={styles.welcomeText}>
+                  Our users love us because we{'\n'}
+                  make learning finance easy,{'\n'}
+                  fun and intuitive!
+                </Text>
+              </View>
+              <View style={styles.trophySection}>
+                <View style={styles.trophyRow}>
+                  <Image 
+                    source={require('@/src/assets/images/trophy.png')} 
+                    style={styles.trophyIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.trophyText}>Level up your finance{'\n'}knowledge</Text>
                 </View>
               </View>
-              <View style={styles.welcomeDescription}>
-                <View style={styles.descriptionCard}>
-                  <Text style={styles.descriptionText}>
-                    FiPet is your personal financial companion that helps you build better money habits through interactive lessons, challenges, and a cute digital pet that grows as you learn!
-                  </Text>
-                  <Text style={styles.descriptionText}>
-                    Complete daily tasks, earn experience points, and watch your financial knowledge and your pet grow together.
-                  </Text>
+              <View style={styles.questSection}>
+                <View style={styles.questRow}>
+                  <Image 
+                    source={require('@/src/assets/images/quest-selected.png')} 
+                    style={styles.questIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.questText}>Complete quests to earn XP{'\n'}and test your knowledge</Text>
+                </View>
+              </View>
+              <View style={styles.bagSection}>
+                <View style={styles.bagRow}>
+                  <Image 
+                    source={require('@/src/assets/images/bag.png')} 
+                    style={styles.bagIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.bagText}>Purchase items from the{'\n'}shop to upgrade your pet{'\n'}and boost your XP</Text>
+                </View>
+              </View>
+              <View style={styles.coinSection}>
+                <View style={styles.coinRow}>
+                  <Image 
+                    source={require('@/src/assets/images/coin.png')} 
+                    style={styles.coinIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.coinText}>Earn VC to spend at{'\n'}the store</Text>
                 </View>
               </View>
             </View>
@@ -422,103 +455,145 @@ export default function WelcomeScreen() {
         case 1:
           return (
             <View style={[styles.contentContainer, styles.welcomeContent]}>
-              <View style={styles.mascotContainer}>
-                <View style={styles.speechBubbleContainer}>
-                  <View style={styles.speechBubble}>
-                    <Text style={styles.speechText}>Just a few quick questions</Text>
-                  </View>
+              <TouchableOpacity style={styles.backButtonTop} onPress={() => setCurrentStep(0)}>
+                <Ionicons name="arrow-back" size={24} color="#333" />
+              </TouchableOpacity>
+              <View style={styles.speechBubbleContainer}>
+                <View style={styles.speechBubble}>
+                  <Text style={styles.speechText}>Just a few quick questions</Text>
                 </View>
-                <View style={styles.fillerImageContainer}>
-                  <Image 
-                    source={require('@/src/assets/images/temp-fox-logo.png')} 
-                    style={styles.fillerImage}
-                    resizeMode="contain"
-                  />
-                </View>
+              </View>
+              <View style={styles.foxImageContainer}>
+                <Image 
+                  source={require('@/src/assets/images/welcomeFox.png')} 
+                  style={styles.fillerImage}
+                  resizeMode="contain"
+                />
               </View>
             </View>
           );
         case 2:
           return (
             <View style={styles.contentContainer}>
-              <Mascot text="Let's create your account!" />
-              <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                <TextInput
-                  style={[styles.input, usernameError ? styles.inputError : null]}
-                  value={username}
-                  onChangeText={handleUsernameChange}
-                  placeholder="Enter your username"
-                  placeholderTextColor="#A0AEC0"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                {usernameError ? (
-                  <Text style={styles.errorText}>{usernameError}</Text>
-                ) : null}
+              <Text style={styles.accountHeading}>You're almost ready!</Text>
+              
+              <View style={styles.formSection}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Enter your email</Text>
+                  <TextInput
+                    style={[styles.styledInput, emailError ? styles.inputError : null]}
+                    value={email}
+                    onChangeText={handleEmailChange}
+                    placeholder="Type here..."
+                    placeholderTextColor="#FFA500"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  {emailError ? (
+                    <Text style={styles.errorText}>{emailError}</Text>
+                  ) : null}
+                </View>
 
-                <TextInput
-                  style={[styles.input, emailError ? styles.inputError : null]}
-                  value={email}
-                  onChangeText={handleEmailChange}
-                  placeholder="Enter your email"
-                  placeholderTextColor="#A0AEC0"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                {emailError ? (
-                  <Text style={styles.errorText}>{emailError}</Text>
-                ) : null}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Create a password</Text>
+                  <TextInput
+                    style={[styles.styledInput, passwordError ? styles.inputError : null]}
+                    value={password}
+                    onChangeText={handlePasswordChange}
+                    placeholder="Type here..."
+                    placeholderTextColor="#FFA500"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <Text style={styles.passwordSubtext}>Your password must contain at least 12 characters</Text>
+                  {passwordError ? (
+                    <Text style={styles.errorText}>{passwordError}</Text>
+                  ) : null}
+                </View>
 
-                <TextInput
-                  style={[styles.input, passwordError ? styles.inputError : null]}
-                  value={password}
-                  onChangeText={handlePasswordChange}
-                  placeholder="Create a password"
-                  placeholderTextColor="#A0AEC0"
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                {passwordError ? (
-                  <Text style={styles.errorText}>{passwordError}</Text>
-                ) : null}
+                <View style={styles.inputGroup}>
+                  <TextInput
+                    style={[styles.styledInput, confirmPasswordError ? styles.inputError : null]}
+                    value={confirmPassword}
+                    onChangeText={handleConfirmPasswordChange}
+                    placeholder="Confirm your password"
+                    placeholderTextColor="#FFA500"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  {confirmPasswordError ? (
+                    <Text style={styles.errorText}>{confirmPasswordError}</Text>
+                  ) : null}
+                </View>
 
-                <TextInput
-                  style={[styles.input, confirmPasswordError ? styles.inputError : null]}
-                  value={confirmPassword}
-                  onChangeText={handleConfirmPasswordChange}
-                  placeholder="Confirm your password"
-                  placeholderTextColor="#A0AEC0"
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                {confirmPasswordError ? (
-                  <Text style={styles.errorText}>{confirmPasswordError}</Text>
-                ) : null}
-
-                <TextInput
-                  style={[styles.input, ageError ? styles.inputError : null]}
-                  value={age}
-                  onChangeText={handleAgeChange}
-                  placeholder="Enter your age"
-                  placeholderTextColor="#A0AEC0"
-                  keyboardType="numeric"
-                  returnKeyType="done"
-                  onSubmitEditing={() => {
-                    // Dismiss keyboard when Done is pressed
-                    Keyboard.dismiss();
-                  }}
-                  autoCorrect={false}
-                />
-                {ageError ? (
-                  <Text style={styles.errorText}>{ageError}</Text>
-                ) : null}
-              </ScrollView>
+                <View style={styles.termsContainer}>
+                  <TouchableOpacity 
+                    style={styles.checkbox}
+                    onPress={() => setTermsAccepted(!termsAccepted)}
+                  >
+                    {termsAccepted && (
+                      <Ionicons name="checkmark" size={16} color="#FF6B35" />
+                    )}
+                  </TouchableOpacity>
+                  <Text style={styles.termsText}>
+                    By registering your details, you agree with our{' '}
+                    <Text style={styles.termsLink}>Terms & Conditions</Text>
+                  </Text>
+                </View>
+              </View>
             </View>
           );
         case 3:
+          return (
+            <View style={styles.contentContainer}>
+              <Text style={styles.accountHeading}>Finishing touches!</Text>
+              
+              <View style={styles.formSection}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Create a username</Text>
+                  <Text style={styles.inputSubtext}>This username will be visible to other users</Text>
+                  <TextInput
+                    style={[styles.styledInput, usernameError ? styles.inputError : null]}
+                    value={username}
+                    onChangeText={handleUsernameChange}
+                    placeholder="Type here..."
+                    placeholderTextColor="#FFA500"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <Text style={styles.hintText}>Username may only contain alphabet characters (A–Z)</Text>
+                  {usernameError ? (
+                    <Text style={styles.errorText}>{usernameError}</Text>
+                  ) : null}
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Enter your age</Text>
+                  <Text style={styles.inputSubtext}>This number helps us give you a better experience</Text>
+                  <TextInput
+                    style={[styles.styledInput, ageError ? styles.inputError : null]}
+                    value={age}
+                    onChangeText={handleAgeChange}
+                    placeholder="Type here..."
+                    placeholderTextColor="#FFA500"
+                    keyboardType="numeric"
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                      Keyboard.dismiss();
+                    }}
+                    autoCorrect={false}
+                  />
+                  {ageError ? (
+                    <Text style={styles.errorText}>{ageError}</Text>
+                  ) : null}
+                </View>
+              </View>
+            </View>
+          );
+        case 4:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="How did you hear about FiPet?" />
@@ -548,7 +623,7 @@ export default function WelcomeScreen() {
               </ScrollView>
             </View>
           );
-        case 4:
+        case 5:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="Choose your pet egg! Each one is special!" />
@@ -580,7 +655,7 @@ export default function WelcomeScreen() {
               </View>
             </View>
           );
-        case 5:
+        case 6:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="What would you like to name your pet?" />
@@ -589,11 +664,11 @@ export default function WelcomeScreen() {
                 value={petName}
                 onChangeText={setPetName}
                 placeholder="Enter pet name"
-                placeholderTextColor="#A0AEC0"
+                placeholderTextColor="#FFA500"
               />
             </View>
           );
-        case 6:
+        case 7:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="What financial goals would you like to achieve?" />
@@ -621,7 +696,7 @@ export default function WelcomeScreen() {
               </View>
             </View>
           );
-        case 7:
+        case 8:
           return (
             <View style={styles.contentContainer}>
               <Mascot text="How can I help you on your financial journey?" />
@@ -646,34 +721,6 @@ export default function WelcomeScreen() {
               </View>
             </View>
           );
-        case 8:
-          return (
-            <View style={styles.contentContainer}>
-              <Mascot text="How much time would you like to spend learning each day?" />
-              <View style={styles.sectionContainer}>
-                {timeOptions.map((option) => (
-                  <TouchableOpacity
-                    key={option.id}
-                    style={[
-                      styles.goalOption,
-                      dailyLearningTime === option.id && styles.selectedGoal
-                    ]}
-                    onPress={() => setDailyLearningTime(option.id)}
-                  >
-                    <View style={styles.goalContent}>
-                      <Ionicons name={option.icon} size={24} color="#333" style={styles.goalIcon} />
-                      <Text style={styles.goalText}>{option.label}</Text>
-                    </View>
-                    <View style={styles.checkbox}>
-                      {dailyLearningTime === option.id && (
-                        <Ionicons name="checkmark" size={20} color="#FFA500" />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          );
         default:
           return null;
       }
@@ -681,26 +728,56 @@ export default function WelcomeScreen() {
 
     const renderButton = () => {
       const isDisabled = 
-        (currentStep === 2 && (!username || !!usernameError || !email || !!emailError || !password || !!passwordError || !confirmPassword || !!confirmPasswordError || !age || !!ageError)) ||
-        (currentStep === 3 && !selectedReferralSource) ||
-        (currentStep === 4 && !selectedEgg) ||
-        (currentStep === 5 && !petName) ||
-        (currentStep === 6 && selectedGoals.length === 0) ||
-        (currentStep === 7 && !selectedHelp) ||
-        (currentStep === 8 && !dailyLearningTime) ||
+        (currentStep === 2 && (!email || !!emailError || !password || !!passwordError || !confirmPassword || !!confirmPasswordError || !termsAccepted)) ||
+        (currentStep === 3 && (!username || !!usernameError || !age || !!ageError)) ||
+        (currentStep === 4 && !selectedReferralSource) ||
+        (currentStep === 5 && !selectedEgg) ||
+        (currentStep === 6 && !petName) ||
+        (currentStep === 7 && selectedGoals.length === 0) ||
+        (currentStep === 8 && !selectedHelp) ||
         isLoading;
 
       return (
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, isDisabled && styles.buttonDisabled]}
-            onPress={currentStep === 8 ? handleFinish : handleContinue}
-            disabled={isDisabled}
-          >
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Creating Account...' : currentStep === 8 ? 'Finish' : 'Continue'}
-            </Text>
-          </TouchableOpacity>
+          {currentStep === 0 || currentStep === 1 || currentStep === 2 || currentStep === 3 ? (
+            <TouchableOpacity
+              style={[styles.gradientButton, isDisabled && styles.buttonDisabled]}
+              onPress={handleContinue}
+              disabled={isDisabled}
+            >
+              <LinearGradient
+                colors={['#FF6B35', '#FFB74D']}
+                style={styles.gradientButtonInner}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.buttonText}>
+                  {isLoading ? 'Creating Account...' : currentStep === 2 ? 'Create Account' : 'Continue'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.button, isDisabled && styles.buttonDisabled]}
+              onPress={currentStep === 8 ? handleFinish : handleContinue}
+              disabled={isDisabled}
+            >
+              <Text style={styles.buttonText}>
+                {isLoading ? 'Creating Account...' : currentStep === 8 ? 'Finish' : 'Continue'}
+              </Text>
+            </TouchableOpacity>
+          )}
+          
+          {currentStep === 2 && (
+            <View style={styles.signInContainer}>
+              <Text style={styles.signInText}>
+                Already have an Account?{' '}
+                <Text style={styles.signInLink} onPress={() => router.push('/login')}>
+                  Sign In
+                </Text>
+              </Text>
+            </View>
+          )}
         </View>
       );
     };
@@ -719,13 +796,15 @@ export default function WelcomeScreen() {
         <LoadingScreen />
       ) : (
         <>
-          <ProgressBar progress={progress} onBack={() => {
-            if (currentStep === 0) {
-              router.push('/landing');
-            } else {
-              setCurrentStep(Math.max(0, currentStep - 1));
-            }
-          }} />
+          {currentStep !== 0 && currentStep !== 1 && (
+            <ProgressBar progress={progress} onBack={() => {
+              if (currentStep === 0) {
+                router.push('/landing');
+              } else {
+                setCurrentStep(Math.max(0, currentStep - 1));
+              }
+            }} />
+          )}
           {renderStep()}
         </>
       )}
@@ -736,14 +815,14 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF5E6',
+    backgroundColor: '#FFFFFF',
   },
   progressBarWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
     paddingTop: 40,
-    backgroundColor: '#FFF5E6',
+    backgroundColor: '#FFFFFF',
   },
   backButton: {
     marginRight: 10,
@@ -784,15 +863,16 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   speechBubbleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    position: 'absolute',
+    top: 40,
+    right: 20,
   },
   speechBubble: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 12,
-    marginBottom: 15,
-    maxWidth: '80%',
+    marginTop: 80,
+    maxWidth: '100%',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -910,10 +990,10 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   inputLabel: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 8,
-    fontWeight: '500',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFA500',
+    marginBottom: 5,
   },
   goalOption: {
     flexDirection: 'row',
@@ -940,14 +1020,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#FFA500',
+    borderColor: '#FF6B35',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 10,
+    marginRight: 12,
+    marginTop: 2,
   },
   selectedGoal: {
     backgroundColor: '#FFE5E5',
@@ -959,6 +1040,29 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     width: '100%',
     alignItems: 'center',
+  },
+  gradientButton: {
+    width: '100%',
+    height: 60,
+    borderRadius: 20,
+    marginBottom: 20,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  gradientButtonInner: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
@@ -1016,7 +1120,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '100%',
-    paddingBottom: 40,
+    paddingBottom: 10,
   },
   buttonText: {
     color: 'white',
@@ -1024,7 +1128,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   welcomeContent: {
-    justifyContent: 'center',
+    position: 'relative',
   },
   loadingContainer: {
     flex: 1,
@@ -1050,37 +1154,42 @@ const styles = StyleSheet.create({
   fillerImageContainer: {
     width: 140,
     height: 140,
-    borderRadius: 70,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 250
   },
   fillerImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 220,
+    height: 220,
   },
   scrollView: {
     width: '100%',
     maxHeight: 400,
   },
   welcomeHeader: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 40,
-    marginTop: 20,
+    marginTop: 50,
+    width: '100%',
+    paddingLeft: 20,
   },
   welcomeTitle: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: '#4A5568',
-    textAlign: 'center',
+    fontSize: 48,
+    fontWeight: 600,
+    color: '#000000',
+    textAlign: 'left',
   },
   welcomeIcon: {
     fontSize: 60,
     marginTop: 15,
   },
   welcomeDescription: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    fontSize: 20,
+    color: '#000000',
+    textAlign: 'left',
+    marginTop: 10,
+    paddingLeft: 5,
+    lineHeight: 28,
   },
   descriptionText: {
     fontSize: 16,
@@ -1125,5 +1234,195 @@ const styles = StyleSheet.create({
     elevation: 8,
     borderWidth: 1,
     borderColor: '#F7FAFC',
+  },
+  backButtonTop: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+  },
+  welcomeSubtitle: {
+    fontSize: 20,
+    color: '#8B5CF6',
+    textAlign: 'left',
+    marginTop: 5,
+    paddingLeft: 5,
+  },
+  welcomeText: {
+    fontSize: 20,
+    color: '#000000',
+    textAlign: 'left',
+    marginTop: 5,
+    paddingLeft: 5,
+  },
+  trophySection: {
+    position: 'absolute',
+    top: 250,
+    right: 90,
+  },
+  trophyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  trophyIcon: {
+    width: 60,
+    height: 60,
+    marginRight: 10,
+  },
+  trophyText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'left',
+  },
+  questSection: {
+    position: 'absolute',
+    top: 320,
+    right: 42,
+  },
+  questRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  questIcon: {
+    width: 70,
+    height: 70,
+    marginRight: 10,
+  },
+  questText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'left',
+  },
+  bagSection: {
+    position: 'absolute',
+    top: 410,
+    right: 60,
+  },
+  bagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bagIcon: {
+    width: 70,
+    height: 70,
+    marginRight: 10,
+  },
+  bagText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'left',
+  },
+  coinSection: {
+    position: 'absolute',
+    top: 500,
+    right: 100,
+  },
+  coinRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  coinIcon: {
+    width: 70,
+    height: 70,
+    marginRight: 10,
+  },
+  coinText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'left',
+  },
+  foxImageContainer: {
+    width: 140,
+    height: 140,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 250
+  },
+  accountHeading: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    textAlign: 'center',
+    color: '#333',
+  },
+  formSection: {
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  inputGroup: {
+    width: '100%',
+    marginBottom: 25,
+  },
+  styledInput: {
+    width: '100%',
+    height: 55,
+    borderWidth: 2,
+    borderColor: '#FFA500',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  passwordSubtext: {
+    fontSize: 12,
+    color: '#A0AEC0',
+    marginTop: 8,
+    marginLeft: 4,
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 30,
+    paddingHorizontal: 20,
+  },
+  termsText: {
+    fontSize: 14,
+    color: '#333',
+    flex: 1,
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: '#FF6B35',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+  signInContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  signInText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center',
+  },
+  signInLink: {
+    color: '#8B5CF6',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+  inputSubtext: {
+    fontSize: 14,
+    color: '#A0AEC0',
+    marginTop: 0,
+    marginBottom: 15,
+    marginLeft: 2,
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#A0AEC0',
+    marginTop: 8,
+    marginLeft: 4,
   },
 }); 

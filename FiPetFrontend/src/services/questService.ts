@@ -1,92 +1,58 @@
 import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where } from '@firebase/firestore';
 import { db } from '../config/firebase';
-import { Quest, QuestDocument } from '../types/quest';
+import { Quest, QuestDocument, Question } from '../types/quest';
+import { getQuestionsByIds } from './questionService';
 
 const QUEST_COLLECTION = 'quests';
 
 // Convert Quest to Firestore document format
 const questToDocument = (quest: Quest): Omit<QuestDocument, 'id'> => {
-  const questionsMap: QuestDocument['questions'] = {};
-  quest.questions.forEach(q => {
-    const optionsMap: { [key: string]: QuestDocument['questions'][string]['options'][string] } = {};
-    q.options.forEach(o => {
-      optionsMap[o.id] = {
-        id: o.id,
-        text: o.text,
-        ...(o.nextQuestionId !== undefined && { nextQuestionId: o.nextQuestionId }),
-        outcomeId: o.outcomeId
-      };
-    });
-    questionsMap[q.id] = {
-      id: q.id,
-      text: q.text,
-      isCompleted: q.isCompleted,
-      options: optionsMap
-    };
-  });
-
-  const outcomesMap: QuestDocument['outcomes'] = {};
-  quest.outcomes.forEach(o => {
-    outcomesMap[o.id] = {
-      id: o.id,
-      text: o.text,
-      xpReward: o.xpReward,
-      isCorrectAnswer: o.isCorrectAnswer,
-      ...(o.itemReward !== undefined && { itemReward: o.itemReward })
-    };
-  });
-
   return {
     title: quest.title,
     description: quest.description,
-    scroll: quest.scroll,
-    difficulty: quest.difficulty,
-    requiredLevel: quest.requiredLevel,
-    questions: questionsMap,
-    outcomes: outcomesMap,
-    isActive: quest.isActive,
-    isCompleted: quest.isCompleted,
-    createdAt: quest.createdAt,
-    updatedAt: quest.updatedAt
+    duration: quest.duration,
+    level: quest.level,
+    order: quest.order,
+    questionIds: quest.questionIds,
+    topic: quest.topic,
+    xpReward: quest.xpReward
   };
 };
 
 // Convert Firestore document to Quest
 const documentToQuest = (doc: QuestDocument): Quest => {
-  const questions: Quest['questions'] = Object.values(doc.questions).map(q => ({
-    id: q.id,
-    text: q.text,
-    isCompleted: q.isCompleted,
-    options: Object.values(q.options).map(o => ({
-      id: o.id,
-      text: o.text,
-      nextQuestionId: o.nextQuestionId,
-      outcomeId: o.outcomeId
-    }))
-  }));
-
-  const outcomes: Quest['outcomes'] = Object.values(doc.outcomes).map(o => ({
-    id: o.id,
-    text: o.text,
-    xpReward: o.xpReward,
-    isCorrectAnswer: o.isCorrectAnswer,
-    itemReward: o.itemReward
-  }));
-
   return {
     id: doc.id,
     title: doc.title,
     description: doc.description,
-    scroll: doc.scroll,
-    difficulty: doc.difficulty,
-    requiredLevel: doc.requiredLevel,
-    questions,
-    outcomes,
-    isActive: doc.isActive,
-    isCompleted: doc.isCompleted,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt
+    duration: doc.duration,
+    level: doc.level,
+    order: doc.order,
+    questionIds: doc.questionIds,
+    topic: doc.topic,
+    xpReward: doc.xpReward
   };
+};
+
+// Get quest with questions
+export const getQuestWithQuestions = async (id: string): Promise<{ quest: Quest; questions: Question[] } | null> => {
+  const quest = await getQuestById(id);
+  if (!quest) return null;
+  
+  const questions = await getQuestionsByIds(quest.questionIds);
+  return { quest, questions };
+};
+
+// Get all quests with their questions
+export const getAllQuestsWithQuestions = async (): Promise<{ quest: Quest; questions: Question[] }[]> => {
+  const quests = await getAllQuests();
+  const questsWithQuestions = await Promise.all(
+    quests.map(async (quest) => {
+      const questions = await getQuestionsByIds(quest.questionIds);
+      return { quest, questions };
+    })
+  );
+  return questsWithQuestions;
 };
 
 // Get all quests
@@ -104,26 +70,20 @@ export const getQuestById = async (id: string): Promise<Quest | null> => {
   return documentToQuest({ id: questDoc.id, ...questDoc.data() } as QuestDocument);
 };
 
-// Get active quests
-export const getActiveQuests = async (): Promise<Quest[]> => {
+// Get quests by level
+export const getQuestsByLevel = async (level: number): Promise<Quest[]> => {
   const questsRef = collection(db, QUEST_COLLECTION);
-  const q = query(questsRef, where('isActive', '==', true));
+  const q = query(questsRef, where('level', '==', level));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => documentToQuest({ id: doc.id, ...doc.data() } as QuestDocument));
 };
 
 // Create new quest
-export const createQuest = async (quest: Omit<Quest, 'id' | 'createdAt' | 'updatedAt'>): Promise<Quest> => {
+export const createQuest = async (quest: Omit<Quest, 'id'>): Promise<Quest> => {
   const questsRef = collection(db, QUEST_COLLECTION);
-  const now = new Date();
-  const questData = {
-    ...quest,
-    createdAt: now,
-    updatedAt: now
-  };
-  const docRef = await addDoc(questsRef, questToDocument(questData as Quest));
+  const docRef = await addDoc(questsRef, questToDocument(quest as Quest));
   return {
-    ...questData,
+    ...quest,
     id: docRef.id
   } as Quest;
 };
@@ -131,11 +91,8 @@ export const createQuest = async (quest: Omit<Quest, 'id' | 'createdAt' | 'updat
 // Update quest
 export const updateQuest = async (id: string, quest: Partial<Quest>): Promise<void> => {
   const questRef = doc(db, QUEST_COLLECTION, id);
-  const updateData = {
-    ...quest,
-    updatedAt: new Date()
-  };
-  await updateDoc(questRef, questToDocument(updateData as Quest));
+  const updateData = questToDocument(quest as Quest);
+  await updateDoc(questRef, updateData);
 };
 
 // Delete quest

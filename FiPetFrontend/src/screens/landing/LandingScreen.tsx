@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,7 +47,7 @@ export default function LandingScreen() {
         {/* Filler Image */}
         <View style={styles.imageContainer}>
           <Image 
-            source={require('@/src/assets/images/temp-fox-logo.png')} 
+            source={require('@/src/assets/images/fox.png')} 
             style={styles.fillerImage}
             resizeMode="contain"
           />
@@ -68,7 +69,14 @@ export default function LandingScreen() {
             onPress={handleGetStarted}
             activeOpacity={0.8}
           >
-            <Text style={styles.primaryButtonText}>Get Started</Text>
+            <LinearGradient
+              colors={['#FF6B35', '#FFB74D']}
+              style={styles.gradientButton}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.primaryButtonText}>Get Started</Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -87,14 +95,15 @@ export default function LandingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5E6D3',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 40,
     paddingVertical: 60,
+    paddingTop: 100,
   },
   loadingText: {
     fontSize: 18,
@@ -104,24 +113,15 @@ const styles = StyleSheet.create({
   imageContainer: {
     marginBottom: 60,
     alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    paddingLeft: 30,
   },
   fillerImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+    width: 200,
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
   },
   mottoContainer: {
     alignItems: 'center',
@@ -156,11 +156,9 @@ const styles = StyleSheet.create({
   primaryButton: {
     width: '100%',
     height: 60,
-    backgroundColor: '#FF6B35',
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 20,
     marginBottom: 20,
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -173,6 +171,11 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  gradientButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 20,
@@ -181,11 +184,11 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     width: '100%',
-    height: 50,
+    height: 60,
     backgroundColor: 'transparent',
     borderWidth: 2,
     borderColor: '#4C1D95',
-    borderRadius: 25,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },

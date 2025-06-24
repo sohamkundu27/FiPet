@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList } from "react-native";
-import { Question, QuestionOption } from "@/src/types/quest";
+import { Question } from "@/src/types/quest";
 
+// Option type for internal use
+interface QuestionOption {
+  id: string;
+  text: string;
+}
 
 type Props = {
   question: Question;
-  options: QuestionOption[];
   selectedOption: QuestionOption | QuestionOption[] | null;
   onSelect: (option: QuestionOption ) => void;
   disabled: boolean;
@@ -13,13 +17,16 @@ type Props = {
 
 export default function QuestionRenderer({
   question,
-  options,
   selectedOption,
   onSelect,
   disabled,
 }: Props) {
   
- 
+  // Convert string options to option objects
+  const options: QuestionOption[] = question.options.map((optionText, index) => ({
+    id: `option_${question.id}_${index}`,
+    text: optionText
+  }));
 
   switch (question.type) {
     case "trueFalse":
