@@ -1,9 +1,9 @@
-import { StyleSheet, View, TouchableOpacity, Text, Image } from "react-native";
-import { Link, useLocalSearchParams } from "expo-router";
+import { StyleSheet, View, TouchableOpacity, Text, Image, Modal } from "react-native";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuest } from "@/src/hooks/useQuest";
 import { ThemedText } from "@/src/components/ThemedText";
 import { QuestAnswer } from "@/src/components/questProvider";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThemedView } from "@/src/components/ThemedView";
 import QuestionRenderer from "@/src/components/questions/QuestionRenderer";
 
@@ -30,6 +30,9 @@ export default function QuestQuestion() {
   const [selectedOptions, setSelectedOptions] = useState<QuestionOption[]>([]);
   const [checked, setChecked] = useState(false);
   let [answer, setAnswer] = useState<QuestAnswer | null>(null);
+  const [showIncorrectModal, setShowIncorrectModal] = useState(false);
+  const [showCorrectModal, setShowCorrectModal] = useState(false);
+  const router = useRouter();
 
   if (questionID === undefined) {
     throw new Error("Question ID is undefined!");
@@ -59,24 +62,26 @@ export default function QuestQuestion() {
   function checkAnswer() {
     if (checked) return;
     if (question.type === "multiselect" && selectedOptions.length > 0) {
-      setAnswer(selectOption(question.id, selectedOptions[0].id));
+      const result = selectOption(question.id, selectedOptions[0].id);
+      setAnswer(result);
       setChecked(true);
+      if (!result.outcome.isCorrectAnswer) setShowIncorrectModal(true);
+      else setShowCorrectModal(true);
     } else if (selectedOptions.length > 0) {
-      setAnswer(selectOption(question.id, selectedOptions[0].id));
+      const result = selectOption(question.id, selectedOptions[0].id);
+      setAnswer(result);
       setChecked(true);
+      if (!result.outcome.isCorrectAnswer) setShowIncorrectModal(true);
+      else setShowCorrectModal(true);
     }
   }
 
   function OutcomeDisplay() {
-    if (checked && answer) {
+    if (checked && answer && answer.outcome.isCorrectAnswer) {
       return (
         <View style={styles.feedbackBox}>
-          <Text style={styles.feedbackText}>
-            {answer.outcome.isCorrectAnswer ? "✅ Correct!" : "❌ Incorrect"}
-          </Text>
-          <Text style={styles.xpText}>
-            {answer.outcome.text}{"\n"}🎉 {Math.abs(answer.outcome.xpReward)} XP
-          </Text>
+          <Text style={styles.feedbackText}>✅ Correct!</Text>
+          <Text style={styles.xpText}>{answer.outcome.text}{"\n"}🎉 {Math.abs(answer.outcome.xpReward)} XP</Text>
         </View>
       );
     }
@@ -84,7 +89,7 @@ export default function QuestQuestion() {
   }
 
   function ContinueButton() {
-    if (checked && answer) {
+    if (checked && answer && answer.outcome.isCorrectAnswer) {
       if (answer.nextQuestion === null) {
         return (
           <Link style={styles.continueLink} href={`/quests/${questID}`}>
@@ -107,6 +112,31 @@ export default function QuestQuestion() {
     question.type === "multiselect"
       ? selectedOptions.length > 0 ? selectedOptions[0] : null
       : selectedOptions.length > 0 ? selectedOptions[0] : null;
+
+  useEffect(() => {
+    if (showIncorrectModal && checked && answer && !answer.outcome.isCorrectAnswer) {
+      const timer = setTimeout(() => {
+        setShowIncorrectModal(false);
+        if (answer.nextQuestion === null) {
+          router.replace(`/quests/${questID}`);
+        } else {
+          router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
+        }
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+    if (showCorrectModal && checked && answer && answer.outcome.isCorrectAnswer) {
+      const timer = setTimeout(() => {
+        setShowCorrectModal(false);
+        if (answer.nextQuestion === null) {
+          router.replace(`/quests/${questID}`);
+        } else {
+          router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
+        }
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [showIncorrectModal, showCorrectModal, checked, answer, questID, router]);
 
   return (
     <ThemedView style={styles.container}>
@@ -173,6 +203,58 @@ export default function QuestQuestion() {
       <View style={styles.continueContainer}>
         <ContinueButton />
       </View>
+
+      {/* Correct Modal */}
+      <Modal
+        visible={showCorrectModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCorrectModal(false)}
+      >
+        <View style={styles.correctModalOverlay}>
+          <View style={styles.correctModalContent}>
+            <Text style={styles.correctTitle}>🎉 Correct</Text>
+            <View style={styles.foxContainer}>
+              <Image
+                source={require('@/src/assets/images/happy-fox.png')}
+                style={styles.foxImage}
+                resizeMode="contain"
+              />
+              <Image
+                source={require('@/src/assets/images/fox-shadow.png')}
+                style={styles.foxShadow}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Incorrect Modal */}
+      <Modal
+        visible={showIncorrectModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowIncorrectModal(false)}
+      >
+        <View style={styles.incorrectModalOverlay}>
+          <View style={styles.incorrectModalContent}>
+            <Text style={styles.incorrectTitle}>❌ Incorrect</Text>
+            <View style={styles.foxContainer}>
+              <Image
+                source={require('@/src/assets/images/sad-fox.png')}
+                style={styles.foxImage}
+                resizeMode="contain"
+              />
+              <Image
+                source={require('@/src/assets/images/fox-shadow.png')}
+                style={styles.foxShadow}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -282,5 +364,72 @@ const styles = StyleSheet.create({
   xpText: {
     fontSize: 16,
     textAlign: "center",
+  },
+  incorrectModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 99, 132, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  incorrectModalContent: {
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  incorrectTitle: {
+    fontSize: 35,
+    position: 'absolute',
+    fontWeight: 'bold',
+    color: '#fff',
+    top: 137,
+    alignItems: 'center',
+  },
+  foxContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    position: 'relative',
+    width: 267.01,
+    height: 250,
+  },
+  foxImage: {
+    width: 267.01,
+    height: 250,
+    marginBottom: 30,
+    position: 'relative',
+    zIndex: 2,
+  },
+  foxShadow: {
+    width: 219,
+    height: 25,
+    position: 'absolute',
+    bottom: -100,
+    left: '50%',
+    marginLeft: -109.5,
+    zIndex: 1,
+    opacity: 0.4,
+  },
+  correctModalOverlay: {
+    flex: 1,
+    backgroundColor: '#7CF97C',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  correctModalContent: {
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  correctTitle: {
+   fontSize: 35,
+    position: 'absolute',
+    fontWeight: 'bold',
+    color: '#fff',
+    top: 137,
+    alignItems: 'center',
   },
 });
