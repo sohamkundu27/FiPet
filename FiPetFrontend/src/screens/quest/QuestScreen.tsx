@@ -128,7 +128,7 @@ function getObjectiveEmoji(idx: number) {
     return emojis[idx % emojis.length];
 }
 
-const GradientPlayIcon = ({ colors }: { colors: string[] }) => {
+const GradientPlayIcon = ({ colors }: { colors: readonly [string, string, ...string[]] }) => {
     return (
         <LinearGradient
             colors={colors}
