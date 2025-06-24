@@ -1,163 +1,104 @@
 // import firestore from '@react-native-firebase/firestore';
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { Feather, MaterialCommunityIcons, FontAwesome5, AntDesign } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import firebase from '@react-native-firebase/app';
-import { collection, getDocs } from '@firebase/firestore';
-import { db } from '../../config/firebase'; // adjust path if needed
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const ProgressBar = ({ progressText }: { progressText: string }) => {
-	// Convert progressText to a number (e.g., "70%" -> 70)
-	const progress =
-		typeof progressText === 'string'
-			? parseInt(progressText.replace('%', ''), 10)
-			: Number(progressText);
-
-	return (
-		<View style={styles.progressBarBg}>
-			<View
-				style={[
-					styles.progressBarFill,
-					{ width: `${Math.min(Math.max(progress, 0), 100)}%` },
-				]}
-			/>
-			<View style={styles.progressBarTextWrapper}>
-				<Text style={styles.progressTextInBar}>{progressText}</Text>
-			</View>
-		</View>
-	);
-};
-
-type Quest = {
-	id: string;
-	[key: string]: any; // You can replace 'any' with more specific types if you know the structure
-};
-
-// Dummy stats for header
-const stats = [
-	{ icon: <FontAwesome5 name="star" size={16} color="#FFD700" />, value: 6 },
-	{ icon: <MaterialCommunityIcons name="fire" size={18} color="#FF7A00" />, value: 3 },
-	{ icon: <FontAwesome5 name="coins" size={16} color="#FFD700" />, value: 1400 },
-];
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { getAllQuests } from '@/src/services/questService';
+import { Quest } from '@/src/types/quest';
+import { useUserProgress } from '@/src/context/UserProgressContext';
 
 export default function QuestScreen() {
 	const [quests, setQuests] = useState<Quest[]>([]);
+	const { progress } = useUserProgress();
 
-	useEffect(() => {
-		const fetchQuests = async () => {
-			try {
-				const querySnapshot = await getDocs(collection(db, 'quests'));
-				const questsData = querySnapshot.docs.map((doc) => ({
-					id: doc.id,
-					...doc.data(),
-				}));
-				setQuests(questsData);
-				console.log('Fetched quests:', questsData);
-			} catch (error) {
-				console.error('Error fetching quests:', error);
-			}
-		};
+	useFocusEffect(
+		useCallback(() => {
+			const fetchQuests = async () => {
+				const data = await getAllQuests();
+				setQuests(data);
+			};
+			fetchQuests();
+		}, [])
+	);
 
-		fetchQuests();
-	}, []);
-
-	// Dummy quests for illustration
-	const dummyQuests = [
-		{
-			id: '1',
-			title: 'Spend It or Save It',
-			xp: 150,
-			time: '30 min',
-			objectives: [
-				'Understand the difference between spending and saving',
-				'Recognize opportunity cost',
-				'Learn to delay gratification for larger financial goals',
-			],
-			gradient: ['#A259FF', '#3B82F6'],
-		},
-		{
-			id: '2',
-			title: 'Example Quest II',
-			xp: 260,
-			time: '45 min',
-			objectives: [
-				'Understand the difference between spending and saving',
-				'Recognize opportunity cost',
-				'Learn to delay gratification for larger financial goals',
-			],
-			gradient: ['#43E97B', '#38F9D7'],
-		},
-	];
-
-	const questsToShow = quests.length > 0 ? quests : dummyQuests;
+	// Progress calculation - count quests with all correct answers as completed
+	const completedCount = quests.filter(q => {
+		const questProgress = progress[q.id];
+		return questProgress && questProgress.correctCount === questProgress.total && questProgress.total > 0;
+	}).length;
+	const totalCount = quests.length;
+	const progressBarValue = totalCount > 0 ? completedCount / totalCount : 0;
 
 	return (
-		<View style={{ flex: 1, backgroundColor: '#F6F8FF' }}>
-			{/* Gradient Header */}
+		<View style={{ flex: 1, backgroundColor: '#F5F6FA' }}>
+			{/* Header with Progress Bar */}
 			<LinearGradient
 				colors={['#A259FF', '#3B82F6']}
 				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
+				end={{ x: 1, y: 0 }}
 				style={styles.header}
 			>
-				<Text style={styles.headerTitle}>Quests</Text>
-				<View style={styles.statsRow}>
-					{stats.map((stat, idx) => (
-						<View key={idx} style={styles.statBox}>
-							{stat.icon}
-							<Text style={styles.statValue}>{stat.value}</Text>
-						</View>
-					))}
+				<View style={{ flex: 1 }}>
+					<Text style={styles.headerTitle}>Quests</Text>
+					<View style={styles.progressBarContainer}>
+						<View style={[styles.progressBar, { width: `${progressBarValue * 100}%` }]} />
+					</View>
+					<Text style={styles.progressText}>
+						{completedCount} of {totalCount} Quests Completed
+					</Text>
 				</View>
 			</LinearGradient>
 
 			{/* Quests List */}
-			<ScrollView contentContainerStyle={styles.scrollContent}>
-				{questsToShow.map((quest, idx) => (
-					<LinearGradient
-						key={quest.id}
-						colors={quest.gradient}
-						start={{ x: 0, y: 0 }}
-						end={{ x: 1, y: 1 }}
-						style={styles.questCard}
-					>
-						<View style={styles.questCardHeader}>
-							<View style={styles.questStatRow}>
-								<View style={styles.questStatItem}>
-									<FontAwesome5 name="star" size={14} color="#FFD700" />
-									<Text style={styles.questStatText}>{quest.xp}</Text>
+			<ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 80 }}>
+				{quests.map((quest, idx) => {
+					const questProgress = progress[quest.id];
+					const isAllCorrect = questProgress && questProgress.correctCount === questProgress.total && questProgress.total > 0;
+					
+					return (
+						<LinearGradient
+							key={quest.id}
+							colors={idx % 2 === 0 ? ['#A259FF', '#3B82F6'] : ['#3B82F6', '#56CCF2']}
+							style={styles.questCard}
+						>
+							{isAllCorrect ? (
+								<View style={styles.checkmarkContainer}>
+									<MaterialCommunityIcons name="check-circle" size={32} color="#FFD700" />
 								</View>
-								<View style={styles.questStatItem}>
-									<Feather name="clock" size={14} color="#fff" />
-									<Text style={styles.questStatText}>{quest.time}</Text>
+							) : (
+								<View style={styles.correctCountContainer}>
+									<Text style={styles.correctCountText}>
+										{(questProgress?.correctCount ?? 0)}/{questProgress?.total ?? quest.questionIds.length} Correct
+									</Text>
+								</View>
+							)}
+							<Text style={styles.questTitle}>{quest.title}</Text>
+							<View style={styles.questStatsRow}>
+								<View style={styles.questStat}>
+									<MaterialCommunityIcons name="star" size={16} color="#FFD700" />
+									<Text style={styles.questStatText}>{quest.xpReward}</Text>
+								</View>
+								<View style={styles.questStat}>
+									<Ionicons name="time-outline" size={16} color="#fff" />
+									<Text style={styles.questStatText}>{quest.duration}</Text>
 								</View>
 							</View>
-						</View>
-						<Text style={styles.questTitle}>{quest.title}</Text>
-						<View style={styles.objectivesList}>
-							{(quest.objectives ?? []).map((obj: string, i: number) => (
-								<View key={i} style={styles.objectiveRow}>
-									<MaterialCommunityIcons name="check-decagram" size={18} color="#fff" style={{ marginRight: 8 }} />
-									<Text style={styles.objectiveText}>{obj}</Text>
-								</View>
-							))}
-						</View>
-						<TouchableOpacity style={styles.playButton} onPress={() => router.push(`/quests/${quest.id}`)}>
-							<Text style={styles.playButtonText}>Play</Text>
-						</TouchableOpacity>
-					</LinearGradient>
-				))}
+							<View style={styles.objectives}>
+								<Text style={styles.descriptionText}>{quest.description}</Text>
+								<Text style={styles.topicText}>{quest.topic}</Text>
+							</View>
+							<TouchableOpacity
+								style={styles.playButton}
+								onPress={() => router.push(`/quests/${quest.id}`)}
+							>
+								<Ionicons name="play" size={24} color="#A259FF" />
+								<Text style={styles.playButtonText}>Play</Text>
+							</TouchableOpacity>
+						</LinearGradient>
+					);
+				})}
 			</ScrollView>
-
-			{/* Bottom Tab Bar (dummy, for illustration) */}
-			<View style={styles.tabBar}>
-				<TouchableOpacity style={styles.tabIcon}><FontAwesome5 name="home" size={22} color="#bbb" /></TouchableOpacity>
-				<TouchableOpacity style={styles.tabIcon}><MaterialCommunityIcons name="clipboard-list-outline" size={28} color="#6C63FF" /></TouchableOpacity>
-				<TouchableOpacity style={styles.tabIcon}><FontAwesome5 name="user-friends" size={22} color="#bbb" /></TouchableOpacity>
-				<TouchableOpacity style={styles.tabIcon}><MaterialCommunityIcons name="trophy-outline" size={28} color="#bbb" /></TouchableOpacity>
-			</View>
 		</View>
 	);
 }
@@ -169,162 +110,131 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 24,
 		borderBottomLeftRadius: 24,
 		borderBottomRightRadius: 24,
-		elevation: 4,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 8,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
 	},
 	headerTitle: {
 		color: '#fff',
 		fontSize: 28,
 		fontWeight: 'bold',
-		marginBottom: 12,
+		letterSpacing: 1,
 	},
-	statsRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginTop: 4,
+	progressBarContainer: {
+		height: 10,
+		backgroundColor: 'rgba(255,255,255,0.25)',
+		borderRadius: 8,
+		marginTop: 16,
+		marginBottom: 8,
+		overflow: 'hidden',
 	},
-	statBox: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		backgroundColor: 'rgba(255,255,255,0.15)',
-		borderRadius: 16,
-		paddingHorizontal: 12,
-		paddingVertical: 4,
-		marginRight: 12,
+	progressBar: {
+		height: '100%',
+		backgroundColor: '#FFD700',
+		borderRadius: 8,
 	},
-	statValue: {
+	progressText: {
 		color: '#fff',
 		fontWeight: 'bold',
-		marginLeft: 6,
-		fontSize: 16,
-	},
-	scrollContent: {
-		padding: 20,
-		paddingBottom: 100,
+		fontSize: 15,
+		textAlign: 'center',
+		marginTop: 2,
 	},
 	questCard: {
 		borderRadius: 24,
 		padding: 20,
-		marginBottom: 28,
+		marginBottom: 24,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 4 },
-		shadowOpacity: 0.12,
+		shadowOpacity: 0.08,
 		shadowRadius: 12,
 		elevation: 4,
 	},
-	questCardHeader: {
-		flexDirection: 'row',
-		justifyContent: 'flex-end',
-		marginBottom: 8,
+	questTitle: {
+		color: '#fff',
+		fontSize: 22,
+		fontWeight: 'bold',
+		marginBottom: 12,
 	},
-	questStatRow: {
-		flexDirection: 'row',
-	},
-	questStatItem: {
+	questStatsRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginLeft: 12,
+		marginBottom: 12,
+		gap: 16,
+	},
+	questStat: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginRight: 16,
+		backgroundColor: 'rgba(255,255,255,0.15)',
+		borderRadius: 12,
+		paddingHorizontal: 8,
+		paddingVertical: 2,
 	},
 	questStatText: {
 		color: '#fff',
-		marginLeft: 4,
 		fontWeight: 'bold',
+		marginLeft: 4,
 		fontSize: 14,
 	},
-	questTitle: {
-		color: '#fff',
-		fontSize: 20,
-		fontWeight: 'bold',
-		marginBottom: 12,
-		marginTop: 4,
+	objectives: {
+		marginBottom: 16,
 	},
-	objectivesList: {
-		marginBottom: 18,
-	},
-	objectiveRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 6,
-	},
-	objectiveText: {
+	descriptionText: {
 		color: '#fff',
 		fontSize: 15,
-		flex: 1,
-		flexWrap: 'wrap',
+		marginBottom: 4,
+		opacity: 0.95,
+	},
+	topicText: {
+		color: '#fff',
+		fontSize: 17,
+		fontStyle: 'italic',
+		fontWeight: '500',
+		marginTop: 8,
+		opacity: 0.95,
 	},
 	playButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
 		backgroundColor: '#fff',
-		borderRadius: 20,
+		borderRadius: 24,
 		alignSelf: 'flex-start',
-		paddingHorizontal: 28,
+		paddingHorizontal: 20,
 		paddingVertical: 8,
 		marginTop: 8,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.08,
-		shadowRadius: 4,
+		shadowRadius: 6,
 		elevation: 2,
 	},
 	playButtonText: {
-		color: '#6C63FF',
+		color: '#A259FF',
 		fontWeight: 'bold',
 		fontSize: 16,
+		marginLeft: 8,
 	},
-	tabBar: {
+	correctCountContainer: {
 		position: 'absolute',
-		left: 0,
-		right: 0,
-		bottom: 0,
-		height: 64,
-		backgroundColor: '#fff',
-		flexDirection: 'row',
-		justifyContent: 'space-around',
-		alignItems: 'center',
-		borderTopLeftRadius: 20,
-		borderTopRightRadius: 20,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: -2 },
-		shadowOpacity: 0.08,
-		shadowRadius: 8,
-		elevation: 8,
-	},
-	tabIcon: {
-		flex: 1,
-		alignItems: 'center',
-	},
-	progressBarBg: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		height: 32,
+		top: 12,
+		right: 12,
+		zIndex: 2,
+		backgroundColor: 'rgba(255,255,255,0.15)',
 		borderRadius: 16,
-		backgroundColor: '#E0E0E0',
-		paddingLeft: 8,
-		paddingRight: 16,
-		marginTop: 6,
-		marginBottom: 2,
-		minWidth: 120,
+		padding: 2,
 	},
-	progressBarFill: {
+	correctCountText: {
+		color: '#fff',
+		fontWeight: 'bold',
+		fontSize: 14,
+	},
+	checkmarkContainer: {
 		position: 'absolute',
-		left: 0,
-		top: 0,
-		bottom: 0,
-		backgroundColor: '#FFB347',
+		top: 12,
+		right: 12,
+		backgroundColor: 'rgba(255,255,255,0.15)',
 		borderRadius: 16,
-	},
-	progressTextInBar: {
-		color: '#7D7D7D',
-		fontSize: 20,
-		fontWeight: '600',
-		textAlignVertical: 'center',
-	},
-	progressBarTextWrapper: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		zIndex: 1,
+		padding: 2,
 	},
 });

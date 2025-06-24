@@ -13,7 +13,8 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import { Quest, Question } from "../types/quest";
-import { getQuestWithQuestions } from "../services/questService";
+import { getQuestWithQuestions, updateQuest } from "../services/questService";
+import { useUserProgress } from '../context/UserProgressContext';
 
 // Extended Question type for internal use with option objects
 interface ExtendedQuestion extends Question {
@@ -126,6 +127,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
   const [answeredQuestions, setAnsweredQuestions] = useState<QuestAnswerDict>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { setProgress } = useUserProgress();
 
   // Fetch quest and questions on mount
   useEffect(() => {
@@ -312,6 +314,33 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       nextQuestion: nextQuestion,
     };
     setAnsweredQuestions(newAnsweredQuestions);
+
+    // Update user progress context
+    if (quest && questions.length > 0) {
+      const correctCount = questions.filter(q => {
+        const ans = newAnsweredQuestions[q.id];
+        return ans && ans.outcome && ans.outcome.isCorrectAnswer;
+      }).length;
+      setProgress(prev => ({
+        ...prev,
+        [quest.id]: {
+          correctCount,
+          total: questions.length,
+        },
+      }));
+    }
+
+    // Check if all questions are answered correctly and mark quest as complete
+    if (quest && questions.length > 0) {
+      const allCorrect = questions.every(q => {
+        const ans = newAnsweredQuestions[q.id];
+        return ans && ans.outcome && ans.outcome.isCorrectAnswer;
+      });
+      if (allCorrect && !quest.isCompleted) {
+        setQuest({ ...quest, isCompleted: true });
+        updateQuest(quest.id, { isCompleted: true });
+      }
+    }
     
     return newAnsweredQuestions[question.id];
   }

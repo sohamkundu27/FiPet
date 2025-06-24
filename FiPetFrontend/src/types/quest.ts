@@ -23,7 +23,7 @@ export interface Quest {
   title: string;
   topic: string;
   xpReward: number;
-  
+  isCompleted?: boolean;
 }
 
 // Firestore document structure
