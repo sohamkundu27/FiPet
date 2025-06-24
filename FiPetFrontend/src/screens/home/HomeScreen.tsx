@@ -28,22 +28,22 @@ export default function HomeScreen() {
         <Text style={styles.headerText}>Home</Text>
         <View style={styles.stats}>
           <View style={styles.statItem}>
-            <Image source={require("@/src/assets/images/temp-fox-logo.png")} style={styles.icon} />
+            <Image source={require("@/src/assets/images/xp.png")} style={styles.icon} />
             <Text style={styles.statText}>6</Text>
           </View>
           <View style={styles.statItem}>
-            <Image source={require("@/src/assets/images/temp-fox-logo.png")} style={styles.icon} />
+            <Image source={require("@/src/assets/images/streak.png")} style={styles.icon} />
             <Text style={styles.statText}>3</Text>
           </View>
           <View style={styles.statItem}>
-            <Image source={require("@/src/assets/images/temp-fox-logo.png")} style={styles.icon} />
+            <Image source={require("@/src/assets/images/coin.png")} style={styles.icon} />
             <Text style={styles.statText}>1400</Text>
           </View>
         </View>
       </LinearGradient>
 
       <View style={styles.petSection}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end'}}>
           <Text style={[styles.levelText, { marginBottom: -20 }]}>Level</Text>
           <View style={styles.petContainer}>
             <AnimatedCircularProgress
@@ -77,6 +77,8 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.levelIndicator}>
+          <Image source={require("@/src/assets/images/trophy.png")} style={styles.icon} />
+
           <Text style={styles.levelText}>Level {level}</Text>
         </View>
       </View>
@@ -84,8 +86,14 @@ export default function HomeScreen() {
       <View style={styles.divider} />
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Daily Streak</Text>
-        <Text style={styles.sectionSubtitle}>Earn XP to add to your daily streak</Text>
+        <View style={{ flexDirection: 'row', }}>
+          <Image source={require("@/src/assets/images/daily-streak.png")} style={{ width: 50, height: 50, marginRight: 5 }} />
+
+          <View>
+            <Text style={styles.sectionTitle}>Daily Streak</Text>
+            <Text style={styles.sectionSubtitle}>Earn XP to add to your daily streak</Text>
+          </View>
+        </View>
         <LinearGradient
           colors={["#D26AFF", "#2D8EFF"]}
           start={{ x: 0, y: 0 }}
@@ -144,8 +152,14 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quests</Text>
-        <Text style={styles.sectionSubtitle}>Complete quests to earn extra XP</Text>
+        <View style={{ flexDirection: 'row' }}>
+          <Image source={require("@/src/assets/images/quest-selected.png")} style={{ width: 50, height: 50, }} />
+          <View>
+            <Text style={styles.sectionTitle}>Quests</Text>
+            <Text style={styles.sectionSubtitle}>Complete quests to earn extra XP</Text>
+          </View>
+        </View>
+
         <LinearGradient
           colors={["#F97216", "#F9C116"]}
           start={{ x: 0, y: 0 }}
@@ -157,6 +171,7 @@ export default function HomeScreen() {
             <Text style={styles.questSubtitle}>Understand the difference between spending or saving.</Text>
           </View>
           <TouchableOpacity style={styles.playButton}>
+            <Image source={require("@/src/assets/images/play.png")} style={{ width: 60, height: 60 }} />
             <Text style={styles.playText}>Play</Text>
           </TouchableOpacity>
         </LinearGradient>
@@ -199,6 +214,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     marginRight: 5,
+    resizeMode: 'contain'
   },
   statText: {
     color: "black",
@@ -235,13 +251,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#222",
   },
   sectionSubtitle: {
     color: "#666",
     marginBottom: 10,
+    fontSize: 14
   },
   progressCard: {
     borderRadius: 20,
@@ -268,7 +285,7 @@ const styles = StyleSheet.create({
   },
   quest: {
     borderRadius: 20,
-    padding: 15,
+    paddingHorizontal: 15,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -276,7 +293,7 @@ const styles = StyleSheet.create({
   questTitle: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 20,
   },
   questSubtitle: {
     color: "#fff",
@@ -285,13 +302,14 @@ const styles = StyleSheet.create({
     maxWidth: 200,
   },
   playButton: {
-    backgroundColor: "#fff",
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   playText: {
-    color: "#F97216",
+    color: "white",
     fontWeight: "bold",
   },
   progressBarContainer: {
