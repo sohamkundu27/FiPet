@@ -1,330 +1,343 @@
 // import firestore from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { Feather, MaterialCommunityIcons, FontAwesome5, AntDesign } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { Feather, FontAwesome5 } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import firebase from '@react-native-firebase/app';
 import { collection, getDocs } from '@firebase/firestore';
-import { db } from '../../config/firebase'; // adjust path if needed
+import { db } from '../../config/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const ProgressBar = ({ progressText }: { progressText: string }) => {
-	// Convert progressText to a number (e.g., "70%" -> 70)
-	const progress =
-		typeof progressText === 'string'
-			? parseInt(progressText.replace('%', ''), 10)
-			: Number(progressText);
-
-	return (
-		<View style={styles.progressBarBg}>
-			<View
-				style={[
-					styles.progressBarFill,
-					{ width: `${Math.min(Math.max(progress, 0), 100)}%` },
-				]}
-			/>
-			<View style={styles.progressBarTextWrapper}>
-				<Text style={styles.progressTextInBar}>{progressText}</Text>
-			</View>
-		</View>
-	);
-};
+import Svg, { Polygon, Circle, Line, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
 type Quest = {
-	id: string;
-	[key: string]: any; // You can replace 'any' with more specific types if you know the structure
+    id: string;
+    title: string;
+    xpReward: number;
+    duration?: string;
+    objectives?: string[];
+    [key: string]: any;
 };
 
-// Dummy stats for header
-const stats = [
-	{ icon: <FontAwesome5 name="star" size={16} color="#FFD700" />, value: 6 },
-	{ icon: <MaterialCommunityIcons name="fire" size={18} color="#FF7A00" />, value: 3 },
-	{ icon: <FontAwesome5 name="coins" size={16} color="#FFD700" />, value: 1400 },
-];
-
 export default function QuestScreen() {
-	const [quests, setQuests] = useState<Quest[]>([]);
+    const navigation = useNavigation();
+    const [quests, setQuests] = useState<Quest[]>([]);
 
-	useEffect(() => {
-		const fetchQuests = async () => {
-			try {
-				const querySnapshot = await getDocs(collection(db, 'quests'));
-				const questsData = querySnapshot.docs.map((doc) => ({
-					id: doc.id,
-					...doc.data(),
-				}));
-				setQuests(questsData);
-				console.log('Fetched quests:', questsData);
-			} catch (error) {
-				console.error('Error fetching quests:', error);
-			}
-		};
+    useEffect(() => {
+        const fetchQuests = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'quests'));
+                const questsData = querySnapshot.docs.map((doc) => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        title: data.title ?? 'Untitled Quest',
+                        xpReward: data.xpReward ?? 0,
+                        duration: data.duration ?? '30 min',
+                        description: data.description ?? 'No description available.',
+                        ...data,
+                    };
+                });
+                setQuests(questsData);
+            } catch (error) {
+                console.error('Error fetching quests:', error);
+            }
+        };
+        fetchQuests();
+    }, []);
 
-		fetchQuests();
-	}, []);
+    return (
+        <View style={{ flex: 1, backgroundColor: '#F9F7E0' }}>
+            {/* Gradient Header */}
+            <LinearGradient
+                colors={['#A259FF', '#3B82F6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.headerGradient}
+            >
+                <View style={styles.headerRow}>
+                    <Text style={styles.headerTitle}>Quests</Text>
+                    <View style={styles.headerStatsRow}>
+                        <View style={styles.statPill}>
+                            <Text style={styles.xpText}>XP</Text>
+                            <Text style={styles.statText}>32700</Text>
+                        </View>
+                        <View style={styles.statPill}>
+                            <Text style={styles.statIcon}>🔥</Text>
+                            <Text style={styles.statText}>3</Text>
+                        </View>
+                        <View style={styles.statPill}>
+                            <GoldCoinIcon />
+                            <Text style={styles.statText}>1400</Text>
+                        </View>
+                    </View>
+                </View>
+            </LinearGradient>
 
-	// Dummy quests for illustration
-	const dummyQuests = [
-		{
-			id: '1',
-			title: 'Spend It or Save It',
-			xp: 150,
-			time: '30 min',
-			objectives: [
-				'Understand the difference between spending and saving',
-				'Recognize opportunity cost',
-				'Learn to delay gratification for larger financial goals',
-			],
-			gradient: ['#A259FF', '#3B82F6'],
-		},
-		{
-			id: '2',
-			title: 'Example Quest II',
-			xp: 260,
-			time: '45 min',
-			objectives: [
-				'Understand the difference between spending and saving',
-				'Recognize opportunity cost',
-				'Learn to delay gratification for larger financial goals',
-			],
-			gradient: ['#43E97B', '#38F9D7'],
-		},
-	];
-
-	const questsToShow = quests.length > 0 ? quests : dummyQuests;
-
-	return (
-		<View style={{ flex: 1, backgroundColor: '#F6F8FF' }}>
-			{/* Gradient Header */}
-			<LinearGradient
-				colors={['#A259FF', '#3B82F6']}
-				start={{ x: 0, y: 0 }}
-				end={{ x: 1, y: 1 }}
-				style={styles.header}
-			>
-				<Text style={styles.headerTitle}>Quests</Text>
-				<View style={styles.statsRow}>
-					{stats.map((stat, idx) => (
-						<View key={idx} style={styles.statBox}>
-							{stat.icon}
-							<Text style={styles.statValue}>{stat.value}</Text>
-						</View>
-					))}
-				</View>
-			</LinearGradient>
-
-			{/* Quests List */}
-			<ScrollView contentContainerStyle={styles.scrollContent}>
-				{questsToShow.map((quest, idx) => (
-					<LinearGradient
-						key={quest.id}
-						colors={quest.gradient}
-						start={{ x: 0, y: 0 }}
-						end={{ x: 1, y: 1 }}
-						style={styles.questCard}
-					>
-						<View style={styles.questCardHeader}>
-							<View style={styles.questStatRow}>
-								<View style={styles.questStatItem}>
-									<FontAwesome5 name="star" size={14} color="#FFD700" />
-									<Text style={styles.questStatText}>{quest.xp}</Text>
-								</View>
-								<View style={styles.questStatItem}>
-									<Feather name="clock" size={14} color="#fff" />
-									<Text style={styles.questStatText}>{quest.time}</Text>
-								</View>
-							</View>
-						</View>
-						<Text style={styles.questTitle}>{quest.title}</Text>
-						<View style={styles.objectivesList}>
-							{(quest.objectives ?? []).map((obj: string, i: number) => (
-								<View key={i} style={styles.objectiveRow}>
-									<MaterialCommunityIcons name="check-decagram" size={18} color="#fff" style={{ marginRight: 8 }} />
-									<Text style={styles.objectiveText}>{obj}</Text>
-								</View>
-							))}
-						</View>
-						<TouchableOpacity style={styles.playButton} onPress={() => router.push(`/quests/${quest.id}`)}>
-							<Text style={styles.playButtonText}>Play</Text>
-						</TouchableOpacity>
-					</LinearGradient>
-				))}
-			</ScrollView>
-
-			{/* Bottom Tab Bar (dummy, for illustration) */}
-			<View style={styles.tabBar}>
-				<TouchableOpacity style={styles.tabIcon}><FontAwesome5 name="home" size={22} color="#bbb" /></TouchableOpacity>
-				<TouchableOpacity style={styles.tabIcon}><MaterialCommunityIcons name="clipboard-list-outline" size={28} color="#6C63FF" /></TouchableOpacity>
-				<TouchableOpacity style={styles.tabIcon}><FontAwesome5 name="user-friends" size={22} color="#bbb" /></TouchableOpacity>
-				<TouchableOpacity style={styles.tabIcon}><MaterialCommunityIcons name="trophy-outline" size={28} color="#bbb" /></TouchableOpacity>
-			</View>
-		</View>
-	);
+            <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 0 }}>
+                {quests.map((q, idx) => (
+                    <LinearGradient
+                        key={q.id}
+                        colors={idx % 2 === 0 ? ['#A259FF', '#3B82F6'] : ['#3B82F6', '#38BDF8']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }} // <-- horizontal
+                        style={styles.questCard}
+                    >
+                        <Text style={styles.questCardTitle}>{q.title}</Text>
+                        <View style={styles.questCardStatsRow}>
+                            <View style={styles.questCardStat}>
+                                <FontAwesome5 name="coins" size={18} color="#FFD700" />
+                                <Text style={styles.questCardStatText}>{q.xpReward}</Text>
+                            </View>
+                            <View style={styles.questCardStat}>
+                                {/* Custom Clock Icon */}
+                                <CustomClockIcon />
+                                <Text style={styles.questCardStatText}>{q.duration || '30 min'}</Text>
+                            </View>
+                        </View>
+                        {/* Description as Objective */}
+                        <View style={{ marginTop: 10 }}>
+                            <View style={styles.objectiveRow}>
+                                <Text style={styles.objectiveEmoji}>📊</Text>
+                                <Text style={styles.objectiveText}>{q.description}</Text>
+                            </View>
+                        </View>
+                        {/* Play Button */}
+                        <TouchableOpacity
+                            style={styles.playButton}
+                            activeOpacity={0.85}
+                            onPress={() => navigation.navigate('QuestQuestion', { questID: q.id })}
+                        >
+                            <GradientPlayIcon colors={idx % 2 === 0 ? ['#A259FF', '#3B82F6'] : ['#3B82F6', '#38BDF8']} />
+                            <Text
+                              style={[
+                                styles.playButtonText,
+                                { color: (idx % 2 === 0 ? '#3B82F6' : '#38BDF8') }
+                              ]}
+                            >
+                              Play
+                            </Text>
+                        </TouchableOpacity>
+                    </LinearGradient>
+                ))}
+            </ScrollView>
+        </View>
+    );
 }
 
+function getObjectiveEmoji(idx: number) {
+    const emojis = ['📊', '💰', '⏰', '🎯', '📈'];
+    return emojis[idx % emojis.length];
+}
+
+const GradientPlayIcon = ({ colors }: { colors: readonly [string, string, ...string[]] }) => {
+    return (
+        <LinearGradient
+            colors={colors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }} // <-- horizontal
+            style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
+        >
+            <Svg width={20} height={20} viewBox="0 0 20 20">
+                <Polygon points="4,3 17,10 4,17" fill="#fff" />
+            </Svg>
+        </LinearGradient>
+    );
+};
+
+const CustomClockIcon = () => (
+  <Svg width={22} height={22} viewBox="0 0 22 22">
+    <Circle cx="11" cy="11" r="10" stroke="#3B82F6" strokeWidth="2.5" fill="#fff" />
+    <Line x1="11" y1="11" x2="11" y2="6.2" stroke="#FBBF24" strokeWidth="2.2" strokeLinecap="round" />
+    <Line x1="11" y1="11" x2="15.2" y2="13.5" stroke="#FBBF24" strokeWidth="2.2" strokeLinecap="round" />
+  </Svg>
+);
+
+const GoldCoinIcon = () => (
+  <Svg width={20} height={20} viewBox="0 0 20 20">
+    <Circle cx="10" cy="10" r="10" fill="#FFD600"/>
+    <Circle cx="10" cy="10" r="8" fill="#FFEB3B"/>
+    <SvgText
+      x="10"
+      y="14"
+      fontSize="11"
+      fontWeight="bold"
+      fill="#FBC02D"
+      textAnchor="middle"
+      fontFamily="Arial"
+    >
+      $
+    </SvgText>
+  </Svg>
+);
+
+const XPIcon = () => (
+  <Svg width={28} height={16} viewBox="0 0 28 16">
+    <Defs>
+      <SvgLinearGradient id="xp-gradient" x1="0" y1="0" x2="1" y2="1">
+        <Stop offset="0%" stopColor="#4FC3F7" />
+        <Stop offset="100%" stopColor="#1976D2" />
+      </SvgLinearGradient>
+    </Defs>
+    <SvgText
+      x="0"
+      y="13"
+      fontSize="16"
+      fontWeight="bold"
+      fontFamily="Arial"
+      fill="url(#xp-gradient)"
+    >
+      XP
+    </SvgText>
+  </Svg>
+);
+
 const styles = StyleSheet.create({
-	header: {
-		paddingTop: 48,
-		paddingBottom: 24,
-		paddingHorizontal: 24,
-		borderBottomLeftRadius: 24,
-		borderBottomRightRadius: 24,
-		elevation: 4,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 8,
-	},
-	headerTitle: {
-		color: '#fff',
-		fontSize: 28,
-		fontWeight: 'bold',
-		marginBottom: 12,
-	},
-	statsRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginTop: 4,
-	},
-	statBox: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		backgroundColor: 'rgba(255,255,255,0.15)',
-		borderRadius: 16,
-		paddingHorizontal: 12,
-		paddingVertical: 4,
-		marginRight: 12,
-	},
-	statValue: {
-		color: '#fff',
-		fontWeight: 'bold',
-		marginLeft: 6,
-		fontSize: 16,
-	},
-	scrollContent: {
-		padding: 20,
-		paddingBottom: 100,
-	},
-	questCard: {
-		borderRadius: 24,
-		padding: 20,
-		marginBottom: 28,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 4 },
-		shadowOpacity: 0.12,
-		shadowRadius: 12,
-		elevation: 4,
-	},
-	questCardHeader: {
-		flexDirection: 'row',
-		justifyContent: 'flex-end',
-		marginBottom: 8,
-	},
-	questStatRow: {
-		flexDirection: 'row',
-	},
-	questStatItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginLeft: 12,
-	},
-	questStatText: {
-		color: '#fff',
-		marginLeft: 4,
-		fontWeight: 'bold',
-		fontSize: 14,
-	},
-	questTitle: {
-		color: '#fff',
-		fontSize: 20,
-		fontWeight: 'bold',
-		marginBottom: 12,
-		marginTop: 4,
-	},
-	objectivesList: {
-		marginBottom: 18,
-	},
-	objectiveRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 6,
-	},
-	objectiveText: {
-		color: '#fff',
-		fontSize: 15,
-		flex: 1,
-		flexWrap: 'wrap',
-	},
-	playButton: {
-		backgroundColor: '#fff',
-		borderRadius: 20,
-		alignSelf: 'flex-start',
-		paddingHorizontal: 28,
-		paddingVertical: 8,
-		marginTop: 8,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.08,
-		shadowRadius: 4,
-		elevation: 2,
-	},
-	playButtonText: {
-		color: '#6C63FF',
-		fontWeight: 'bold',
-		fontSize: 16,
-	},
-	tabBar: {
-		position: 'absolute',
-		left: 0,
-		right: 0,
-		bottom: 0,
-		height: 64,
-		backgroundColor: '#fff',
-		flexDirection: 'row',
-		justifyContent: 'space-around',
-		alignItems: 'center',
-		borderTopLeftRadius: 20,
-		borderTopRightRadius: 20,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: -2 },
-		shadowOpacity: 0.08,
-		shadowRadius: 8,
-		elevation: 8,
-	},
-	tabIcon: {
-		flex: 1,
-		alignItems: 'center',
-	},
-	progressBarBg: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		height: 32,
-		borderRadius: 16,
-		backgroundColor: '#E0E0E0',
-		paddingLeft: 8,
-		paddingRight: 16,
-		marginTop: 6,
-		marginBottom: 2,
-		minWidth: 120,
-	},
-	progressBarFill: {
-		position: 'absolute',
-		left: 0,
-		top: 0,
-		bottom: 0,
-		backgroundColor: '#FFB347',
-		borderRadius: 16,
-	},
-	progressTextInBar: {
-		color: '#7D7D7D',
-		fontSize: 20,
-		fontWeight: '600',
-		textAlignVertical: 'center',
-	},
-	progressBarTextWrapper: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		zIndex: 1,
-	},
+    headerGradient: {
+        width: '100%',
+        height: 106,           // Fixed height as per Figma
+        paddingHorizontal: 24, // Left = 24px
+        paddingTop: 0,         // Remove top padding
+        paddingBottom: 12,     // Content sits near the bottom
+        marginBottom: 28,
+        justifyContent: 'flex-end', // Ensure content is at the bottom
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        width: '100%',
+        flexWrap: 'nowrap',
+        minHeight: 36,
+    },
+    headerTitle: {
+        fontSize: 24,            // slightly smaller if needed
+        fontWeight: 'bold',        // reduced from 12
+        color: '#fff',
+        letterSpacing: 0.5,
+        flexShrink: 1,
+        minWidth: 90,            // ensures some space before stat pills
+    },
+    headerStatsRow: {
+        flexDirection: 'row',
+        gap: 8,                  // reduced gap
+        alignItems: 'center',
+        flexWrap: 'wrap',
+    },
+    statPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F3F3F3',
+        borderRadius: 999,
+        paddingHorizontal: 10,   // reduced from 18
+        paddingVertical: 3,      // reduced from 6
+        marginRight: 6,          // reduced from 10
+        marginBottom: 4,         // reduced from 6
+    },
+    xpText: {
+        fontWeight: '900',
+        fontSize: 16,            // reduced from 22
+        color: '#3B82F6',
+        marginRight: 4,          // reduced from 6
+        letterSpacing: 0.5,      // reduced from 1
+    },
+    statIcon: {
+        fontSize: 14,            // reduced from 18
+        marginRight: 4,          // reduced from 6
+    },
+    statText: {
+        fontWeight: 'bold',
+        fontSize: 14,            // reduced from 16
+        color: '#444',
+    },
+    questCard: {
+        borderRadius: 22,
+        padding: 22,
+        marginBottom: 24,
+        ...(Platform.OS === 'web'
+            ? { boxShadow: '0 6px 18px rgba(0,0,0,0.12)' }
+            : {
+                    shadowColor: '#000',
+                    shadowOpacity: 0.12,
+                    shadowRadius: 10,
+                    shadowOffset: { width: 0, height: 6 },
+                    elevation: 3,
+              }),
+    },
+    questCardTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 10,
+        letterSpacing: 0.5,
+    },
+    questCardStatsRow: {
+        flexDirection: 'row',
+        gap: 16,
+        marginBottom: 8,
+    },
+    questCardStat: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        marginRight: 10,
+        ...(Platform.OS === 'web'
+            ? { boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }
+            : {
+                    shadowColor: '#000',
+                    shadowOpacity: 0.08,
+                    shadowRadius: 4,
+                    shadowOffset: { width: 0, height: 2 },
+              }),
+    },
+    questCardStatText: {
+        color: '#444',
+        fontWeight: 'bold',
+        fontSize: 15,
+        marginLeft: 6,
+    },
+    objectiveRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    objectiveEmoji: {
+        fontSize: 18,
+        marginRight: 8,
+    },
+    objectiveText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '500',
+        marginLeft: 2,
+    },
+    playButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 32,
+        paddingHorizontal: 24,
+        paddingVertical: 10,
+        alignSelf: 'flex-start',
+        marginTop: 24,
+        ...(Platform.OS === 'web'
+            ? { boxShadow: '0 4px 16px rgba(124,58,237,0.10)' }
+            : {
+                shadowColor: '#7C3AED',
+                shadowOpacity: 0.1,
+            }),
+    },
+    playButtonText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginLeft: 12,
+    },
 });
