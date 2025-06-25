@@ -90,22 +90,19 @@ export default function QuestScreen() {
                         key={q.id}
                         colors={idx % 2 === 0 ? ['#A259FF', '#3B82F6'] : ['#3B82F6', '#38BDF8']}
                         start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }} // <-- horizontal
+                        end={{ x: 1, y: 0 }} 
                         style={styles.questCard}
                     >
                         <Text style={styles.questCardTitle}>{q.title}</Text>
                         <View style={styles.questCardStatsRow}>
                             <View style={styles.questCardStat}>
-                                <FontAwesome5 name="coins" size={18} color="#FFD700" />
+                                <GoldCoinIcon />
                                 <Text style={styles.questCardStatText}>{q.xpReward}</Text>
                             </View>
                             <View style={styles.questCardStat}>
                                 <CustomClockIcon />
                                 <Text style={styles.questCardStatText}>{q.duration || '30 min'}</Text>
                             </View>
-                            {/* <View style={styles.questCardStat}>
-                                <Text style={styles.questCardStatText}>Lvl {q.level}</Text>
-                            </View> */}
                         </View>
                         {/* Objectives (descriptions) */}
                         <View style={{ marginTop: 10, marginRight: 18 }}>
@@ -235,7 +232,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
         flexShrink: 1,
         minWidth: 90,            
-        fontFamily: 'Poppins', // updated
+        fontFamily: 'Poppins', 
     },
     headerStatsRow: {
         flexDirection: 'row',
@@ -259,18 +256,18 @@ const styles = StyleSheet.create({
         color: '#3B82F6',
         marginRight: 4,         
         letterSpacing: 0.5,      
-        fontFamily: 'Poppins', // updated
+        fontFamily: 'Poppins', 
     },
     statIcon: {
         fontSize: 14,            
         marginRight: 4,          
-        fontFamily: 'Poppins', // updated
+        fontFamily: 'Poppins', 
     },
     statText: {
         fontWeight: '400',
         fontSize: 14,            
         color: '#444',
-        fontFamily: 'Poppins', // updated
+        fontFamily: 'Poppins', 
     },
     questCard: {
         borderRadius: 22,
@@ -292,20 +289,21 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginBottom: 10,
         letterSpacing: 0.5,
-        fontFamily: 'Poppins', // updated
+        fontFamily: 'Poppins', 
     },
     questCardStatsRow: {
         flexDirection: 'row',
         gap: 4,
         marginBottom: 8,
+
     },
     questCardStat: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
-        borderRadius: 12,
+        borderRadius: 15,
         paddingHorizontal: 5,
-        paddingVertical: 2,
+        paddingVertical: 5,
         marginRight: 10,
         ...(Platform.OS === 'web'
             ? { boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }
@@ -320,7 +318,7 @@ const styles = StyleSheet.create({
         color: '#444',
         fontSize: 15,
         marginLeft: 6,
-        fontFamily: 'Poppins', // updated
+        fontFamily: 'Poppins', 
     },
     objectiveRow: {
         flexDirection: 'row',
@@ -330,14 +328,14 @@ const styles = StyleSheet.create({
     objectiveEmoji: {
         fontSize: 18,
         marginRight: 8,
-        fontFamily: 'Poppins', // updated
+        fontFamily: 'Poppins', 
     },
     objectiveText: {
         color: '#fff',
         fontSize: 15,
         fontWeight: '500',
         marginLeft: 2,
-        fontFamily: 'Poppins', // updated
+        fontFamily: 'Poppins', 
     },
     playButton: {
         flexDirection: 'row',
@@ -357,6 +355,6 @@ const styles = StyleSheet.create({
     },
     playButtonText: {
         fontSize: 20,
-        fontFamily: 'Poppins', // updated
+        fontFamily: 'Poppins', 
     },
 });
