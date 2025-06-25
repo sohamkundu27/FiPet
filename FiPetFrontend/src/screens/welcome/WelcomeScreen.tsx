@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image, Alert, Keyboard, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image, Alert, Keyboard, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { validateUsername } from '@/src/functions/validation';
@@ -7,13 +7,13 @@ import { db } from '../../config/firebase';
 import { doc, setDoc } from '@firebase/firestore';
 import { createUserWithEmailAndPassword } from '@firebase/auth';
 import { useAuth } from '@/src/hooks/useAuth';
-
-interface Egg {
-  id: string;
-  name: string;
-  color: string;
-  gradient: string[];
-}
+import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
 
 interface Goal {
   id: string;
@@ -36,67 +36,50 @@ interface ReferralSource {
 const goals: Goal[] = [
   { 
     id: '0',
-    label: 'Save more money',
-    icon: 'cash-outline'
+    label: 'Save for something big (phone, PS5, concert)',
+    icon: 'gift-outline'
   },
   { 
     id: '1',
-    label: 'Create better budgets',
-    icon: 'calculator-outline'
+    label: 'Get smarter with money decisions',
+    icon: 'bulb-outline'
   },
   { 
     id: '2',
-    label: 'Build my credit score',
-    icon: 'trending-up-outline'
+    label: 'Learn how to budget and plan ahead',
+    icon: 'calendar-outline'
   },
   { 
     id: '3',
-    label: 'Learn about investing',
-    icon: 'stats-chart-outline'
+    label: 'Start investing or growing my money',
+    icon: 'trending-up-outline'
   },
   { 
     id: '4',
-    label: 'Pay off debt',
-    icon: 'card-outline'
+    label: 'Stop overspending on small things',
+    icon: 'stop-circle-outline'
   },
 ];
 
 const helpOptions: HelpOption[] = [
-  { value: '0', label: 'Daily financial reminders' },
-  { value: '1', label: 'Financial challenges' },
-  { value: '2', label: 'Money-saving tips' },
-  { value: '3', label: 'Expense tracking' },
-  { value: '4', label: 'Financial education' },
-];
-
-// Add time options with icons
-const timeOptions = [
-  { id: '0', label: '5 mins / day', icon: 'time-outline' as const },
-  { id: '1', label: '10 mins / day', icon: 'time-outline' as const },
-  { id: '2', label: '15 mins / day', icon: 'time-outline' as const },
-  { id: '3', label: '20 mins / day', icon: 'time-outline' as const },
+  { value: '0', label: 'Give me challenges and games' },
+  { value: '1', label: 'Celebrate when I make smart choices' },
+  { value: '2', label: 'Explain things when i get them wrong' },
+  { value: '3', label: 'Make it feel like a game, not school' },
+  { value: '4', label: 'Give me feedback and reminders' },
 ];
 
 // Add referral source options
 const referralSources: ReferralSource[] = [
-  { id: '0', label: 'Social Media (Instagram, TikTok, etc.)', icon: 'share-social-outline' },
-  { id: '1', label: 'Friend or Family Recommendation', icon: 'people-outline' },
-  { id: '2', label: 'App Store Search', icon: 'search-outline' },
-  { id: '3', label: 'Online Advertisement', icon: 'megaphone-outline' },
-  { id: '4', label: 'Financial Blog or Website', icon: 'globe-outline' },
-  { id: '5', label: 'School or University', icon: 'school-outline' },
-  { id: '6', label: 'Work or Employer', icon: 'business-outline' },
+  { id: '0', label: 'TikTok', icon: 'logo-tiktok' },
+  { id: '1', label: 'Instagram/Facebook', icon: 'logo-instagram' },
+  { id: '2', label: 'Friends/Family', icon: 'people-outline' },
+  { id: '3', label: 'Google Search', icon: 'search-outline' },
+  { id: '4', label: 'App Store', icon: 'phone-portrait-outline' },
+  { id: '5', label: 'YouTube', icon: 'logo-youtube' },
+  { id: '6', label: 'LinkedIn', icon: 'logo-linkedin' },
+  { id: '7', label: 'Other', icon: 'ellipsis-horizontal-outline' },
 ];
-
-// Placeholder mascot component
-const Mascot = ({ text }: { text: string }) => (
-  <View style={styles.mascotContainer}>
-    <View style={styles.speechBubble}>
-      <Text style={styles.speechText}>{text}</Text>
-    </View>
-    <Text style={styles.mascotText}>🐾</Text>
-  </View>
-);
 
 // Progress bar component
 const ProgressBar = ({ progress, onBack }: { progress: number; onBack: () => void }) => (
@@ -113,14 +96,29 @@ const ProgressBar = ({ progress, onBack }: { progress: number; onBack: () => voi
 // LoadingScreen component outside of main component
 const LoadingScreen = () => (
   <View style={styles.loadingContainer}>
-    <Text style={styles.loadingText}>Setting up your financial journey...</Text>
-    <View style={styles.loadingAnimation}>
-      <Text style={styles.loadingEmoji}>🐾</Text>
+    <View style={styles.foxSpeechContainer}>
+      <View style={styles.speechBubbleFox}>
+        <Text style={styles.speechTextFox}>Setting up your financial journey...</Text>
+      </View>
+    </View>
+    <View style={styles.foxImageContainer}>
+      <Image
+        source={require('../../assets/images/welcomeFox.png')}
+        style={styles.foxImage}
+        resizeMode="contain"
+      />
     </View>
   </View>
 );
 
 export default function WelcomeScreen() {
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+  });
+
   const [currentStep, setCurrentStep] = useState(0);
   const [username, setUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
@@ -132,18 +130,15 @@ export default function WelcomeScreen() {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [age, setAge] = useState('');
   const [ageError, setAgeError] = useState('');
-  const [selectedEgg, setSelectedEgg] = useState<Egg | null>(null);
   const [petName, setPetName] = useState('');
   const [petNameError, setPetNameError] = useState('');
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
-  const [selectedHelp, setSelectedHelp] = useState('');
-  const [dailyLearningTime, setDailyLearningTime] = useState('');
+  const [selectedHelp, setSelectedHelp] = useState<string[]>([]);
   const [selectedReferralSource, setSelectedReferralSource] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const _auth = useAuth();
   const auth = _auth.authState;
-  const user = _auth.userState;
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const totalSteps = 9;
@@ -266,10 +261,6 @@ export default function WelcomeScreen() {
     }
   };
 
-  const handleEggSelect = (egg: Egg) => {
-    setSelectedEgg(egg);
-  };
-
   const handleGoalToggle = (goalId: string) => {
     setSelectedGoals(prev => 
       prev.includes(goalId)
@@ -288,7 +279,7 @@ export default function WelcomeScreen() {
   };
 
   const handleFinish = async () => {
-    if (petName.trim() && selectedGoals.length > 0 && selectedHelp !== undefined) {
+    if (petName.trim() && selectedGoals.length > 0 && selectedHelp.length > 0) {
       
       // Validate account creation fields
       const isEmailValid = validateEmail(email);
@@ -306,22 +297,23 @@ export default function WelcomeScreen() {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         console.log('Account created successfully:', userCredential.user.uid);
 
-        const petData = {
+        const userData = {
+          age: parseInt(age),
+          current_level: 1,
+          current_xp: 0,
           username: username.trim(),
-          egg_type: 0, // Default egg type
           pet_name: petName.trim(),
+          heard_about_fipet: selectedReferralSource.map(source => Number(source)),
           financial_goals: selectedGoals.map(goal => Number(goal)),
-          financial_journey_help: Number(selectedHelp),
-          learning_time: Number(dailyLearningTime),
-          referral_source: Number(selectedReferralSource[0]),
-          current_level: 0,
-          current_xp: 0
+          pet_help_method: Number(selectedHelp),
+          current_coins: 0,
+          pet_mood: 10
         };
 
-        console.log('Saving data to Firestore:', petData);
+        console.log('Saving data to Firestore:', userData);
 
         // Save user data to Firestore
-        await setDoc(doc(db, 'users', userCredential.user.uid), petData);
+        await setDoc(doc(db, 'users', userCredential.user.uid), userData);
         console.log('User data saved successfully to Firestore');
         
         router.replace('/(tabs)/home');
@@ -338,7 +330,7 @@ export default function WelcomeScreen() {
       console.log('Validation failed:', {
         hasPetName: !!petName.trim(),
         hasGoals: selectedGoals.length > 0,
-        hasHelp: selectedHelp !== undefined
+        hasHelp: selectedHelp.length > 0
       });
     }
   };
@@ -425,77 +417,101 @@ export default function WelcomeScreen() {
           );
         case 2:
           return (
-            <View style={styles.contentContainer}>
-              <View style={styles.sectionContainer}>
-                {referralSources.map((source) => (
-                  <TouchableOpacity
-                    key={source.id}
-                    style={[
-                      styles.referralOption,
-                      selectedReferralSource.includes(source.id) && styles.selectedReferralOption
-                    ]}
-                    onPress={() => {
-                      if (selectedReferralSource.includes(source.id)) {
-                        setSelectedReferralSource(selectedReferralSource.filter(id => id !== source.id));
-                      } else if (selectedReferralSource.length < 4) {
-                        setSelectedReferralSource([...selectedReferralSource, source.id]);
-                      }
-                    }}
-                  >
-                    <View style={styles.goalContent}>
-                      <Ionicons name={source.icon} size={20} color="#333" style={styles.goalIcon} />
-                      <Text style={styles.goalText}>{source.label}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+            <View style={styles.scrollableContentContainer}>
+              <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollViewContent}
+                showsVerticalScrollIndicator={false}
+              >
+                <View style={styles.sectionContainer}>
+                  {referralSources.map((source) => (
+                    <TouchableOpacity
+                      key={source.id}
+                      style={[
+                        styles.referralOption,
+                        selectedReferralSource.includes(source.id) && styles.selectedReferralOption
+                      ]}
+                      onPress={() => {
+                        if (selectedReferralSource.includes(source.id)) {
+                          setSelectedReferralSource(selectedReferralSource.filter(id => id !== source.id));
+                        } else if (selectedReferralSource.length < 4) {
+                          setSelectedReferralSource([...selectedReferralSource, source.id]);
+                        }
+                      }}
+                    >
+                      <View style={styles.goalContent}>
+                        <Ionicons name={source.icon} size={20} color="#333" style={styles.goalIcon} />
+                        <Text style={styles.goalText}>{source.label}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
             </View>
           );
         case 3:
           return (
-            <View style={styles.contentContainer}>
-              <View style={styles.sectionContainer}>
-                {goals.map((goal) => (
-                  <TouchableOpacity
-                    key={goal.id}
-                    style={[
-                      styles.referralOption,
-                      selectedGoals.includes(goal.id) && styles.selectedReferralOption
-                    ]}
-                    onPress={() => {
-                      if (selectedGoals.includes(goal.id)) {
-                        setSelectedGoals(selectedGoals.filter(id => id !== goal.id));
-                      } else if (selectedGoals.length < 4) {
-                        setSelectedGoals([...selectedGoals, goal.id]);
-                      }
-                    }}
-                  >
-                    <View style={styles.goalContent}>
-                      <Ionicons name={goal.icon} size={20} color="#333" style={styles.goalIcon} />
-                      <Text style={styles.goalText}>{goal.label}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+            <View style={styles.scrollableContentContainer}>
+              <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollViewContent}
+                showsVerticalScrollIndicator={false}
+              >
+                <View style={styles.sectionContainer}>
+                  {goals.map((goal) => (
+                    <TouchableOpacity
+                      key={goal.id}
+                      style={[
+                        styles.referralOption,
+                        selectedGoals.includes(goal.id) && styles.selectedReferralOption
+                      ]}
+                      onPress={() => {
+                        if (selectedGoals.includes(goal.id)) {
+                          setSelectedGoals(selectedGoals.filter(id => id !== goal.id));
+                        } else if (selectedGoals.length < 4) {
+                          setSelectedGoals([...selectedGoals, goal.id]);
+                        }
+                      }}
+                    >
+                      <View style={styles.goalContent}>
+                        <Ionicons name={goal.icon} size={20} color="#333" style={styles.goalIcon} />
+                        <Text style={styles.goalText}>{goal.label}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
             </View>
           );
         case 4:
           return (
-            <View style={styles.contentContainer}>
-              <View style={styles.sectionContainer}>
-                {helpOptions.map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.referralOption,
-                      selectedHelp === option.value && styles.selectedReferralOption
-                    ]}
-                    onPress={() => setSelectedHelp(option.value)}
-                  >
-                    <Text style={styles.goalText}>{option.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+            <View style={styles.scrollableContentContainer}>
+              <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollViewContent}
+                showsVerticalScrollIndicator={false}
+              >
+                <View style={styles.sectionContainer}>
+                  {helpOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.referralOption,
+                        selectedHelp.includes(option.value) && styles.selectedReferralOption
+                      ]}
+                      onPress={() => {
+                        if (selectedHelp.includes(option.value)) {
+                          setSelectedHelp(selectedHelp.filter(value => value !== option.value));
+                        } else if (selectedHelp.length < 4) {
+                          setSelectedHelp([...selectedHelp, option.value]);
+                        }
+                      }}
+                    >
+                      <Text style={styles.goalText}>{option.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
             </View>
           );
         case 5:
@@ -530,12 +546,15 @@ export default function WelcomeScreen() {
                 />
               </View>
               <TextInput
-                style={[styles.input, { borderColor: '#F97216CC', color: '#F97216CC' }]}
+                style={[styles.input, { borderColor: '#F97216CC', color: '#F97216CC' }, petNameError ? styles.inputError : null]}
                 value={petName}
                 onChangeText={handlePetNameChange}
                 placeholder="Name your pet..."
                 placeholderTextColor="#F97216CC"
               />
+              {petNameError ? (
+                <Text style={styles.errorText}>{petNameError}</Text>
+              ) : null}
             </View>
           );
         case 7:
@@ -667,8 +686,7 @@ export default function WelcomeScreen() {
       const isDisabled = 
         (currentStep === 2 && selectedReferralSource.length === 0) ||
         (currentStep === 3 && selectedGoals.length === 0) ||
-        (currentStep === 4 && !selectedHelp) ||
-        (currentStep === 5 && !selectedEgg) ||
+        (currentStep === 4 && selectedHelp.length === 0) ||
         (currentStep === 6 && !petName) ||
         (currentStep === 7 && (!email || !!emailError || !password || !!passwordError || !confirmPassword || !!confirmPasswordError || !termsAccepted)) ||
         (currentStep === 8 && (!username || !!usernameError || !age || !!ageError)) ||
@@ -722,7 +740,11 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, currentStep === 5 && { backgroundColor: '#F97216' }]}>
-      {isLoading ? (
+      {!fontsLoaded ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      ) : isLoading ? (
         <LoadingScreen />
       ) : (
         <>
@@ -738,8 +760,12 @@ export default function WelcomeScreen() {
           {currentStep === 2 && (
             <>
               <View style={styles.headerContainer}>
-                <Text style={styles.mainTitle}>FiPet</Text>
-                <Text style={styles.subtitle}>How did you hear about FiPet?</Text>
+                <Image 
+                  source={require('@/src/assets/images/FiPet_Title_Orange.png')} 
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+                <Text style={styles.stepSubtitle}>How did you hear about FiPet?</Text>
               </View>
               <Text style={styles.selectionHint}>Select all that apply (up to 4)</Text>
             </>
@@ -747,8 +773,12 @@ export default function WelcomeScreen() {
           {currentStep === 3 && (
             <>
               <View style={styles.headerContainer}>
-                <Text style={styles.mainTitle}>FiPet</Text>
-                <Text style={styles.subtitle}>What are your financial goals?</Text>
+                <Image 
+                  source={require('@/src/assets/images/FiPet_Title_Orange.png')} 
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+                <Text style={styles.stepSubtitle}>What are your financial goals?</Text>
               </View>
               <Text style={styles.selectionHint}>Select all that apply (up to 4)</Text>
             </>
@@ -756,8 +786,12 @@ export default function WelcomeScreen() {
           {currentStep === 4 && (
             <>
               <View style={styles.headerContainer}>
-                <Text style={styles.mainTitle}>FiPet</Text>
-                <Text style={styles.subtitle}>How do you want your pet to help you learn?</Text>
+                <Image 
+                  source={require('@/src/assets/images/FiPet_Title_Orange.png')} 
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+                <Text style={styles.stepSubtitle}>How do you want your pet to help you learn?</Text>
               </View>
               <Text style={styles.selectionHint}>Select one option</Text>
             </>
@@ -810,21 +844,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 60,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  mascotContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 20,
-  },
-  speechBubbleContainer: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-  },
   speechBubble: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
@@ -845,9 +864,7 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
     fontWeight: '500',
-  },
-  mascotText: {
-    fontSize: 80,
+    fontFamily: 'Poppins_500Medium',
   },
   input: {
     width: '100%',
@@ -857,6 +874,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 20,
     marginBottom: 20,
+    fontFamily: 'Poppins_400Regular',
   },
   inputError: {
     borderColor: '#FF6B6B',
@@ -866,92 +884,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 5,
     textAlign: 'center',
-  },
-  eggCarouselContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  eggCarousel: {
-    width: '100%',
-  },
-  eggCarouselContent: {
-    paddingHorizontal: 10,
-    alignItems: 'center',
-  },
-  eggOption: {
-    marginHorizontal: 10,
-    padding: 10,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  selectedEgg: {
-    borderColor: '#FFA500',
-  },
-  eggShape: {
-    width: 80,
-    height: 100,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  eggHighlight: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    position: 'absolute',
-    top: 20,
-    left: 20,
-  },
-  eggContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    padding: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  eggInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 60,
-    borderWidth: 2,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  eggEmoji: {
-    fontSize: 42,
-  },
-  eggName: {
-    fontSize: 10,
-    color: '#333',
-    marginTop: 5,
-    textAlign: 'center',
-    width: '100%',
+    fontFamily: 'Poppins_400Regular',
   },
   sectionContainer: {
     width: '100%',
     marginTop: 0,
-  },
-  firstSection: {
-    marginTop: 15,
   },
   inputLabel: {
     fontSize: 20,
     fontWeight: '600',
     color: '#FFA500',
     marginBottom: 5,
+    fontFamily: 'Poppins_600SemiBold',
   },
   referralOption: {
     flexDirection: 'row',
@@ -969,17 +913,6 @@ const styles = StyleSheet.create({
     borderColor: '#8F66FD',
     backgroundColor: '#8F66FD1A',
   },
-  goalOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    marginBottom: 20,
-    width: '100%',
-  },
   goalContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -992,6 +925,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     flex: 1,
+    fontFamily: 'Poppins_400Regular',
   },
   checkbox: {
     width: 20,
@@ -1003,9 +937,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  selectedGoal: {
-    backgroundColor: '#FFE5E5',
   },
   button: {
     backgroundColor: '#FFA500',
@@ -1036,75 +967,18 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  gradientButtonInner: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-  },
   buttonDisabled: {
     backgroundColor: '#ccc',
   },
-  buttonDisabledText: {
-    color: '#666',
-  },
-  petContainer: {
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  petBody: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    position: 'relative',
-  },
-  petEar: {
-    position: 'absolute',
-    width: 30,
-    height: 30,
-    backgroundColor: 'inherit',
-    borderRadius: 15,
-    top: -10,
-    left: 10,
-    transform: [{ rotate: '-30deg' }],
-  },
-  petEarRight: {
-    left: 80,
-    transform: [{ rotate: '30deg' }],
-  },
-  petFace: {
-    position: 'absolute',
-    top: 40,
-    left: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  petEye: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: 'white',
-    marginRight: 20,
-  },
-  petEyeRight: {
-    marginRight: 0,
-  },
-  petNose: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'white',
-    marginLeft: 10,
-  },
   buttonContainer: {
     width: '100%',
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   buttonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Poppins_700Bold',
   },
   welcomeContent: {
     position: 'relative',
@@ -1116,10 +990,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5E6',
   },
   loadingText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
+    fontSize: 18,
+    color: '#F97216',
+    textAlign: 'center',
+    fontFamily: 'Poppins_400Regular',
   },
   loadingAnimation: {
     width: 100,
@@ -1130,20 +1004,9 @@ const styles = StyleSheet.create({
   loadingEmoji: {
     fontSize: 60,
   },
-  fillerImageContainer: {
-    width: 140,
-    height: 140,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 250
-  },
   fillerImage: {
     width: 220,
     height: 220,
-  },
-  scrollView: {
-    width: '100%',
-    maxHeight: 400,
   },
   welcomeHeader: {
     alignItems: 'flex-start',
@@ -1157,62 +1020,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
     textAlign: 'left',
-  },
-  welcomeIcon: {
-    fontSize: 60,
-    marginTop: 15,
-  },
-  welcomeDescription: {
-    fontSize: 20,
-    color: '#000000',
-    textAlign: 'left',
-    marginTop: 10,
-    paddingLeft: 5,
-    lineHeight: 28,
-  },
-  descriptionText: {
-    fontSize: 16,
-    color: '#4A5568',
-    textAlign: 'center',
-    marginBottom: 15,
-    lineHeight: 24,
-    fontWeight: '400',
-  },
-  titleContainer: {
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  appName: {
-    fontSize: 42,
-    fontWeight: 'bold',
-    color: '#FF6B35',
-    textAlign: 'center',
-    marginTop: 5,
-    textShadowColor: 'rgba(255, 107, 53, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  iconContainer: {
-    backgroundColor: '#FFF5E6',
-    borderRadius: 50,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  descriptionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 25,
-    padding: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: '#F7FAFC',
+    fontFamily: 'Poppins_700Bold',
   },
   backButtonTop: {
     position: 'absolute',
@@ -1225,6 +1033,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginTop: 5,
     paddingLeft: 5,
+    fontFamily: 'Poppins_500Medium',
   },
   welcomeText: {
     fontSize: 20,
@@ -1232,6 +1041,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginTop: 5,
     paddingLeft: 5,
+    fontFamily: 'Poppins_400Regular',
   },
   trophySection: {
     position: 'absolute',
@@ -1251,6 +1061,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'left',
+    fontFamily: 'Poppins_400Regular',
   },
   questSection: {
     position: 'absolute',
@@ -1270,6 +1081,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'left',
+    fontFamily: 'Poppins_400Regular',
   },
   bagSection: {
     position: 'absolute',
@@ -1289,6 +1101,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'left',
+    fontFamily: 'Poppins_400Regular',
   },
   coinSection: {
     position: 'absolute',
@@ -1308,6 +1121,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'left',
+    fontFamily: 'Poppins_400Regular',
   },
   foxImageContainer: {
     flex: 0.6,
@@ -1326,6 +1140,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     textAlign: 'center',
     color: '#333',
+    fontFamily: 'Poppins_700Bold',
   },
   formSection: {
     width: '100%',
@@ -1344,6 +1159,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     fontSize: 16,
     backgroundColor: '#FFFFFF',
+    fontFamily: 'Poppins_400Regular',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -1361,6 +1177,7 @@ const styles = StyleSheet.create({
     color: '#A0AEC0',
     marginTop: 8,
     marginLeft: 4,
+    fontFamily: 'Poppins_400Regular',
   },
   termsContainer: {
     flexDirection: 'row',
@@ -1373,11 +1190,13 @@ const styles = StyleSheet.create({
     color: '#333',
     flex: 1,
     lineHeight: 20,
+    fontFamily: 'Poppins_400Regular',
   },
   termsLink: {
     color: '#FF6B35',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
+    fontFamily: 'Poppins_700Bold',
   },
   signInContainer: {
     width: '100%',
@@ -1389,11 +1208,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'center',
+    fontFamily: 'Poppins_400Regular',
   },
   signInLink: {
     color: '#8B5CF6',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
+    fontFamily: 'Poppins_700Bold',
   },
   inputSubtext: {
     fontSize: 14,
@@ -1401,31 +1222,34 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 15,
     marginLeft: 2,
+    fontFamily: 'Poppins_400Regular',
   },
   hintText: {
     fontSize: 12,
     color: '#A0AEC0',
     marginTop: 8,
     marginLeft: 4,
+    fontFamily: 'Poppins_400Regular',
   },
   headerContainer: {
     alignItems: 'flex-start',
-    marginBottom: 20,
-    marginTop: 10,
+    marginBottom: 3,
+    marginTop: 1,
     paddingHorizontal: 20,
   },
-  mainTitle: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#F97216',
-    textAlign: 'left',
-    marginBottom: 10,
+  logoImage: {
+    width: 125,
+    height: 125,
+    marginBottom: -20,
+    marginTop: -20,
   },
-  subtitle: {
+  stepSubtitle: {
     fontSize: 20,
     color: '#F97216',
     textAlign: 'left',
     fontWeight: '500',
+    marginBottom: 10,
+    fontFamily: 'Poppins_500Medium',
   },
   selectionHint: {
     fontSize: 13,
@@ -1434,6 +1258,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     fontWeight: '400',
     paddingHorizontal: 20,
+    fontFamily: 'Poppins_400Regular',
   },
   hatchingTitle: {
     fontSize: 29,
@@ -1441,6 +1266,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 40,
     textAlign: 'center',
+    fontFamily: 'Poppins_700Bold',
   },
   hatchingEggContainer: {
     width: '100%',
@@ -1457,12 +1283,14 @@ const styles = StyleSheet.create({
   },
   hatchingEggEmoji: {
     fontSize: 80,
+    fontFamily: 'Poppins_400Regular',
   },
   hatchingSubtitle: {
     fontSize: 22,
     color: '#FFFFFF',
     textAlign: 'center',
     marginTop: 40,
+    fontFamily: 'Poppins_400Regular',
   },
   hatchingContainer: {
     flex: 1,
@@ -1496,6 +1324,7 @@ const styles = StyleSheet.create({
     color: '#F97216',
     fontWeight: '500',
     textAlign: 'center',
+    fontFamily: 'Poppins_500Medium',
   },
   speechBubbleContainerStep1: {
     position: 'absolute',
@@ -1508,5 +1337,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 80,
+  },
+  scrollableContentContainer: {
+    flex: 1,
+    width: '100%',
+  },
+  scrollView: {
+    flex: 1,
+    width: '100%',
+  },
+  scrollViewContent: {
+    paddingBottom: 20,
   },
 }); 
