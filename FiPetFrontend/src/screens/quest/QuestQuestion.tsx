@@ -30,7 +30,6 @@ export default function QuestQuestion() {
   const [selectedOptions, setSelectedOptions] = useState<QuestionOption[]>([]);
   const [checked, setChecked] = useState(false);
   let [answer, setAnswer] = useState<QuestAnswer | null>(null);
-  const [showIncorrectModal, setShowIncorrectModal] = useState(false);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const router = useRouter();
 
@@ -65,14 +64,16 @@ export default function QuestQuestion() {
       const result = selectOption(question.id, selectedOptions[0].id);
       setAnswer(result);
       setChecked(true);
-      if (!result.outcome.isCorrectAnswer) setShowIncorrectModal(true);
-      else setShowCorrectModal(true);
+      if (!result.outcome.isCorrectAnswer) {
+        router.push(`/quests/${questID}/questions/${questionID}/incorrect`);
+      } else setShowCorrectModal(true);
     } else if (selectedOptions.length > 0) {
       const result = selectOption(question.id, selectedOptions[0].id);
       setAnswer(result);
       setChecked(true);
-      if (!result.outcome.isCorrectAnswer) setShowIncorrectModal(true);
-      else setShowCorrectModal(true);
+      if (!result.outcome.isCorrectAnswer) {
+        router.push(`/quests/${questID}/questions/${questionID}/incorrect`);
+      } else setShowCorrectModal(true);
     }
   }
 
@@ -114,17 +115,6 @@ export default function QuestQuestion() {
       : selectedOptions.length > 0 ? selectedOptions[0] : null;
 
   useEffect(() => {
-    if (showIncorrectModal && checked && answer && !answer.outcome.isCorrectAnswer) {
-      const timer = setTimeout(() => {
-        setShowIncorrectModal(false);
-        if (answer.nextQuestion === null) {
-          router.replace(`/quests/${questID}`);
-        } else {
-          router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
-        }
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
     if (showCorrectModal && checked && answer && answer.outcome.isCorrectAnswer) {
       const timer = setTimeout(() => {
         setShowCorrectModal(false);
@@ -136,13 +126,27 @@ export default function QuestQuestion() {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [showIncorrectModal, showCorrectModal, checked, answer, questID, router]);
+  }, [showCorrectModal, checked, answer, questID, router]);
 
   return (
     <ThemedView style={styles.container}>
-      {/* Progress Bar */}
-      <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+      {/* Progress Bar Header */}
+      <View style={styles.progressHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
+          <Text style={styles.backArrow}>{'<'}</Text>
+        </TouchableOpacity>
+        <View style={styles.progressBarSteps}>
+          {allQuestions.map((_, step) => (
+            <View
+              key={step}
+              style={[
+                styles.progressStep,
+                step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
+                step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
+              ]}
+            />
+          ))}
+        </View>
       </View>
 
       {/* Question Number */}
@@ -229,32 +233,6 @@ export default function QuestQuestion() {
           </View>
         </View>
       </Modal>
-
-      {/* Incorrect Modal */}
-      <Modal
-        visible={showIncorrectModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowIncorrectModal(false)}
-      >
-        <View style={styles.incorrectModalOverlay}>
-          <View style={styles.incorrectModalContent}>
-            <Text style={styles.incorrectTitle}>❌ Incorrect</Text>
-            <View style={styles.foxContainer}>
-              <Image
-                source={require('@/src/assets/images/sad-fox.png')}
-                style={styles.foxImage}
-                resizeMode="contain"
-              />
-              <Image
-                source={require('@/src/assets/images/red-Vector.png')}
-                style={styles.foxShadow}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
     </ThemedView>
   );
 }
@@ -266,18 +244,40 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'flex-start',
   },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: '#eee',
-    borderRadius: 8,
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 32,
-    overflow: 'hidden',
-    marginTop: 48,
   },
-  progressBar: {
-    height: '100%',
+  backArrowContainer: {
+    padding: 8,
+  },
+  backArrow: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  progressBarSteps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  progressStep: {
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  progressStepFirst: {
+    flex: 3,
+    height: 10,
+  },
+  progressStepSmall: {
+    flex: 1,
+    height: 6,
+  },
+  progressStepActive: {
     backgroundColor: '#6C63FF',
-    borderRadius: 8,
+  },
+  progressStepInactive: {
+    backgroundColor: '#ccc',
   },
   questionNumber: {
     fontSize: 16,
@@ -364,27 +364,6 @@ const styles = StyleSheet.create({
   xpText: {
     fontSize: 16,
     textAlign: "center",
-  },
-  incorrectModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 99, 132, 0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  incorrectModalContent: {
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  incorrectTitle: {
-    fontSize: 35,
-    position: 'absolute',
-    fontWeight: 'bold',
-    color: '#fff',
-    top: 137,
-    alignItems: 'center',
   },
   foxContainer: {
     alignItems: 'center',
