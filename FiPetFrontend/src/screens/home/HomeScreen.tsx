@@ -10,7 +10,6 @@ import { getLevelXPRequirement, getStreakXPRequirement } from "@/src/functions/g
 import { UserProgress, dayAbbreviations, StreakProgress, StreakDay } from "@/src/types/UserProgress"
 import { useFonts } from 'expo-font';
 
-
 const STREAK_DISPLAY_LEN = 7;
 const MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
 
