@@ -34,7 +34,7 @@ export default function LandingScreen() {
   }
 
   const handleGetStarted = () => {
-    router.push('/home');
+    router.push('/welcome');
   };
 
   const handleSignIn = () => {
