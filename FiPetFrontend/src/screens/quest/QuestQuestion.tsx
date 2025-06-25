@@ -130,9 +130,23 @@ export default function QuestQuestion() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Progress Bar */}
-      <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+      {/* Progress Bar Header */}
+      <View style={styles.progressHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
+          <Text style={styles.backArrow}>{'<'}</Text>
+        </TouchableOpacity>
+        <View style={styles.progressBarSteps}>
+          {allQuestions.map((_, step) => (
+            <View
+              key={step}
+              style={[
+                styles.progressStep,
+                step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
+                step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
+              ]}
+            />
+          ))}
+        </View>
       </View>
 
       {/* Question Number */}
@@ -230,18 +244,40 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'flex-start',
   },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: '#eee',
-    borderRadius: 8,
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 32,
-    overflow: 'hidden',
-    marginTop: 48,
   },
-  progressBar: {
-    height: '100%',
+  backArrowContainer: {
+    padding: 8,
+  },
+  backArrow: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  progressBarSteps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  progressStep: {
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  progressStepFirst: {
+    flex: 3,
+    height: 10,
+  },
+  progressStepSmall: {
+    flex: 1,
+    height: 6,
+  },
+  progressStepActive: {
     backgroundColor: '#6C63FF',
-    borderRadius: 8,
+  },
+  progressStepInactive: {
+    backgroundColor: '#ccc',
   },
   questionNumber: {
     fontSize: 16,

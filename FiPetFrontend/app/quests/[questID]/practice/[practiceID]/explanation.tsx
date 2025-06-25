@@ -97,11 +97,15 @@ export default function PracticeExplanationScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Practice Question</Text>
+        {/* Progress Bar (same as question screens) */}
+        <View style={styles.progressBarSteps}>
+          <View style={[styles.progressStep, styles.progressStepFirst, styles.progressStepActive]} />
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <View key={idx} style={[styles.progressStep, styles.progressStepCircle]} />
+          ))}
         </View>
-
+        {/* Practice Question Title */}
+        <Text style={styles.headerTitle}>Practice Question</Text>
         {/* Question Text */}
         <Text style={styles.questionText}>{practiceQuestion.prompt}</Text>
 
@@ -183,6 +187,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+    textAlign: 'center',
+    marginBottom: 16,
   },
   questionText: {
     fontSize: 20,
@@ -263,5 +269,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 1,
+  },
+  progressBarSteps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  progressStep: {
+    marginRight: 10,
+  },
+  progressStepFirst: {
+    width: 40,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#6C63FF',
+  },
+  progressStepCircle: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#eee',
+  },
+  progressStepActive: {
+    backgroundColor: '#6C63FF',
   },
 }); 

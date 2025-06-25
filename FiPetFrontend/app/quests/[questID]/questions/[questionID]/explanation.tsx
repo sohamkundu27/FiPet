@@ -64,11 +64,13 @@ export default function QuestionExplanationScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView style={styles.container}>
-        {/* Progress Bar */}
-        <View style={styles.progressBarContainer}>
-          <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+        {/* Progress Bar (same as question screens) */}
+        <View style={styles.progressBarSteps}>
+          <View style={[styles.progressStep, styles.progressStepFirst, styles.progressStepActive]} />
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <View key={idx} style={[styles.progressStep, styles.progressStepCircle]} />
+          ))}
         </View>
-
         {/* Question Number */}
         <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
 
@@ -123,19 +125,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 24,
   },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: '#eee',
-    borderRadius: 8,
-    marginBottom: 32,
-    overflow: 'hidden',
-    marginTop: 48,
+  progressBarSteps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
   },
-  progressBar: {
-    height: '100%',
+  progressStep: {
+    marginRight: 10,
+  },
+  progressStepFirst: {
+    width: 40,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: '#6C63FF',
-    borderRadius: 8,
   },
+  progressStepCircle: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#eee',
+  },
+  progressStepActive: {
+    backgroundColor: '#6C63FF',
+  },
+  backArrowContainer: undefined,
+  progressHeader: undefined,
   questionNumber: {
     fontSize: 16,
     color: '#888',

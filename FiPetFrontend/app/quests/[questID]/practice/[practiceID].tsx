@@ -126,9 +126,23 @@ export default function PracticeQuestionScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Practice Question</Text>
+        {/* Progress Bar Header */}
+        <View style={styles.progressHeader}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
+            <Text style={styles.backArrow}>{'<'}</Text>
+          </TouchableOpacity>
+          <View style={styles.progressBarSteps}>
+            {[0,1,2,3,4,5].map((step) => (
+              <View
+                key={step}
+                style={[
+                  styles.progressStep,
+                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
+                  step === 0 ? styles.progressStepActive : styles.progressStepInactive,
+                ]}
+              />
+            ))}
+          </View>
         </View>
 
         {/* Question Text */}
@@ -232,15 +246,42 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: 'center',
   },
-  header: {
+  progressHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
     marginTop: 48,
     marginBottom: 32,
   },
-  headerTitle: {
+  backArrowContainer: {
+    padding: 8,
+  },
+  backArrow: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  progressBarSteps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  progressStep: {
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  progressStepFirst: {
+    flex: 3,
+    height: 10,
+  },
+  progressStepSmall: {
+    flex: 1,
+    height: 6,
+  },
+  progressStepActive: {
+    backgroundColor: '#6C63FF',
+  },
+  progressStepInactive: {
+    backgroundColor: '#ccc',
   },
   questionText: {
     fontSize: 20,
