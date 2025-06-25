@@ -1,25 +1,180 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { AnimatedCircularProgress } from 'react-native-circular-progress'
+import { useAuth } from "@/src/hooks/useAuth"
+import { db } from "@/src/config/firebase"
+import { doc, getDocs, collection, onSnapshot, query, where, orderBy, Timestamp, setDoc, serverTimestamp, updateDoc } from "@firebase/firestore"
+import { getLevelXPRequirement, getStreakXPRequirement } from "@/src/functions/getXPRequirement"
+import { UserProgress, dayAbbreviations, StreakProgress, StreakDay } from "@/src/types/UserProgress"
+
+
+const STREAK_DISPLAY_LEN = 7;
+const MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
+
+/**
+ * Modifies the date passed in to be the timestamp at the start of the day.
+ */
+function startOfDay ( date: Date ): Date {
+  let sod = new Date(date);
+  sod.setHours(0);
+  sod.setMinutes(0);
+  sod.setSeconds(0);
+  sod.setMilliseconds(0);
+  return sod;
+}
 
 export default function HomeScreen() {
-  const [level, setLevel] = useState(6)
+
   const [mood, setMood] = useState(25)
-  const petData = {
-    level: 3,
-    currentXP: 650,
-    requiredXP: 1000,
-    stats: {
-      coins: 1400,
-      streak: 6,
-      xp: 32700,
-    },
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    level: 0,
+    currentXP: 0,
+    earnedXP: 0,
+    requiredLevelXP: 0,
+    requiredStreakXP: 0,
+    coins: 0,
+  });
+  const [streakProgress, setStreak] = useState<StreakProgress>({
+    currentStreak: 0,
+    days: []
+  });
+  const _auth = useAuth();
+  const user = _auth.userState;
+
+  function loadStreakInfo() {
+
+    if ( !user ) {
+      return;
+    }
+    
+    const streakCollection = collection( db, 'users', user.uid, 'streakData' );
+    const today = startOfDay( new Date() );
+
+    const displayStartDate = new Date(today.valueOf() - ((STREAK_DISPLAY_LEN-1) * MILLIS_IN_DAY));
+    const displayStartTimestamp = new Timestamp(displayStartDate.getSeconds(), displayStartDate.getMilliseconds());
+    const streakQuery = query(
+      streakCollection,
+      where("endTime", ">=", displayStartTimestamp),
+      orderBy("endTime", "asc")
+    );
+
+    getDocs(streakQuery).then(async (snapshot) => {
+
+      let i = 0;
+      let currentDate = new Date(displayStartDate);
+      let days: StreakDay[] = [];
+
+      while( currentDate.valueOf() < today.valueOf() ) {
+
+        const currentDay = currentDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+        if ( i >= snapshot.docs.length ) {
+          days.push({
+            dayAbbreviation: dayAbbreviations[currentDay],
+            achieved: false
+          });
+          currentDate = new Date( currentDate.valueOf() + MILLIS_IN_DAY );
+          continue;
+        }
+
+        const streakStartTimestamp = snapshot.docs[i].get("startTime", {serverTimestamps: 'estimate'}) as Timestamp;
+        const streakStartDate = startOfDay(streakStartTimestamp.toDate());
+        const streakDuration = snapshot.docs[i].get("duration") as number;
+
+        if ( currentDate.valueOf() <  streakStartDate.valueOf() ) {
+          days.push({
+            dayAbbreviation: dayAbbreviations[currentDay],
+            achieved: false
+          });
+          currentDate = new Date( currentDate.valueOf() + MILLIS_IN_DAY );
+        } else if ( currentDate.valueOf() > streakStartDate.valueOf() + ((streakDuration - 1) * MILLIS_IN_DAY ) ) {
+          i ++;
+        } else {
+          days.push({
+            dayAbbreviation: dayAbbreviations[currentDay],
+            achieved: true
+          });
+          currentDate = new Date( currentDate.valueOf() + MILLIS_IN_DAY );
+        }
+      }
+
+      let _currentStreak;
+      const currentDay = today.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+      if ( i < snapshot.docs.length ) {
+        const streakStart = snapshot.docs[i].get("startTime") as Timestamp;
+        _currentStreak = ((today.valueOf() - startOfDay(streakStart.toDate()).valueOf()) / MILLIS_IN_DAY) + 1;
+        await updateDoc(snapshot.docs[i].ref, {
+          endTime: serverTimestamp(),
+          duration: _currentStreak,
+        });
+        days.push({
+          dayAbbreviation: dayAbbreviations[currentDay],
+          achieved: true
+        });
+      } else {
+        const refName = `${today.getMonth().toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}-${today.getFullYear()}`;
+        const streakDocRef = doc( streakCollection, refName );
+        await setDoc(streakDocRef, {
+          startTime: serverTimestamp(),
+          endTime: serverTimestamp(),
+          duration: 1,
+        });
+        _currentStreak = 1;
+        days.push({
+          dayAbbreviation: dayAbbreviations[currentDay],
+          achieved: true
+        });
+      }
+
+      setStreak({
+        currentStreak: _currentStreak,
+        days: days
+      });
+
+    }).catch((error) => {
+      console.error(error);
+    });
+
   }
 
-  const xpPercentage = (petData.currentXP / petData.requiredXP) * 100
-  const levelProgress = 65
+  function loadProgressInfo() {
+
+    if ( !user ) {
+      return;
+    }
+    
+    const userDocRef = doc( db, 'users', user.uid );
+
+    const progressUnsub = onSnapshot( userDocRef, {
+      next: (snapshot) => {
+        const userData = snapshot.data();
+        const level = userData?.current_level || 0;
+        const previousXP = userData?.previous_xp || 0;
+        const currentXP = userData?.current_xp || 0;
+        setUserProgress({
+          level: level,
+          currentXP: currentXP,
+          earnedXP: currentXP - previousXP,
+          requiredLevelXP: getLevelXPRequirement(level),
+          requiredStreakXP: getStreakXPRequirement(level, streakProgress),
+          coins: userData?.coins || 0,
+        })
+      },
+      error: (err) => {
+        console.error( err );
+      }
+    });
+
+    return progressUnsub;
+  }
+
+  useEffect(loadStreakInfo, [user]);
+  useEffect(loadProgressInfo, [user, streakProgress]);
+
+  const xpPercentage = Math.min((userProgress.earnedXP / userProgress.requiredStreakXP) * 100, 100) || 0;
+  const levelProgress = Math.round(Math.min((userProgress.currentXP / userProgress.requiredLevelXP) * 100, 100)) || 0;
 
   const windowWidth = Dimensions.get("window").width
   const petCircleSize = windowWidth * 0.65
@@ -32,15 +187,15 @@ export default function HomeScreen() {
         <View style={styles.stats}>
           <View style={styles.statItem}>
             <Image source={require("@/src/assets/images/xp.png")} style={styles.icon} />
-            <Text style={styles.statText}>{petData.stats.xp}</Text>
+            <Text style={styles.statText}>{userProgress.currentXP}</Text>
           </View>
           <View style={styles.statItem}>
             <Image source={require("@/src/assets/images/streak.png")} style={styles.icon} />
-            <Text style={styles.statText}>{petData.stats.streak}</Text>
+            <Text style={styles.statText}>{streakProgress.currentStreak}</Text>
           </View>
           <View style={styles.statItem}>
             <Image source={require("@/src/assets/images/coin.png")} style={styles.icon} />
-            <Text style={styles.statText}>{petData.stats.coins}</Text>
+            <Text style={styles.statText}>{userProgress.coins}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -83,7 +238,7 @@ export default function HomeScreen() {
 
           <View style={styles.levelIndicator}>
             <Image source={require("@/src/assets/images/trophy.png")} style={styles.icon} />
-            <Text style={{ fontSize: 16, fontWeight: "600", color: "#374151" }}>Level {level}</Text>
+            <Text style={{ fontSize: 16, fontWeight: "600", color: "#374151" }}>Level {userProgress.level}</Text>
           </View>
         </View>
 
@@ -105,34 +260,12 @@ export default function HomeScreen() {
           >
             <View style={{ justifyContent: "center" }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <View style={{ alignItems: "center" }}>
-                  <Text style={styles.left}>🔥</Text>
-                  <Text style={styles.left}>F</Text>
-                </View>
-                <View style={{ alignItems: "center" }}>
-                  <Text style={styles.left}>🔥</Text>
-                  <Text style={styles.left}>S</Text>
-                </View>
-                <View style={{ alignItems: "center" }}>
-                  <Text style={styles.left}>🔥</Text>
-                  <Text style={styles.left}>S</Text>
-                </View>
-                <View style={{ alignItems: "center" }}>
-                  <Text style={styles.left}>🔥</Text>
-                  <Text style={styles.left}>M</Text>
-                </View>
-                <View style={{ alignItems: "center" }}>
-                  <Text style={styles.left}>🔥</Text>
-                  <Text style={styles.left}>T</Text>
-                </View>
-                <View style={{ alignItems: "center" }}>
-                  <Text style={styles.left}>🔥</Text>
-                  <Text style={styles.left}>W</Text>
-                </View>
-                <View style={{ alignItems: "center" }}>
-                  <Text style={styles.left}>🔥</Text>
-                  <Text style={styles.left}>T</Text>
-                </View>
+                {streakProgress.days.map((day, key) => (
+                  <View key={key} style={{ alignItems: "center" }}>
+                    <Text style={styles.left}>{day.achieved ? "🔥" : " "}</Text>
+                    <Text style={styles.left}>{day.dayAbbreviation}</Text>
+                  </View>
+                ))}
               </View>
               <Text style={styles.left}>Weekly Streak Calendar</Text>
             </View>
@@ -148,7 +281,7 @@ export default function HomeScreen() {
                 </View>
               </View>
               <TouchableOpacity style={styles.right}>
-                <Text style={styles.cardButton}>Today's Progress</Text>
+                <Text style={styles.cardButton}>Today&apos;s Progress</Text>
               </TouchableOpacity>
             </View>
           </LinearGradient>
