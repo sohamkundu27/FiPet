@@ -152,13 +152,14 @@ export default function HomeScreen() {
         const userData = snapshot.data();
         const level = userData?.current_level || 0;
         const previousXP = userData?.previous_xp || 0;
+        const previousLevel = userData?.previous_level || level;
         const currentXP = userData?.current_xp || 0;
         setUserProgress({
           level: level,
           currentXP: currentXP,
           earnedXP: currentXP - previousXP,
           requiredLevelXP: getLevelXPRequirement(level),
-          requiredStreakXP: getStreakXPRequirement(level, streakProgress),
+          requiredStreakXP: getStreakXPRequirement(previousLevel, streakProgress),
           coins: userData?.coins || 0,
         })
       },
