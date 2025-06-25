@@ -124,7 +124,13 @@ export default function QuestScreen() {
                         <TouchableOpacity
                             style={styles.playButton}
                             activeOpacity={0.85}
-                            onPress={() => router.push(`/quests/${q.id}`)}
+                            onPress={() => {
+                                if (q.preQuest) {
+                                    router.push(`/quests/${q.id}/preQuestReading`);
+                                } else {
+                                    router.push(`/quests/${q.id}`);
+                                }
+                            }}
                         >
                             <GradientPlayIcon colors={idx % 2 === 0 ? ['#A259FF', '#3B82F6'] : ['#3B82F6', '#38BDF8']} />
                             <Text

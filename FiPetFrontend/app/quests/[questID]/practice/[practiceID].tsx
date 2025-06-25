@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
 import { getPracticeQuestionById } from '@/src/services/practiceQuestionService';
 import { PracticeQuestion } from '@/src/types/quest';
+import { useQuest } from '@/src/hooks/useQuest';
 
 // Option type for internal use
 interface QuestionOption {
@@ -12,9 +13,10 @@ interface QuestionOption {
 }
 
 export default function PracticeQuestionScreen() {
-  const { questID, practiceID } = useLocalSearchParams<{
+  const { questID, practiceID, originalQuestionID } = useLocalSearchParams<{
     questID?: string;
     practiceID?: string;
+    originalQuestionID?: string;
   }>();
   const router = useRouter();
   
@@ -25,9 +27,16 @@ export default function PracticeQuestionScreen() {
   const [loading, setLoading] = useState(true);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
 
+  // Get quest context for progress bar
+  const { getAllQuestions } = useQuest();
+  const allQuestions = getAllQuestions();
+  const originalQuestionIndex = originalQuestionID ? allQuestions.findIndex(q => q.id === originalQuestionID) : 0;
+
   // Debug logging
   console.log('Practice screen - practiceID:', practiceID);
   console.log('Practice screen - questID:', questID);
+  console.log('Practice screen - originalQuestionID:', originalQuestionID);
+  console.log('Practice screen - originalQuestionIndex:', originalQuestionIndex);
 
   useEffect(() => {
     const loadPracticeQuestion = async () => {
@@ -88,7 +97,7 @@ export default function PracticeQuestionScreen() {
       setShowCorrectModal(true);
     } else {
       // If incorrect, navigate to incorrect screen
-      router.push(`/quests/${questID}/practice/${practiceID}/incorrect`);
+      router.push(`/quests/${questID}/practice/${practiceID}/incorrect?originalQuestionID=${originalQuestionID}`);
     }
   };
 
@@ -129,22 +138,27 @@ export default function PracticeQuestionScreen() {
         {/* Progress Bar Header */}
         <View style={styles.progressHeader}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
-            <Text style={styles.backArrow}>{'<'}</Text>
+            <Image
+              source={require('@/src/assets/images/arrow.png')}
+              style={styles.backArrow}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
-          <View style={styles.progressBarSteps}>
-            {[0,1,2,3,4,5].map((step) => (
+          <View style={[styles.progressBarSteps, { flex: 1 }]}>
+            {allQuestions.map((_, step) => (
               <View
                 key={step}
                 style={[
                   styles.progressStep,
                   step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                  step === 0 ? styles.progressStepActive : styles.progressStepInactive,
+                  step <= originalQuestionIndex ? styles.progressStepActive : styles.progressStepInactive,
                 ]}
               />
             ))}
           </View>
         </View>
-
+        {/* Practice Question Title */}
+        <Text style={styles.headerTitle}>Practice Question</Text>
         {/* Question Text */}
         <Text style={styles.questionText}>{practiceQuestion.prompt}</Text>
 
@@ -249,16 +263,15 @@ const styles = StyleSheet.create({
   progressHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 48,
+    paddingTop: 87,
     marginBottom: 32,
   },
   backArrowContainer: {
     padding: 8,
   },
   backArrow: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    width: 32,
+    height: 24,
   },
   progressBarSteps: {
     flexDirection: 'row',
@@ -282,6 +295,13 @@ const styles = StyleSheet.create({
   },
   progressStepInactive: {
     backgroundColor: '#ccc',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 32,
+    textAlign: 'center',
+    color: '#333',
   },
   questionText: {
     fontSize: 20,

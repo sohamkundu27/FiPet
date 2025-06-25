@@ -27,6 +27,19 @@ export interface PracticeQuestion {
   incorrectResponse?: string;
 }
 
+export interface PreQuestReadingPage {
+  top: string;
+  bottom: string;
+}
+
+export interface PreQuestReading {
+  id: string;
+  page1: PreQuestReadingPage;
+  page2: PreQuestReadingPage;
+  page3: PreQuestReadingPage;
+  page4: PreQuestReadingPage;
+}
+
 export interface Quest {
   id: string;
   description: string;
@@ -37,7 +50,7 @@ export interface Quest {
   title: string;
   topic: string;
   xpReward: number;
-  
+  preQuest?: string;
 }
 
 // Firestore document structure
@@ -51,6 +64,7 @@ export interface QuestDocument {
   title: string;
   topic: string;
   xpReward: number;
+  preQuest?: string;
 }
 
 
