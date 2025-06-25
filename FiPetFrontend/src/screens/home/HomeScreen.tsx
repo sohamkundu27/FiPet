@@ -13,8 +13,8 @@ export default function HomeScreen() {
     requiredXP: 1000,
     stats: {
       coins: 1400,
-      trophies: 6,
-      streak: 3,
+      streak: 6,
+      xp: 32700,
     },
   }
 
@@ -22,7 +22,7 @@ export default function HomeScreen() {
   const levelProgress = 65
 
   const windowWidth = Dimensions.get("window").width
-  const petCircleSize = windowWidth * 0.65 // Adjust size as needed
+  const petCircleSize = windowWidth * 0.65
   const progressSize = windowWidth * 0.85
 
   return (
@@ -32,15 +32,15 @@ export default function HomeScreen() {
         <View style={styles.stats}>
           <View style={styles.statItem}>
             <Image source={require("@/src/assets/images/xp.png")} style={styles.icon} />
-            <Text style={styles.statText}>6</Text>
+            <Text style={styles.statText}>{petData.stats.xp}</Text>
           </View>
           <View style={styles.statItem}>
             <Image source={require("@/src/assets/images/streak.png")} style={styles.icon} />
-            <Text style={styles.statText}>3</Text>
+            <Text style={styles.statText}>{petData.stats.streak}</Text>
           </View>
           <View style={styles.statItem}>
             <Image source={require("@/src/assets/images/coin.png")} style={styles.icon} />
-            <Text style={styles.statText}>1400</Text>
+            <Text style={styles.statText}>{petData.stats.coins}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -75,7 +75,7 @@ export default function HomeScreen() {
               />
               <View style={styles.petCircle}>
                 <Image source={require("@/src/assets/images/sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain" }} />
-                <Image source={require("@/src/assets/images/fox-shadow.png")} style={{width: petCircleSize * .75, resizeMode: 'contain'}} />
+                <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, resizeMode: 'contain' }} />
               </View>
             </View>
             <Text style={styles.levelText}>Mood</Text>
@@ -238,10 +238,8 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width * .65,
     height: Dimensions.get("window").width * .65,
     borderRadius: 500,
-    //backgroundColor: "black",
     alignItems: "center",
     justifyContent: "center",
-    //marginTop: 15
   },
   petImage: {
     width: 220,
