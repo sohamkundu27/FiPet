@@ -1,8 +1,9 @@
 "use client"
 import { useState } from "react"
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions } from "react-native"
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, SafeAreaView } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { AnimatedCircularProgress } from 'react-native-circular-progress'
+import { useFonts } from 'expo-font';
 
 export default function HomeScreen() {
   const [level, setLevel] = useState(6)
@@ -24,6 +25,23 @@ export default function HomeScreen() {
   const windowWidth = Dimensions.get("window").width
   const petCircleSize = windowWidth * 0.65
   const progressSize = windowWidth * 0.85
+
+  const [loaded] = useFonts({
+    PoppinsBold: require('@/src/assets/fonts/Poppins-Bold.ttf'),
+    PoppinsMedium: require('@/src/assets/fonts/Poppins-Medium.ttf'),
+    PoppinsRegular: require('@/src/assets/fonts/Poppins-Regular.ttf'),
+    PoppinsSemiBold: require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
+  });
+
+  if (!loaded) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -83,7 +101,7 @@ export default function HomeScreen() {
 
           <View style={styles.levelIndicator}>
             <Image source={require("@/src/assets/images/trophy.png")} style={styles.icon} />
-            <Text style={{ fontSize: 16, fontWeight: "600", color: "#374151" }}>Level {level}</Text>
+            <Text style={{ fontSize: 16, fontFamily: 'PoppinsRegular', color: "#374151" }}>Level {level}</Text>
           </View>
         </View>
 
@@ -134,7 +152,7 @@ export default function HomeScreen() {
                   <Text style={styles.left}>T</Text>
                 </View>
               </View>
-              <Text style={styles.left}>Weekly Streak Calendar</Text>
+              <Text style={styles.left2}>Weekly Streak Calendar</Text>
             </View>
             <View>
               <View style={styles.progressBarContainer}>
@@ -188,6 +206,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff"
   },
+  content: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 60,
+    paddingTop: 100,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#4A5568',
+    fontFamily: 'PoppinsRegular',
+  },
   header: {
     paddingTop: 50,
     paddingHorizontal: 20,
@@ -197,7 +228,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontFamily: "PoppinsBold",
     color: "#fff",
   },
   stats: {
@@ -221,8 +252,8 @@ const styles = StyleSheet.create({
   },
   statText: {
     color: "black",
-    fontWeight: "bold",
-    fontSize: 16,
+    fontFamily: 'PoppinsRegular',
+    fontSize: 15,
   },
   petSection: {
     alignItems: "center",
@@ -252,13 +283,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontFamily: 'PoppinsBold',
     color: "#222",
   },
   sectionSubtitle: {
     color: "#666",
     marginBottom: 10,
-    fontSize: 14
+    fontSize: 14,
+    fontFamily: 'PoppinsRegular'
   },
   progressCard: {
     borderRadius: 20,
@@ -269,9 +301,15 @@ const styles = StyleSheet.create({
   },
   left: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 22,
-    fontWeight: "bold",
+    fontFamily: 'PoppinsSemiBold'
+  },
+  left2: {
+    color: "#fff",
+    fontSize: 13,
+    lineHeight: 22,
+    fontFamily: 'PoppinsRegular'
   },
   right: {
     backgroundColor: "#fff",
@@ -281,7 +319,8 @@ const styles = StyleSheet.create({
   },
   cardButton: {
     color: "#2D8EFF",
-    fontWeight: "bold",
+    fontFamily: 'PoppinsRegular',
+    fontSize: 13
   },
   quest: {
     borderRadius: 20,
@@ -292,7 +331,7 @@ const styles = StyleSheet.create({
   },
   questTitle: {
     color: "#fff",
-    fontWeight: "bold",
+    fontFamily: 'PoppinsSemiBold',
     fontSize: 20,
   },
   questSubtitle: {
@@ -300,6 +339,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 2,
     maxWidth: 200,
+    fontFamily: 'PoppinsRegular'
   },
   playButton: {
     paddingVertical: 8,
@@ -310,7 +350,8 @@ const styles = StyleSheet.create({
   },
   playText: {
     color: "white",
-    fontWeight: "bold",
+    fontSize: 15,
+    fontFamily: 'PoppinsMedium'
   },
   progressBarContainer: {
     marginBottom: 10,
@@ -381,7 +422,7 @@ const styles = StyleSheet.create({
   },
   levelText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: 'PoppinsRegular',
     color: "#374151",
     marginHorizontal: ((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 6,
     marginBottom: ((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 8
