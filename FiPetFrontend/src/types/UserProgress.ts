@@ -3,6 +3,7 @@ export type UserProgress = {
   currentXP: number,
   earnedXP: number, // amount of xp earned today.
   requiredLevelXP: number, // amount of XP before leveling up.
+  prevRequiredLevelXP: number,
   requiredStreakXP: number, // amount of XP before achieving streak.
   coins: number,
 }

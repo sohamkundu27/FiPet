@@ -25,6 +25,10 @@ function startOfDay ( date: Date ): Date {
   return sod;
 }
 
+function constrain( num: number, min: number, max: number ) {
+  return Math.min(Math.max(num, min), max);
+}
+
 export default function HomeScreen() {
 
   const [mood, setMood] = useState(25)
@@ -33,6 +37,7 @@ export default function HomeScreen() {
     currentXP: 0,
     earnedXP: 0,
     requiredLevelXP: 0,
+    prevRequiredLevelXP: 0,
     requiredStreakXP: 0,
     coins: 0,
   });
@@ -159,6 +164,7 @@ export default function HomeScreen() {
           currentXP: currentXP,
           earnedXP: currentXP - previousXP,
           requiredLevelXP: getLevelXPRequirement(level),
+          prevRequiredLevelXP: getLevelXPRequirement(level-1),
           requiredStreakXP: getStreakXPRequirement(previousLevel, streakProgress),
           coins: userData?.coins || 0,
         })
@@ -174,8 +180,10 @@ export default function HomeScreen() {
   useEffect(loadStreakInfo, [user]);
   useEffect(loadProgressInfo, [user, streakProgress]);
 
-  const xpPercentage = Math.min((userProgress.earnedXP / userProgress.requiredStreakXP) * 100, 100) || 0;
-  const levelProgress = Math.round(Math.min((userProgress.currentXP / userProgress.requiredLevelXP) * 100, 100)) || 0;
+  const xpPercentage = constrain(100 * userProgress.earnedXP / userProgress.requiredStreakXP, 0, 100) || 0;
+  const earnedXP = userProgress.currentXP - userProgress.prevRequiredLevelXP;
+  const earnRequired = userProgress.requiredLevelXP - userProgress.prevRequiredLevelXP;
+  const levelProgress = Math.round(constrain(100 * earnedXP/earnRequired, 0, 100)) || 0;
 
   const windowWidth = Dimensions.get("window").width
   const petCircleSize = windowWidth * 0.65
