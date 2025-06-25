@@ -14,7 +14,12 @@ type Quest = {
     title: string;
     xpReward: number;
     duration?: string;
-    objectives?: string[];
+    level?: number;
+    order?: number;
+    preQuest?: string;
+    topic?: string;
+    descriptions?: string[];
+    questionIds?: string[];
     [key: string]: any;
 };
 
@@ -33,11 +38,17 @@ export default function QuestScreen() {
                         title: data.title ?? 'Untitled Quest',
                         xpReward: data.xpReward ?? 0,
                         duration: data.duration ?? '30 min',
-                        description: data.description ?? 'No description available.',
+                        level: data.level ?? 1,
+                        order: data.order ?? 1,
+                        preQuest: data.preQuest ?? '',
+                        topic: data.topic ?? '',
+                        descriptions: data.descriptions ?? [],
+                        questionIds: data.questionIds ?? [],
                         ...data,
                     };
                 });
                 setQuests(questsData);
+                console.log('Fetched quests:', questsData);
             } catch (error) {
                 console.error('Error fetching quests:', error);
             }
@@ -46,7 +57,7 @@ export default function QuestScreen() {
     }, []);
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#F9F7E0' }}>
+        <View style={{ flex: 1}}>
             {/* Gradient Header */}
             <LinearGradient
                 colors={['#A259FF', '#3B82F6']}
@@ -89,17 +100,28 @@ export default function QuestScreen() {
                                 <Text style={styles.questCardStatText}>{q.xpReward}</Text>
                             </View>
                             <View style={styles.questCardStat}>
-                                {/* Custom Clock Icon */}
                                 <CustomClockIcon />
                                 <Text style={styles.questCardStatText}>{q.duration || '30 min'}</Text>
                             </View>
+                            {/* <View style={styles.questCardStat}>
+                                <Text style={styles.questCardStatText}>Lvl {q.level}</Text>
+                            </View> */}
                         </View>
-                        {/* Description as Objective */}
-                        <View style={{ marginTop: 10 }}>
-                            <View style={styles.objectiveRow}>
-                                <Text style={styles.objectiveEmoji}>📊</Text>
-                                <Text style={styles.objectiveText}>{q.description}</Text>
-                            </View>
+                        {/* Objectives (descriptions) */}
+                        <View style={{ marginTop: 10, marginRight: 18 }}>
+                            {q.descriptions && q.descriptions.length > 0 ? (
+                                q.descriptions.map((desc: string, i: number) => (
+                                    <View style={styles.objectiveRow} key={i}>
+                                        <Text style={styles.objectiveEmoji}>{getObjectiveEmoji(i)}</Text>
+                                        <Text style={styles.objectiveText}>{desc}</Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <View style={styles.objectiveRow}>
+                                    <Text style={styles.objectiveEmoji}>📊</Text>
+                                    <Text style={styles.objectiveText}>No objectives listed.</Text>
+                                </View>
+                            )}
                         </View>
                         {/* Play Button */}
                         <TouchableOpacity
@@ -111,7 +133,7 @@ export default function QuestScreen() {
                             <Text
                               style={[
                                 styles.playButtonText,
-                                { color: (idx % 2 === 0 ? '#3B82F6' : '#38BDF8') }
+                                { color: (idx % 2 === 0 ? '#A259FF' : '#3B82F6') }
                               ]}
                             >
                               Play
@@ -129,26 +151,17 @@ function getObjectiveEmoji(idx: number) {
     return emojis[idx % emojis.length];
 }
 
-const GradientPlayIcon = ({ colors }: { colors: readonly [string, string, ...string[]] }) => {
-    return (
-        <LinearGradient
-            colors={colors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }} // <-- horizontal
-            style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                justifyContent: 'center',
-                alignItems: 'center',
-            }}
-        >
-            <Svg width={20} height={20} viewBox="0 0 20 20">
-                <Polygon points="4,3 17,10 4,17" fill="#fff" />
-            </Svg>
-        </LinearGradient>
-    );
-};
+const GradientPlayIcon = ({ colors }: { colors: readonly [string, string, ...string[]] }) => (
+    <Svg width={32} height={32} viewBox="0 0 32 32">
+        <Defs>
+            <SvgLinearGradient id="play-gradient" x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0%" stopColor={colors[0]} />
+                <Stop offset="100%" stopColor={colors[1]} />
+            </SvgLinearGradient>
+        </Defs>
+        <Polygon points="8,6 26,16 8,26" fill="url(#play-gradient)" />
+    </Svg>
+);
 
 const CustomClockIcon = () => (
   <Svg width={22} height={22} viewBox="0 0 22 22">
@@ -200,12 +213,12 @@ const XPIcon = () => (
 const styles = StyleSheet.create({
     headerGradient: {
         width: '100%',
-        height: 106,           // Fixed height as per Figma
-        paddingHorizontal: 24, // Left = 24px
-        paddingTop: 0,         // Remove top padding
-        paddingBottom: 12,     // Content sits near the bottom
+        height: 106,          
+        paddingHorizontal: 24,
+        paddingTop: 0,         
+        paddingBottom: 12,     
         marginBottom: 28,
-        justifyContent: 'flex-end', // Ensure content is at the bottom
+        justifyContent: 'flex-end', 
     },
     headerRow: {
         flexDirection: 'row',
@@ -216,16 +229,17 @@ const styles = StyleSheet.create({
         minHeight: 36,
     },
     headerTitle: {
-        fontSize: 24,            // slightly smaller if needed
-        fontWeight: 'bold',        // reduced from 12
+        fontSize: 24,            
+        fontWeight: 'bold',        
         color: '#fff',
         letterSpacing: 0.5,
         flexShrink: 1,
-        minWidth: 90,            // ensures some space before stat pills
+        minWidth: 90,            
+        fontFamily: 'Poppins', // updated
     },
     headerStatsRow: {
         flexDirection: 'row',
-        gap: 8,                  // reduced gap
+        gap: 8,                  
         alignItems: 'center',
         flexWrap: 'wrap',
     },
@@ -234,26 +248,29 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#F3F3F3',
         borderRadius: 999,
-        paddingHorizontal: 10,   // reduced from 18
-        paddingVertical: 3,      // reduced from 6
-        marginRight: 6,          // reduced from 10
-        marginBottom: 4,         // reduced from 6
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        marginRight: 6,
+        marginBottom: 4,
     },
     xpText: {
         fontWeight: '900',
-        fontSize: 16,            // reduced from 22
+        fontSize: 16,            
         color: '#3B82F6',
-        marginRight: 4,          // reduced from 6
-        letterSpacing: 0.5,      // reduced from 1
+        marginRight: 4,         
+        letterSpacing: 0.5,      
+        fontFamily: 'Poppins', // updated
     },
     statIcon: {
-        fontSize: 14,            // reduced from 18
-        marginRight: 4,          // reduced from 6
+        fontSize: 14,            
+        marginRight: 4,          
+        fontFamily: 'Poppins', // updated
     },
     statText: {
-        fontWeight: 'bold',
-        fontSize: 14,            // reduced from 16
+        fontWeight: '400',
+        fontSize: 14,            
         color: '#444',
+        fontFamily: 'Poppins', // updated
     },
     questCard: {
         borderRadius: 22,
@@ -275,10 +292,11 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginBottom: 10,
         letterSpacing: 0.5,
+        fontFamily: 'Poppins', // updated
     },
     questCardStatsRow: {
         flexDirection: 'row',
-        gap: 16,
+        gap: 4,
         marginBottom: 8,
     },
     questCardStat: {
@@ -286,8 +304,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#fff',
         borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 4,
+        paddingHorizontal: 5,
+        paddingVertical: 2,
         marginRight: 10,
         ...(Platform.OS === 'web'
             ? { boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }
@@ -300,9 +318,9 @@ const styles = StyleSheet.create({
     },
     questCardStatText: {
         color: '#444',
-        fontWeight: 'bold',
         fontSize: 15,
         marginLeft: 6,
+        fontFamily: 'Poppins', // updated
     },
     objectiveRow: {
         flexDirection: 'row',
@@ -312,20 +330,22 @@ const styles = StyleSheet.create({
     objectiveEmoji: {
         fontSize: 18,
         marginRight: 8,
+        fontFamily: 'Poppins', // updated
     },
     objectiveText: {
         color: '#fff',
         fontSize: 15,
         fontWeight: '500',
         marginLeft: 2,
+        fontFamily: 'Poppins', // updated
     },
     playButton: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
         borderRadius: 32,
-        paddingHorizontal: 24,
-        paddingVertical: 10,
+        paddingHorizontal: 18,
+        paddingVertical: 4,
         alignSelf: 'flex-start',
         marginTop: 24,
         ...(Platform.OS === 'web'
@@ -337,7 +357,6 @@ const styles = StyleSheet.create({
     },
     playButtonText: {
         fontSize: 20,
-        fontWeight: 'bold',
-        marginLeft: 12,
+        fontFamily: 'Poppins', // updated
     },
 });
