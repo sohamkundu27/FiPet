@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions } from "react-native"
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, SafeAreaView } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { AnimatedCircularProgress } from 'react-native-circular-progress'
 import { useAuth } from "@/src/hooks/useAuth"
