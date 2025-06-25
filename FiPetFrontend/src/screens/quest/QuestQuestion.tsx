@@ -30,7 +30,6 @@ export default function QuestQuestion() {
   const [selectedOptions, setSelectedOptions] = useState<QuestionOption[]>([]);
   const [checked, setChecked] = useState(false);
   let [answer, setAnswer] = useState<QuestAnswer | null>(null);
-  const [showIncorrectModal, setShowIncorrectModal] = useState(false);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const router = useRouter();
 
@@ -65,14 +64,16 @@ export default function QuestQuestion() {
       const result = selectOption(question.id, selectedOptions[0].id);
       setAnswer(result);
       setChecked(true);
-      if (!result.outcome.isCorrectAnswer) setShowIncorrectModal(true);
-      else setShowCorrectModal(true);
+      if (!result.outcome.isCorrectAnswer) {
+        router.push(`/quests/${questID}/questions/${questionID}/incorrect`);
+      } else setShowCorrectModal(true);
     } else if (selectedOptions.length > 0) {
       const result = selectOption(question.id, selectedOptions[0].id);
       setAnswer(result);
       setChecked(true);
-      if (!result.outcome.isCorrectAnswer) setShowIncorrectModal(true);
-      else setShowCorrectModal(true);
+      if (!result.outcome.isCorrectAnswer) {
+        router.push(`/quests/${questID}/questions/${questionID}/incorrect`);
+      } else setShowCorrectModal(true);
     }
   }
 
@@ -114,17 +115,6 @@ export default function QuestQuestion() {
       : selectedOptions.length > 0 ? selectedOptions[0] : null;
 
   useEffect(() => {
-    if (showIncorrectModal && checked && answer && !answer.outcome.isCorrectAnswer) {
-      const timer = setTimeout(() => {
-        setShowIncorrectModal(false);
-        if (answer.nextQuestion === null) {
-          router.replace(`/quests/${questID}`);
-        } else {
-          router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
-        }
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
     if (showCorrectModal && checked && answer && answer.outcome.isCorrectAnswer) {
       const timer = setTimeout(() => {
         setShowCorrectModal(false);
@@ -136,7 +126,7 @@ export default function QuestQuestion() {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [showIncorrectModal, showCorrectModal, checked, answer, questID, router]);
+  }, [showCorrectModal, checked, answer, questID, router]);
 
   return (
     <ThemedView style={styles.container}>
@@ -222,32 +212,6 @@ export default function QuestQuestion() {
               />
               <Image
                 source={require('@/src/assets/images/green-Vector.png')}
-                style={styles.foxShadow}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Incorrect Modal */}
-      <Modal
-        visible={showIncorrectModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowIncorrectModal(false)}
-      >
-        <View style={styles.incorrectModalOverlay}>
-          <View style={styles.incorrectModalContent}>
-            <Text style={styles.incorrectTitle}>❌ Incorrect</Text>
-            <View style={styles.foxContainer}>
-              <Image
-                source={require('@/src/assets/images/sad-fox.png')}
-                style={styles.foxImage}
-                resizeMode="contain"
-              />
-              <Image
-                source={require('@/src/assets/images/red-Vector.png')}
                 style={styles.foxShadow}
                 resizeMode="contain"
               />
@@ -364,27 +328,6 @@ const styles = StyleSheet.create({
   xpText: {
     fontSize: 16,
     textAlign: "center",
-  },
-  incorrectModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 99, 132, 0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  incorrectModalContent: {
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  incorrectTitle: {
-    fontSize: 35,
-    position: 'absolute',
-    fontWeight: 'bold',
-    color: '#fff',
-    top: 137,
-    alignItems: 'center',
   },
   foxContainer: {
     alignItems: 'center',

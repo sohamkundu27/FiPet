@@ -9,9 +9,23 @@ export interface Question {
   feedback: {
     correct: string;
     incorrect: string;
-  }
+  };
+  incorrectResponse?: string;
+  practiceId?: string;
 }
 
+export interface PracticeQuestion {
+  id: string;
+  options: string[];
+  correctAnswers: string[];
+  type: string;
+  prompt: string;
+  feedback: {
+    correct: string;
+    incorrect: string;
+  };
+  incorrectResponse?: string;
+}
 
 export interface Quest {
   id: string;
