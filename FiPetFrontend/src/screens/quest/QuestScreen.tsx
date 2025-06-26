@@ -6,8 +6,9 @@ import { collection, getDocs, doc } from '@firebase/firestore';
 import { db } from '../../config/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polygon, Circle, Line, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
-import { useAuth } from '@/src/hooks/useAuth';
+import { useAuth } from '@/src/hooks/useRequiresAuth';
 import TabHeader from '@/src/components/TabHeader';
+import { useGamificationStats } from '@/src/hooks/useGamificationStats';
 
 type Quest = {
     id: string;
@@ -24,10 +25,10 @@ type Quest = {
 };
 
 export default function QuestScreen() {
+    const {userProgress, streakProgress} = useGamificationStats();
     const router = useRouter();
     const [quests, setQuests] = useState<Quest[]>([]);
-    const _auth = useAuth();
-    const user = _auth.userState;
+    const {user} = useAuth();
 
     useEffect(() => {
         const fetchQuests = async () => {
@@ -96,7 +97,7 @@ export default function QuestScreen() {
             };
 
             getCorrectAnswers();
-        }, [questId, user]);
+        }, [questId]);
 
         if (totalQuestions === 0) return null;
 
@@ -110,9 +111,9 @@ export default function QuestScreen() {
     return (
         <View style={{ flex: 1}}>
           <TabHeader
-            xp={0}
-            coins={0}
-            streak={0}
+            xp={userProgress.currentXP}
+            coins={userProgress.coins}
+            streak={streakProgress.currentStreak}
             title="Quests"
             gradient={{
               startColor: "#A259FF",
