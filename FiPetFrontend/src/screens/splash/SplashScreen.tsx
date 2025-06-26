@@ -54,7 +54,11 @@ export default function SplashScreen() {
           />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.appName}>FiPet</Text>
+          <Image
+            source={require('@/src/assets/images/FiPetWhite.png')}
+            style={styles.appNameImage}
+            resizeMode="contain"
+          />
         </View>
       </Animated.View>
     </SafeAreaView>
@@ -85,14 +89,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 60,
   },
-  appName: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#FFFFFF', // White text
-    textAlign: 'center',
-    letterSpacing: 2,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+  appNameImage: {
+    width: 220,
+    height: 70,
+    marginBottom: 0,
+    alignSelf: 'center',
   },
 }); 

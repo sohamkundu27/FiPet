@@ -140,6 +140,12 @@ export default function WelcomeScreen() {
   const _auth = useAuth();
   const auth = _auth.authState;
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [loaded] = useFonts({
+    Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('@/src/assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Medium': require('@/src/assets/fonts/Poppins-Medium.ttf'),
+    'Poppins-SemiBold': require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
+  });
 
   const totalSteps = 9;
   const progress = ((currentStep + 1) / totalSteps) * 100;
@@ -738,6 +744,16 @@ export default function WelcomeScreen() {
     );
   };
 
+  if (!loaded) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { fontFamily: 'Poppins' }]}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, currentStep === 5 && { backgroundColor: '#F97216' }]}>
       {!fontsLoaded ? (
@@ -987,7 +1003,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF5E6',
+    backgroundColor: '#FFFFFF',
   },
   loadingText: {
     fontSize: 18,
@@ -1000,6 +1016,7 @@ const styles = StyleSheet.create({
     height: 100,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
   },
   loadingEmoji: {
     fontSize: 60,

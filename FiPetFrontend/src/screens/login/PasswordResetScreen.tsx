@@ -5,6 +5,7 @@ import { useFonts } from 'expo-font';
 import { sendPasswordResetEmail } from '@firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/hooks/useAuth';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function PasswordResetScreen() {
   const [email, setEmail] = useState('');
@@ -15,13 +16,16 @@ export default function PasswordResetScreen() {
   const auth = useAuth().authState;
 
   const [loaded] = useFonts({
-    SpaceMono: require('@/src/assets/fonts/SpaceMono-Regular.ttf'),
+    Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('@/src/assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Medium': require('@/src/assets/fonts/Poppins-Medium.ttf'),
+    'Poppins-SemiBold': require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
   });
 
   if (!loaded) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
+        <View>
           <Text>Loading...</Text>
         </View>
       </SafeAreaView>
@@ -89,64 +93,56 @@ export default function PasswordResetScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.content}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBackToLogin}>
-            <Ionicons name="arrow-back" size={24} color="#4A5568" />
-          </TouchableOpacity>
-
-          <Text style={styles.title}>🔐 Reset Password</Text>
-          <Text style={styles.subtitle}>
-            Enter your email address and we'll send you a link to reset your password.
-          </Text>
-          
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBackToLogin}
+          disabled={isLoading}
+        >
+          <Ionicons name="arrow-back" size={28} color="#4A5568" />
+        </TouchableOpacity>
+        <View style={{ height: 40 }} />
+        <View style={styles.headerSection}>
+          <Text style={styles.title}>Forgot your password?</Text>
+          <Text style={styles.subtitle}>Enter the email you created your account with and we'll send you a reset code</Text>
+        </View>
+        <View style={styles.centerSection}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.styledInput, emailError ? styles.inputError : null]}
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
                 validateEmail(text);
               }}
-              placeholder="Enter your email"
+              placeholder="Enter you email address"
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor="#FFA500"
               editable={!isLoading}
             />
             {emailError ? (
               <Text style={styles.errorText}>{emailError}</Text>
             ) : null}
           </View>
-
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[
-                styles.submitButton,
-                ((!email || !!emailError) || isLoading) && styles.submitButtonDisabled,
-              ]}
+              style={styles.gradientButton}
               onPress={handlePasswordReset}
               disabled={!email || !!emailError || isLoading}
+              activeOpacity={0.8}
             >
-              <Text style={styles.submitButtonText}>
-                {isLoading ? '⏳ Sending...' : '📧 Send Reset Link'}
-              </Text>
+              <LinearGradient
+                colors={['#FF6B35', '#FFB74D']}
+                style={styles.gradientButtonInner}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.buttonText}>
+                  {isLoading ? '⏳ Sending...' : 'Send Code'}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={styles.backToLoginButton}
-            onPress={handleBackToLogin}
-            disabled={isLoading}
-          >
-            <Text style={[
-              styles.backToLoginText,
-              isLoading && styles.backToLoginTextDisabled
-            ]}>
-              ← Back to Login
-            </Text>
-          </TouchableOpacity>
-
           {isEmailSent && (
             <View style={styles.successContainer}>
               <Text style={styles.successText}>
@@ -166,7 +162,7 @@ export default function PasswordResetScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
@@ -174,71 +170,60 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 40,
+    justifyContent: 'flex-start',
   },
-  content: {
-    padding: 20,
-    flex: 1,
-    minHeight: '100%',
-    justifyContent: 'center',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    zIndex: 1,
-    padding: 10,
+  headerSection: {
+    marginTop: 100,
+    marginLeft: 24,
+    marginBottom: 32,
+    alignItems: 'flex-start',
+    maxWidth: 400,
+    width: '90%',
+    alignSelf: 'flex-start',
   },
   title: {
-    fontFamily: 'SpaceMono',
-    fontSize: 28,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 30,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 16,
-    color: '#4A5568',
-    marginTop: 60,
-    ...Platform.select({
-      ios: {
-        textShadowColor: 'rgba(0, 0, 0, 0.1)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-    paddingHorizontal: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#718096',
-    marginBottom: 40,
-    paddingHorizontal: 20,
-    lineHeight: 24,
-  },
-  label: {
-    fontSize: 18,
-    fontWeight: '600',
+    textAlign: 'left',
     marginBottom: 8,
     color: '#4A5568',
+    marginTop: 0,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#4A5568',
+    textAlign: 'left',
+    marginBottom: 0,
+    fontFamily: 'Poppins',
+  },
+  centerSection: {
+    width: '100%',
+    maxWidth: 400,
+    alignSelf: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+    paddingHorizontal: 16,
   },
   inputContainer: {
-    marginBottom: 24,
+    marginBottom: 0,
+    width: '100%',
   },
-  input: {
+  styledInput: {
     width: '100%',
     height: 55,
     borderWidth: 2,
-    borderColor: '#E9ECEF',
-    borderRadius: 16,
+    borderColor: '#FFA500',
+    borderRadius: 12,
     paddingHorizontal: 20,
-    fontSize: 18,
+    fontSize: 16,
     backgroundColor: '#FFFFFF',
+    fontFamily: 'Poppins',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
+        shadowOpacity: 0.1,
         shadowRadius: 4,
       },
       android: {
@@ -246,20 +231,27 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  inputError: {
+    borderColor: '#FF6B6B',
+  },
   errorText: {
     color: '#FF6B6B',
     marginTop: 8,
     fontSize: 14,
+    textAlign: 'center',
+    fontFamily: 'Poppins',
   },
   buttonContainer: {
     width: '100%',
-    marginTop: 20,
+    marginTop: 32,
   },
-  submitButton: {
+  gradientButton: {
     width: '100%',
     height: 60,
-    backgroundColor: '#4C1D95',
-    borderRadius: 30,
+    borderRadius: 20,
+    marginBottom: 0,
+    overflow: 'hidden',
+    backgroundColor: '#FF6B35',
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
@@ -274,27 +266,27 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  submitButtonDisabled: {
-    backgroundColor: '#CBD5E0',
-  },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '700',
-    fontFamily: 'SpaceMono',
-  },
-  backToLoginButton: {
-    marginTop: 20,
+  gradientButtonInner: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
   },
-  backToLoginText: {
-    color: '#4C1D95',
-    fontSize: 16,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
+  buttonText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins',
   },
-  backToLoginTextDisabled: {
-    opacity: 0.5,
+  backButton: {
+    position: 'absolute',
+    top: 30,
+    left: 20,
+    zIndex: 20,
+    padding: 10,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderRadius: 20,
   },
   successContainer: {
     marginTop: 30,
