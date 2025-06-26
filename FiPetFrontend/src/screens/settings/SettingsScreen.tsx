@@ -22,6 +22,7 @@ export default function SettingsScreen() {
   const {userState, authState} = useAuth();
   const auth = authState;
   const hasNavigated = useRef(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   const _modalVisibility = {
     "username": false,
@@ -36,13 +37,13 @@ export default function SettingsScreen() {
   // Create userdoc only if userState exists and has uid
   const userdoc = userState && userState.uid ? doc(db, 'users', userState.uid) : null;
 
-  // Handle navigation when user is not authenticated
+  // Handle navigation when user is not authenticated (but not when logging out intentionally)
   useEffect(() => {
-    if (!userState && !hasNavigated.current) {
+    if (!userState && !hasNavigated.current && !isLoggingOut) {
       hasNavigated.current = true;
       router.replace('/login');
     }
-  }, [userState, router]);
+  }, [userState, router, isLoggingOut]);
 
   useEffect(() => {
     if (userdoc) {
@@ -103,9 +104,13 @@ export default function SettingsScreen() {
           {
             title: "Log Out",
             action: () => {
+              setIsLoggingOut(true);
+              router.replace('/landing');
               signOut(auth).then(() => {
+                // Sign out completed successfully
               }).catch((error) => {
                 console.error("Error signing out:", error);
+                setIsLoggingOut(false);
               });
             },
             color: redColor
