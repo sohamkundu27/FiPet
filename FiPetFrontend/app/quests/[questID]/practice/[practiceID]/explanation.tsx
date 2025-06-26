@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
 import { getPracticeQuestionById } from '@/src/services/practiceQuestionService';
 import { PracticeQuestion } from '@/src/types/quest';
+import { useQuest } from '@/src/hooks/useQuest';
 
 // Option type for internal use
 interface QuestionOption {
@@ -12,15 +13,21 @@ interface QuestionOption {
 }
 
 export default function PracticeExplanationScreen() {
-  const { questID, practiceID } = useLocalSearchParams<{
+  const { questID, practiceID, originalQuestionID } = useLocalSearchParams<{
     questID?: string;
     practiceID?: string;
+    originalQuestionID?: string;
   }>();
   const router = useRouter();
   
   const [practiceQuestion, setPracticeQuestion] = useState<PracticeQuestion | null>(null);
   const [selectedOption, setSelectedOption] = useState<QuestionOption | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Get quest context for progress bar
+  const { getAllQuestions } = useQuest();
+  const allQuestions = getAllQuestions();
+  const originalQuestionIndex = originalQuestionID ? allQuestions.findIndex(q => q.id === originalQuestionID) : 0;
 
   useEffect(() => {
     const loadPracticeQuestion = async () => {
@@ -49,9 +56,24 @@ export default function PracticeExplanationScreen() {
   }, [practiceID]);
 
   const handleContinue = () => {
-    // Navigate back to the original question that had the practiceId
-    // We need to find which question had this practiceId
-    router.replace(`/quests/${questID}`);
+    // Navigate to the next question after the original question
+    if (originalQuestionID) {
+      // Find the original question and get the next question
+      const originalQuestion = allQuestions.find(q => q.id === originalQuestionID);
+      const originalIndex = allQuestions.findIndex(q => q.id === originalQuestionID);
+      const nextQuestion = allQuestions[originalIndex + 1];
+      
+      if (nextQuestion) {
+        // Go to the next question
+        router.replace(`/quests/${questID}/questions/${nextQuestion.id}`);
+      } else {
+        // No next question, go to quest completion
+        router.replace(`/quests/${questID}`);
+      }
+    } else {
+      // Fallback to quest index if no original question ID
+      router.replace(`/quests/${questID}`);
+    }
   };
 
   if (loading) {
@@ -96,55 +118,73 @@ export default function PracticeExplanationScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView style={styles.container}>
-        {/* Progress Bar (same as question screens) */}
-        <View style={styles.progressBarSteps}>
-          <View style={[styles.progressStep, styles.progressStepFirst, styles.progressStepActive]} />
-          {Array.from({ length: 5 }).map((_, idx) => (
-            <View key={idx} style={[styles.progressStep, styles.progressStepCircle]} />
-          ))}
-        </View>
-        {/* Practice Question Title */}
-        <Text style={styles.headerTitle}>Practice Question</Text>
-        {/* Question Text */}
-        <Text style={styles.questionText}>{practiceQuestion.prompt}</Text>
-
-        {/* Options */}
-        <View style={styles.optionsContainer}>
-          {options.map((option, index) => (
-            <View
-              key={option.id}
-              style={[
-                styles.optionButton,
-                getOptionStyle(index),
-              ]}
-            >
-              <Text style={[
-                styles.optionText,
-                correctIndices.includes(index) && styles.correctOptionText,
-                index === selectedOptionIndex && !correctIndices.includes(index) && styles.incorrectOptionText,
-              ]}>
-                {option.text}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Explanation */}
-        {practiceQuestion.incorrectResponse && (
-          <View style={styles.explanationContainer}>
-            <Text style={styles.explanationTitle}>Explanation:</Text>
-            <Text style={styles.explanationText}>{practiceQuestion.incorrectResponse}</Text>
-          </View>
-        )}
-
-        {/* Continue Button */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-            <Text style={styles.continueButtonText}>CONTINUE</Text>
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+        {/* Fixed progress bar and back arrow at the top */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingTop: 87, paddingHorizontal: 16, marginBottom: 16 }}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
+            <Image
+              source={require('@/src/assets/images/arrow.png')}
+              style={styles.backArrow}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
+          <View style={[styles.progressBarSteps, { flex: 1 }]}>
+            {allQuestions.map((_, step) => (
+              <View
+                key={step}
+                style={[
+                  styles.progressStep,
+                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
+                  step <= originalQuestionIndex ? styles.progressStepActive : styles.progressStepInactive,
+                ]}
+              />
+            ))}
+          </View>
         </View>
-      </ScrollView>
+        {/* Scrollable content below */}
+        <ScrollView contentContainerStyle={styles.container}>
+          {/* Practice Question Title */}
+          <Text style={styles.headerTitle}>Practice Question</Text>
+          {/* Question Text */}
+          <Text style={styles.questionText}>{practiceQuestion.prompt}</Text>
+
+          {/* Options */}
+          <View style={styles.optionsContainer}>
+            {options.map((option, index) => (
+              <View
+                key={option.id}
+                style={[
+                  styles.optionButton,
+                  getOptionStyle(index),
+                ]}
+              >
+                <Text style={[
+                  styles.optionText,
+                  correctIndices.includes(index) && styles.correctOptionText,
+                  index === selectedOptionIndex && !correctIndices.includes(index) && styles.incorrectOptionText,
+                ]}>
+                  {option.text}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Explanation */}
+          {practiceQuestion.incorrectResponse && (
+            <View style={styles.explanationContainer}>
+              <Text style={styles.explanationTitle}>Explanation:</Text>
+              <Text style={styles.explanationText}>{practiceQuestion.incorrectResponse}</Text>
+            </View>
+          )}
+
+          {/* Continue Button */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+              <Text style={styles.continueButtonText}>CONTINUE</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
     </>
   );
 }
@@ -273,25 +313,33 @@ const styles = StyleSheet.create({
   progressBarSteps: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
+    flex: 1,
   },
   progressStep: {
-    marginRight: 10,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
   progressStepFirst: {
-    width: 40,
+    flex: 3,
     height: 10,
-    borderRadius: 5,
     backgroundColor: '#6C63FF',
   },
-  progressStepCircle: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  progressStepSmall: {
+    flex: 1,
+    height: 6,
+  },
+  progressStepInactive: {
     backgroundColor: '#eee',
   },
   progressStepActive: {
     backgroundColor: '#6C63FF',
+  },
+  backArrowContainer: {
+    padding: 8,
+    marginRight: 8,
+  },
+  backArrow: {
+    width: 32,
+    height: 24,
   },
 }); 

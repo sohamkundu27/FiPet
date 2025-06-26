@@ -4,9 +4,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
 
 export default function PracticeIncorrectAnswerScreen() {
-  const { questID, practiceID } = useLocalSearchParams<{
+  const { questID, practiceID, originalQuestionID } = useLocalSearchParams<{
     questID?: string;
     practiceID?: string;
+    originalQuestionID?: string;
   }>();
   const router = useRouter();
 
@@ -15,8 +16,8 @@ export default function PracticeIncorrectAnswerScreen() {
   }
 
   const handleSeeExplanation = () => {
-    // Navigate to practice explanation screen
-    router.push(`/quests/${questID}/practice/${practiceID}/explanation`);
+    // Navigate to practice explanation screen with original question context
+    router.push(`/quests/${questID}/practice/${practiceID}/explanation?originalQuestionID=${originalQuestionID}`);
   };
 
   return (

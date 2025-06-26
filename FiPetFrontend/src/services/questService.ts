@@ -15,7 +15,8 @@ const questToDocument = (quest: Quest): Omit<QuestDocument, 'id'> => {
     order: quest.order,
     questionIds: quest.questionIds,
     topic: quest.topic,
-    xpReward: quest.xpReward
+    xpReward: quest.xpReward,
+    preQuest: quest.preQuest, 
   };
 };
 
@@ -30,7 +31,8 @@ const documentToQuest = (doc: QuestDocument): Quest => {
     order: doc.order,
     questionIds: doc.questionIds,
     topic: doc.topic,
-    xpReward: doc.xpReward
+    xpReward: doc.xpReward,
+    preQuest: doc.preQuest, 
   };
 };
 
