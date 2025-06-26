@@ -131,7 +131,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
   const [answeredQuestions, setAnsweredQuestions] = useState<QuestAnswerDict>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { userState } = useAuth();
+  const { user } = useAuth();
 
   // Fetch quest and questions on mount
   useEffect(() => {
@@ -320,9 +320,9 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     setAnsweredQuestions(newAnsweredQuestions);
     
     // Save answer to Firestore
-    if (userState) {
+    if (user) {
       try {
-        const userProgressRef = doc(db, 'users', userState.uid, 'questProgress', questID);
+        const userProgressRef = doc(db, 'users', user.uid, 'questProgress', questID);
         const answerRef = doc(collection(userProgressRef, 'answers'), question.id);
         await setDoc(answerRef, {
           questionId: question.id,

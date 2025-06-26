@@ -1,11 +1,10 @@
 import { auth } from "@/src/config/firebase";
 import { Auth, User } from "@firebase/auth";
 import { createContext, useEffect, useState } from "react";
-import { Text, View } from "react-native";
 
 type AuthContextType = {
-  userState: User | null,
-  authState: Auth,
+  auth: Auth|null,
+  user: User|null,
   ready: boolean,
 };
 
@@ -27,30 +26,13 @@ export const AuthProvider = ({ children }: { children: any }) => {
 
     let unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
-      // Don't automatically redirect - let the app handle navigation
     });
 
     return unsubscribe;
   }, []);
 
-  if ( ! ready ) {
-    return (
-      <View><Text>Loading...</Text></View>
-    );
-  }
-
-  // Only show LoginScreen if user is not authenticated and we're on a protected route
-  // For now, let the app handle navigation naturally
-  if ( !userState || !authState ) {
-    return (
-      <AuthContext.Provider value={{ userState: null, authState: auth, ready }}>
-        {children}
-      </AuthContext.Provider>
-    );
-  }
-
   return (
-    <AuthContext.Provider value={{ userState, authState, ready }}>
+    <AuthContext.Provider value={{ user: userState, auth: authState, ready }}>
       {children}
     </AuthContext.Provider>
   );
