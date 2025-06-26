@@ -8,8 +8,8 @@ import { collection, getDocs, doc } from '@firebase/firestore';
 import { db } from '../../config/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polygon, Circle, Line, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
-import { useAuth } from '@/src/hooks/useAuth';
-import { useQuest } from '@/src/hooks/useQuest';
+import { useAuth } from '@/src/hooks/useRequiresAuth';
+import { useGamificationStats } from '@/src/hooks/useGamificationStats';
 
 type Quest = {
     id: string;
@@ -26,10 +26,10 @@ type Quest = {
 };
 
 export default function QuestScreen() {
+    const {userProgress, streakProgress} = useGamificationStats();
     const router = useRouter();
     const [quests, setQuests] = useState<Quest[]>([]);
-    const _auth = useAuth();
-    const user = _auth.userState;
+    const {user} = useAuth();
 
     useEffect(() => {
         const fetchQuests = async () => {
@@ -98,7 +98,7 @@ export default function QuestScreen() {
             };
 
             getCorrectAnswers();
-        }, [questId, user]);
+        }, [questId]);
 
         if (totalQuestions === 0) return null;
 
@@ -123,15 +123,15 @@ export default function QuestScreen() {
                     <View style={styles.headerStatsRow}>
                         <View style={styles.statPill}>
                             <Text style={styles.xpText}>XP</Text>
-                            <Text style={styles.statText}>32700</Text>
+                            <Text style={styles.statText}>{userProgress.currentXP}</Text>
                         </View>
                         <View style={styles.statPill}>
                             <Text style={styles.statIcon}>🔥</Text>
-                            <Text style={styles.statText}>3</Text>
+                            <Text style={styles.statText}>{streakProgress.currentStreak}</Text>
                         </View>
                         <View style={styles.statPill}>
                             <GoldCoinIcon />
-                            <Text style={styles.statText}>1400</Text>
+                            <Text style={styles.statText}>{userProgress.coins}</Text>
                         </View>
                     </View>
                 </View>
