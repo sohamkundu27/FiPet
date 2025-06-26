@@ -137,8 +137,7 @@ export default function WelcomeScreen() {
   const [selectedReferralSource, setSelectedReferralSource] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const _auth = useAuth();
-  const auth = _auth.authState;
+  const {auth} = useAuth();
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const totalSteps = 9;

@@ -1,10 +1,16 @@
 import { useAuth } from '@/src/hooks/useAuth';
+import SplashScreen from '@/src/screens/splash/SplashScreen';
 import { Redirect } from 'expo-router';
 
 export default function Index() {
-  if (!useAuth().userState) {
-    return <Redirect href="/splash?page=landing" />;
+  const { ready } = useAuth();
+  if ( ! ready ) {
+    return (
+      <SplashScreen redirect="/home" ready={ready}/>
+    );
   } else {
-    return <Redirect href="/splash?page=home" />;
+    return (
+      <Redirect href="/home"/>
+    );
   }
 } 

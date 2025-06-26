@@ -13,8 +13,7 @@ export default function LoginScreen() {
   const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const _auth = useAuth();
-  const auth = _auth.authState;
+  const {auth} = useAuth();
 
   const [loaded] = useFonts({
     SpaceMono: require('@/src/assets/fonts/SpaceMono-Regular.ttf'),
