@@ -16,7 +16,10 @@ export default function PasswordResetScreen() {
   const auth = useAuth().authState;
 
   const [loaded] = useFonts({
-    SpaceMono: require('@/src/assets/fonts/SpaceMono-Regular.ttf'),
+    Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('@/src/assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Medium': require('@/src/assets/fonts/Poppins-Medium.ttf'),
+    'Poppins-SemiBold': require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
   });
 
   if (!loaded) {
@@ -179,7 +182,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   title: {
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins-Bold',
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'left',
@@ -192,7 +195,7 @@ const styles = StyleSheet.create({
     color: '#4A5568',
     textAlign: 'left',
     marginBottom: 0,
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   centerSection: {
     width: '100%',
@@ -215,7 +218,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     fontSize: 16,
     backgroundColor: '#FFFFFF',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     textAlign: 'center',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   buttonContainer: {
     width: '100%',
@@ -274,7 +277,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   backButton: {
     position: 'absolute',

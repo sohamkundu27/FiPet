@@ -20,7 +20,10 @@ export default function LandingScreen() {
   const router = useRouter();
   
   const [loaded] = useFonts({
-    SpaceMono: require('@/src/assets/fonts/SpaceMono-Regular.ttf'),
+    Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('@/src/assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Medium': require('@/src/assets/fonts/Poppins-Medium.ttf'),
+    'Poppins-SemiBold': require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
   });
 
   if (!loaded) {
@@ -54,7 +57,11 @@ export default function LandingScreen() {
         </View>
 
         {/* App Title */}
-        <Text style={styles.appTitle}>FiPet</Text>
+        <Image
+          source={require('@/src/assets/images/FiPetOrange.png')}
+          style={styles.appTitleImage}
+          resizeMode="contain"
+        />
 
         {/* Company Motto */}
         <View style={styles.mottoContainer}>
@@ -108,7 +115,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: '#4A5568',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   imageContainer: {
     marginBottom: 60,
@@ -133,7 +140,7 @@ const styles = StyleSheet.create({
     color: '#2D3748',
     textAlign: 'center',
     marginBottom: 8,
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
     ...Platform.select({
       ios: {
         textShadowColor: 'rgba(0, 0, 0, 0.1)',
@@ -147,7 +154,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#2D3748',
     textAlign: 'center',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   buttonContainer: {
     width: '100%',
@@ -180,7 +187,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '700',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   secondaryButton: {
     width: '100%',
@@ -196,13 +203,12 @@ const styles = StyleSheet.create({
     color: '#4C1D95',
     fontSize: 16,
     fontWeight: '600',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
-  appTitle: {
-    fontSize: 70,
-    fontWeight: 'bold',
-    color: '#FF6B35',
+  appTitleImage: {
+    width: 220,
+    height: 70,
     marginBottom: 20,
-    fontFamily: 'SpaceMono',
+    alignSelf: 'center',
   },
 }); 

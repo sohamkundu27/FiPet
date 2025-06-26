@@ -7,6 +7,7 @@ import { db } from '../../config/firebase';
 import { doc, setDoc } from '@firebase/firestore';
 import { createUserWithEmailAndPassword } from '@firebase/auth';
 import { useAuth } from '@/src/hooks/useAuth';
+import { useFonts } from 'expo-font';
 
 interface Egg {
   id: string;
@@ -113,7 +114,7 @@ const ProgressBar = ({ progress, onBack }: { progress: number; onBack: () => voi
 // LoadingScreen component outside of main component
 const LoadingScreen = () => (
   <View style={styles.loadingContainer}>
-    <Text style={styles.loadingText}>Setting up your financial journey...</Text>
+    <Text style={[styles.loadingText, { fontFamily: 'Poppins' }]}>Setting up your financial journey...</Text>
     <View style={styles.loadingAnimation}>
       <Text style={styles.loadingEmoji}>🐾</Text>
     </View>
@@ -145,6 +146,12 @@ export default function WelcomeScreen() {
   const auth = _auth.authState;
   const user = _auth.userState;
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [loaded] = useFonts({
+    Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('@/src/assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Medium': require('@/src/assets/fonts/Poppins-Medium.ttf'),
+    'Poppins-SemiBold': require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
+  });
 
   const totalSteps = 9;
   const progress = ((currentStep + 1) / totalSteps) * 100;
@@ -426,29 +433,31 @@ export default function WelcomeScreen() {
         case 2:
           return (
             <View style={styles.contentContainer}>
-              <View style={styles.sectionContainer}>
-                {referralSources.map((source) => (
-                  <TouchableOpacity
-                    key={source.id}
-                    style={[
-                      styles.referralOption,
-                      selectedReferralSource.includes(source.id) && styles.selectedReferralOption
-                    ]}
-                    onPress={() => {
-                      if (selectedReferralSource.includes(source.id)) {
-                        setSelectedReferralSource(selectedReferralSource.filter(id => id !== source.id));
-                      } else if (selectedReferralSource.length < 4) {
-                        setSelectedReferralSource([...selectedReferralSource, source.id]);
-                      }
-                    }}
-                  >
-                    <View style={styles.goalContent}>
-                      <Ionicons name={source.icon} size={20} color="#333" style={styles.goalIcon} />
-                      <Text style={styles.goalText}>{source.label}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <ScrollView style={{ width: '100%' }} contentContainerStyle={{ paddingBottom: 40 }}>
+                <View style={styles.sectionContainer}>
+                  {referralSources.map((source) => (
+                    <TouchableOpacity
+                      key={source.id}
+                      style={[
+                        styles.referralOption,
+                        selectedReferralSource.includes(source.id) && styles.selectedReferralOption
+                      ]}
+                      onPress={() => {
+                        if (selectedReferralSource.includes(source.id)) {
+                          setSelectedReferralSource(selectedReferralSource.filter(id => id !== source.id));
+                        } else if (selectedReferralSource.length < 4) {
+                          setSelectedReferralSource([...selectedReferralSource, source.id]);
+                        }
+                      }}
+                    >
+                      <View style={styles.goalContent}>
+                        <Ionicons name={source.icon} size={20} color="#333" style={styles.goalIcon} />
+                        <Text style={styles.goalText}>{source.label}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
             </View>
           );
         case 3:
@@ -720,6 +729,16 @@ export default function WelcomeScreen() {
     );
   };
 
+  if (!loaded) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { fontFamily: 'Poppins' }]}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, currentStep === 5 && { backgroundColor: '#F97216' }]}>
       {isLoading ? (
@@ -844,7 +863,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'center',
-    fontWeight: '500',
+    fontFamily: 'Poppins',
   },
   mascotText: {
     fontSize: 80,
@@ -866,6 +885,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 5,
     textAlign: 'center',
+    fontFamily: 'Poppins',
   },
   eggCarouselContainer: {
     width: '100%',
@@ -952,6 +972,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFA500',
     marginBottom: 5,
+    fontFamily: 'Poppins-Bold',
   },
   referralOption: {
     flexDirection: 'row',
@@ -992,6 +1013,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     flex: 1,
+    fontFamily: 'Poppins',
   },
   checkbox: {
     width: 20,
@@ -1105,6 +1127,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   },
   welcomeContent: {
     position: 'relative',
@@ -1113,19 +1136,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF5E6',
+    backgroundColor: '#FFFFFF',
   },
   loadingText: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 20,
+    fontFamily: 'Poppins',
+    textAlign: 'center',
+    alignSelf: 'center',
   },
   loadingAnimation: {
     width: 100,
     height: 100,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
   },
   loadingEmoji: {
     fontSize: 60,
@@ -1157,6 +1184,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
     textAlign: 'left',
+    fontFamily: 'Poppins-Bold',
   },
   welcomeIcon: {
     fontSize: 60,
@@ -1191,6 +1219,7 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(255, 107, 53, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+    fontFamily: 'Poppins-Bold',
   },
   iconContainer: {
     backgroundColor: '#FFF5E6',
@@ -1225,6 +1254,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginTop: 5,
     paddingLeft: 5,
+    fontFamily: 'Poppins',
   },
   welcomeText: {
     fontSize: 20,
@@ -1232,6 +1262,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginTop: 5,
     paddingLeft: 5,
+    fontFamily: 'Poppins',
   },
   trophySection: {
     position: 'absolute',
@@ -1251,6 +1282,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'left',
+    fontFamily: 'Poppins',
   },
   questSection: {
     position: 'absolute',
@@ -1270,6 +1302,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'left',
+    fontFamily: 'Poppins',
   },
   bagSection: {
     position: 'absolute',
@@ -1289,6 +1322,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'left',
+    fontFamily: 'Poppins',
   },
   coinSection: {
     position: 'absolute',
@@ -1308,6 +1342,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'left',
+    fontFamily: 'Poppins',
   },
   foxImageContainer: {
     flex: 0.6,
@@ -1326,6 +1361,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     textAlign: 'center',
     color: '#333',
+    fontFamily: 'Poppins-Bold',
   },
   formSection: {
     width: '100%',
@@ -1344,6 +1380,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     fontSize: 16,
     backgroundColor: '#FFFFFF',
+    fontFamily: 'Poppins',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -1361,6 +1398,7 @@ const styles = StyleSheet.create({
     color: '#A0AEC0',
     marginTop: 8,
     marginLeft: 4,
+    fontFamily: 'Poppins',
   },
   termsContainer: {
     flexDirection: 'row',
@@ -1373,11 +1411,13 @@ const styles = StyleSheet.create({
     color: '#333',
     flex: 1,
     lineHeight: 20,
+    fontFamily: 'Poppins',
   },
   termsLink: {
     color: '#FF6B35',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
+    fontFamily: 'Poppins-Bold',
   },
   signInContainer: {
     width: '100%',
@@ -1389,11 +1429,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'center',
+    fontFamily: 'Poppins',
   },
   signInLink: {
     color: '#8B5CF6',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
+    fontFamily: 'Poppins-Bold',
   },
   inputSubtext: {
     fontSize: 14,
@@ -1401,12 +1443,14 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 15,
     marginLeft: 2,
+    fontFamily: 'Poppins',
   },
   hintText: {
     fontSize: 12,
     color: '#A0AEC0',
     marginTop: 8,
     marginLeft: 4,
+    fontFamily: 'Poppins',
   },
   headerContainer: {
     alignItems: 'flex-start',
@@ -1420,12 +1464,14 @@ const styles = StyleSheet.create({
     color: '#F97216',
     textAlign: 'left',
     marginBottom: 10,
+    fontFamily: 'Poppins-Bold',
   },
   subtitle: {
     fontSize: 20,
     color: '#F97216',
     textAlign: 'left',
     fontWeight: '500',
+    fontFamily: 'Poppins',
   },
   selectionHint: {
     fontSize: 13,
@@ -1434,6 +1480,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     fontWeight: '400',
     paddingHorizontal: 20,
+    fontFamily: 'Poppins',
   },
   hatchingTitle: {
     fontSize: 29,
@@ -1441,6 +1488,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 40,
     textAlign: 'center',
+    fontFamily: 'Poppins-Bold',
   },
   hatchingEggContainer: {
     width: '100%',
@@ -1463,6 +1511,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginTop: 40,
+    fontFamily: 'Poppins',
   },
   hatchingContainer: {
     flex: 1,
@@ -1496,6 +1545,7 @@ const styles = StyleSheet.create({
     color: '#F97216',
     fontWeight: '500',
     textAlign: 'center',
+    fontFamily: 'Poppins',
   },
   speechBubbleContainerStep1: {
     position: 'absolute',

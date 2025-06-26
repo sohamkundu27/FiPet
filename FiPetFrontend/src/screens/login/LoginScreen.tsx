@@ -18,7 +18,10 @@ export default function LoginScreen() {
   const auth = _auth.authState;
 
   const [loaded] = useFonts({
-    SpaceMono: require('@/src/assets/fonts/SpaceMono-Regular.ttf'),
+    Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('@/src/assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Medium': require('@/src/assets/fonts/Poppins-Medium.ttf'),
+    'Poppins-SemiBold': require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
   });
 
   if (!loaded) {
@@ -260,7 +263,7 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
     textAlign: 'center',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   separator: {
     width: '80%',
@@ -288,7 +291,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFA500',
     marginBottom: 5,
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   styledInput: {
     width: '100%',
@@ -299,7 +302,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     fontSize: 16,
     backgroundColor: '#FFFFFF',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -320,7 +323,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     textAlign: 'center',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   buttonContainer: {
     width: '100%',
@@ -359,7 +362,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
@@ -372,7 +375,7 @@ const styles = StyleSheet.create({
     color: '#4C1D95',
     fontSize: 14,
     fontWeight: '600',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   forgotPasswordTextDisabled: {
     opacity: 0.5,
@@ -387,13 +390,13 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 16,
     textAlign: 'center',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   signUpLink: {
     color: '#8B5CF6',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
-    fontFamily: 'SpaceMono',
+    fontFamily: 'Poppins',
   },
   flexGrowContainer: {
     flex: 1,
