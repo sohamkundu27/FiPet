@@ -14,6 +14,9 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import { Quest, Question } from "../types/quest";
 import { getQuestWithQuestions } from "../services/questService";
+import { doc, setDoc, collection } from '@firebase/firestore';
+import { db } from '../config/firebase';
+import { useAuth } from '../hooks/useAuth';
 
 // Extended Question type for internal use with option objects
 interface ExtendedQuestion extends Question {
@@ -84,7 +87,7 @@ type getOptionsFunType = ( question: ExtendedQuestion ) => Array<{ id: string; t
  *
  * @returns the outcome object and the next question if there is a next question.
  */
-type selectOptionFunType = ( questionID: string, optionID: string) => QuestAnswer;
+type selectOptionFunType = ( questionID: string, optionID: string) => Promise<QuestAnswer>;
 
 /**
  * Gets the current answer to the question or false if it hasn't been answered.
@@ -128,6 +131,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
   const [answeredQuestions, setAnsweredQuestions] = useState<QuestAnswerDict>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userState } = useAuth();
 
   // Fetch quest and questions on mount
   useEffect(() => {
@@ -238,7 +242,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     throw new Error( "Question doesn't exist in quest." );
   }
 
-  const selectOption: selectOptionFunType = ( questionID, optionID ) => {
+  const selectOption: selectOptionFunType = async ( questionID, optionID ) => {
     let question = getQuestion( questionID );
 
     // find selected option
@@ -314,6 +318,22 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       nextQuestion: nextQuestion,
     };
     setAnsweredQuestions(newAnsweredQuestions);
+    
+    // Save answer to Firestore
+    if (userState) {
+      try {
+        const userProgressRef = doc(db, 'users', userState.uid, 'questProgress', questID);
+        const answerRef = doc(collection(userProgressRef, 'answers'), question.id);
+        await setDoc(answerRef, {
+          questionId: question.id,
+          option: selectedOption,
+          outcome: outcome,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error saving answer to Firestore:', error);
+      }
+    }
     
     return newAnsweredQuestions[question.id];
   }
