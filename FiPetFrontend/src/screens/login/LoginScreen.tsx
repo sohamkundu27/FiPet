@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Text, Alert } from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Text, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 import { signInWithEmailAndPassword } from '@firebase/auth';
 import { useAuth } from '@/src/hooks/useAuth';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -94,86 +95,113 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.push('/landing')}
-        disabled={isLoading}
-      >
-        <Ionicons name="arrow-back" size={24} color="#4A5568" />
-      </TouchableOpacity>
-      
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.content}>
-          <Text style={styles.title}>✨ Welcome Back! ✨</Text>
-          
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                validateEmail(text);
-              }}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholderTextColor="#A0AEC0"
-              editable={!isLoading}
-            />
-            {emailError ? (
-              <Text style={styles.errorText}>{emailError}</Text>
-            ) : null}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.push('/landing')}
+          disabled={isLoading}
+        >
+          <Ionicons name="arrow-back" size={28} color="#4A5568" />
+        </TouchableOpacity>
+        <View style={{ height: 120 }} />
+        <View style={styles.topSectionAbsolute}>
+          <View style={styles.topSection}>
+            <View style={{ position: 'relative', width: 160, height: 160 }}>
+              <Image
+                source={require('@/src/assets/images/fox.png')}
+                style={styles.foxImage}
+                resizeMode="contain"
+              />
+              <View style={styles.speechBubbleContainer}>
+                <View style={styles.speechBubble}>
+                  <Text style={styles.speechText}>It's good to see you again!</Text>
+                </View>
+              </View>
+            </View>
           </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                validatePassword(text);
-              }}
-              placeholder="Enter your password"
-              secureTextEntry
-              placeholderTextColor="#A0AEC0"
-              editable={!isLoading}
-            />
-            {passwordError ? (
-              <Text style={styles.errorText}>{passwordError}</Text>
-            ) : null}
-            <TouchableOpacity
-              style={styles.forgotPasswordButton}
-              onPress={() => router.navigate('/password-reset')}
-              disabled={isLoading}
-            >
-              <Text style={[
-                styles.forgotPasswordText,
-                isLoading && styles.forgotPasswordTextDisabled
-              ]}>
-                Forgot Password?
-              </Text>
-            </TouchableOpacity>
+          <View style={styles.separator} />
+        </View>
+        <View style={styles.flexGrowContainer}>
+          <View style={styles.content}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[styles.styledInput, emailError ? styles.inputError : null]}
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  validateEmail(text);
+                }}
+                placeholder="Email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholderTextColor="#FFA500"
+                editable={!isLoading}
+              />
+              {emailError ? (
+                <Text style={styles.errorText}>{emailError}</Text>
+              ) : null}
+            </View>
+            <View style={{ height: 16 }} />
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[styles.styledInput, passwordError ? styles.inputError : null]}
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  validatePassword(text);
+                }}
+                placeholder="Password"
+                secureTextEntry
+                placeholderTextColor="#FFA500"
+                editable={!isLoading}
+              />
+              {passwordError ? (
+                <Text style={styles.errorText}>{passwordError}</Text>
+              ) : null}
+              <TouchableOpacity
+                style={styles.forgotPasswordButton}
+                onPress={() => router.navigate('/password-reset')}
+                disabled={isLoading}
+              >
+                <Text style={[
+                  styles.forgotPasswordText,
+                  isLoading && styles.forgotPasswordTextDisabled
+                ]}>
+                  Forgot Password?
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.gradientButton}
+                onPress={handleLogin}
+                disabled={!email || !password || isLoading}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['#FF6B35', '#FFB74D']}
+                  style={styles.gradientButtonInner}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.buttonText}>
+                    {isLoading ? '⏳ Loading...' : 'Sign In'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                ((!email || !password) || isLoading) && styles.submitButtonDisabled,
-              ]}
-              onPress={handleLogin}
-              disabled={!email || !password || isLoading}
-            >
-              <Text style={styles.submitButtonText}>
-                {isLoading ? '⏳ Loading...' : '🎮 Login'}
+          <View style={styles.signUpContainer}>
+            <Text style={styles.signUpText}>
+              Don't have an account?{' '}
+              <Text style={styles.signUpLink} onPress={() => router.push('/welcome')}>
+                Sign up
               </Text>
-            </TouchableOpacity>
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -184,7 +212,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
@@ -192,56 +220,91 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 40,
+    justifyContent: 'flex-start',
+  },
+  topSection: {
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 10,
+  },
+  foxImage: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    bottom: 10,
+  },
+  speechBubbleContainer: {
+    position: 'absolute',
+    bottom: 220,
+    left: 70,
+    zIndex: 2,
+    width: '100%',
+    alignItems: 'flex-end',
+  },
+  speechBubble: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
+    alignSelf: 'flex-end',
+  },
+  speechText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+    textAlign: 'center',
+    fontFamily: 'SpaceMono',
+  },
+  separator: {
+    width: '80%',
+    height: 1,
+    backgroundColor: '#E9ECEF',
+    alignSelf: 'center',
+    marginVertical: 18,
   },
   content: {
     padding: 20,
     flex: 1,
-    minHeight: '100%',
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: 'transparent',
+    borderRadius: 20,
+    shadowColor: 'transparent',
     justifyContent: 'center',
-  },
-  title: {
-    fontFamily: 'SpaceMono',
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 40,
-    color: '#4A5568',
-    marginTop: 20,
-    ...Platform.select({
-      ios: {
-        textShadowColor: 'rgba(0, 0, 0, 0.1)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-    paddingHorizontal: 10,
-  },
-  label: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#4A5568',
+    marginTop: 270,
   },
   inputContainer: {
-    marginBottom: 24,
+    marginBottom: 0,
   },
-  input: {
+  inputLabel: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFA500',
+    marginBottom: 5,
+    fontFamily: 'SpaceMono',
+  },
+  styledInput: {
     width: '100%',
     height: 55,
     borderWidth: 2,
-    borderColor: '#E9ECEF',
-    borderRadius: 16,
+    borderColor: '#FFA500',
+    borderRadius: 12,
     paddingHorizontal: 20,
-    fontSize: 18,
+    fontSize: 16,
     backgroundColor: '#FFFFFF',
+    fontFamily: 'SpaceMono',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
+        shadowOpacity: 0.1,
         shadowRadius: 4,
       },
       android: {
@@ -249,20 +312,28 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  inputError: {
+    borderColor: '#FF6B6B',
+  },
   errorText: {
     color: '#FF6B6B',
     marginTop: 8,
     fontSize: 14,
+    textAlign: 'center',
+    fontFamily: 'SpaceMono',
   },
   buttonContainer: {
     width: '100%',
-    marginTop: 20,
+    marginTop: 0,
   },
-  submitButton: {
+  gradientButton: {
     width: '100%',
     height: 60,
-    backgroundColor: '#4C1D95',
-    borderRadius: 30,
+    borderRadius: 20,
+    marginTop: 50,
+    marginBottom: 0,
+    overflow: 'hidden',
+    backgroundColor: '#FF6B35',
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
@@ -277,27 +348,21 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  submitButtonDisabled: {
-    backgroundColor: '#CBD5E0',
+  gradientButtonInner: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
   },
-  submitButtonText: {
-    color: '#FFFFFF',
+  buttonText: {
+    color: 'white',
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: 'bold',
     fontFamily: 'SpaceMono',
   },
-  switchButton: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  switchButtonText: {
-    color: '#4C1D95',
-    fontSize: 16,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
-  switchButtonTextDisabled: {
-    opacity: 0.5,
+  buttonDisabled: {
+    backgroundColor: '#ccc',
   },
   forgotPasswordButton: {
     alignItems: 'flex-end',
@@ -307,15 +372,49 @@ const styles = StyleSheet.create({
     color: '#4C1D95',
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: 'SpaceMono',
   },
   forgotPasswordTextDisabled: {
     opacity: 0.5,
   },
+  signUpContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 0,
+    marginBottom: 10
+  },
+  signUpText: {
+    color: '#333',
+    fontSize: 16,
+    textAlign: 'center',
+    fontFamily: 'SpaceMono',
+  },
+  signUpLink: {
+    color: '#8B5CF6',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+    fontFamily: 'SpaceMono',
+  },
+  flexGrowContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  topSectionAbsolute: {
+    position: 'absolute',
+    top: 120,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+    width: '100%',
+  },
   backButton: {
     position: 'absolute',
-    top: 60,
+    top: 30,
     left: 20,
-    zIndex: 1,
+    zIndex: 20,
     padding: 10,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderRadius: 20,
   },
 }); 
