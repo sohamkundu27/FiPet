@@ -4,10 +4,12 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from '
 import { Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import firebase from '@react-native-firebase/app';
-import { collection, getDocs } from '@firebase/firestore';
+import { collection, getDocs, doc } from '@firebase/firestore';
 import { db } from '../../config/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polygon, Circle, Line, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useAuth } from '@/src/hooks/useAuth';
+import { useQuest } from '@/src/hooks/useQuest';
 
 type Quest = {
     id: string;
@@ -26,6 +28,8 @@ type Quest = {
 export default function QuestScreen() {
     const router = useRouter();
     const [quests, setQuests] = useState<Quest[]>([]);
+    const _auth = useAuth();
+    const user = _auth.userState;
 
     useEffect(() => {
         const fetchQuests = async () => {
@@ -55,6 +59,55 @@ export default function QuestScreen() {
         };
         fetchQuests();
     }, []);
+
+    // Component to show correct answers for a quest
+    const CorrectAnswersCounter = ({ questId }: { questId: string }) => {
+        const [correctCount, setCorrectCount] = useState(0);
+        const [totalQuestions, setTotalQuestions] = useState(0);
+
+        useEffect(() => {
+            const getCorrectAnswers = async () => {
+                if (!user) return;
+                
+                try {
+                    // Get the quest data to find question IDs
+                    const questDoc = await getDocs(collection(db, 'quests'));
+                    const questData = questDoc.docs.find(doc => doc.id === questId);
+                    
+                    if (questData) {
+                        const questionIds = questData.data().questionIds || [];
+                        setTotalQuestions(questionIds.length);
+                        
+                        // Get user's progress for this quest
+                        const userProgressRef = doc(db, 'users', user.uid, 'questProgress', questId);
+                        const progressDoc = await getDocs(collection(userProgressRef, 'answers'));
+                        
+                        let correct = 0;
+                        progressDoc.forEach(doc => {
+                            const answerData = doc.data();
+                            if (answerData && answerData.outcome && answerData.outcome.isCorrectAnswer) {
+                                correct++;
+                            }
+                        });
+                        
+                        setCorrectCount(correct);
+                    }
+                } catch (error) {
+                    console.error('Error getting correct answers:', error);
+                }
+            };
+
+            getCorrectAnswers();
+        }, [questId, user]);
+
+        if (totalQuestions === 0) return null;
+
+        return (
+            <View style={styles.correctAnswersBadge}>
+                <Text style={styles.correctAnswersText}>{correctCount}/{totalQuestions}</Text>
+            </View>
+        );
+    };
 
     return (
         <View style={{ flex: 1}}>
@@ -93,6 +146,9 @@ export default function QuestScreen() {
                         end={{ x: 1, y: 0 }} 
                         style={styles.questCard}
                     >
+                        {/* Correct Answers Counter */}
+                        <CorrectAnswersCounter questId={q.id} />
+                        
                         <Text style={styles.questCardTitle}>{q.title}</Text>
                         <View style={styles.questCardStatsRow}>
                             <View style={styles.questCardStat}>
@@ -362,5 +418,25 @@ const styles = StyleSheet.create({
     playButtonText: {
         fontSize: 20,
         fontFamily: 'Poppins', 
+    },
+    correctAnswersBadge: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    correctAnswersText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#333',
+        fontFamily: 'Poppins',
     },
 });
