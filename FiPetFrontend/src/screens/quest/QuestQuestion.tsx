@@ -58,17 +58,17 @@ export default function QuestQuestion() {
     }
   }
 
-  function checkAnswer() {
+  async function checkAnswer() {
     if (checked) return;
     if (question.type === "multiselect" && selectedOptions.length > 0) {
-      const result = selectOption(question.id, selectedOptions[0].id);
+      const result = await selectOption(question.id, selectedOptions[0].id);
       setAnswer(result);
       setChecked(true);
       if (!result.outcome.isCorrectAnswer) {
         router.push(`/quests/${questID}/questions/${questionID}/incorrect`);
       } else setShowCorrectModal(true);
     } else if (selectedOptions.length > 0) {
-      const result = selectOption(question.id, selectedOptions[0].id);
+      const result = await selectOption(question.id, selectedOptions[0].id);
       setAnswer(result);
       setChecked(true);
       if (!result.outcome.isCorrectAnswer) {
@@ -133,7 +133,11 @@ export default function QuestQuestion() {
       {/* Progress Bar Header */}
       <View style={styles.progressHeader}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
-          <Text style={styles.backArrow}>{'<'}</Text>
+          <Image
+            source={require('@/src/assets/images/arrow.png')}
+            style={styles.backArrow}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <View style={styles.progressBarSteps}>
           {allQuestions.map((_, step) => (
@@ -248,13 +252,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 32,
+    paddingTop: 87,
   },
   backArrowContainer: {
     padding: 8,
   },
   backArrow: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    width: 32,
+    height: 24,
   },
   progressBarSteps: {
     flexDirection: 'row',
