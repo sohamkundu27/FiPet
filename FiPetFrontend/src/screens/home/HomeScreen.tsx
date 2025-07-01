@@ -9,6 +9,7 @@ import { doc, getDocs, collection, onSnapshot, query, where, orderBy, Timestamp,
 import { getLevelXPRequirement, getStreakXPRequirement } from "@/src/functions/getXPRequirement"
 import { UserProgress, dayAbbreviations, StreakProgress, StreakDay } from "@/src/types/UserProgress"
 import { useFonts } from 'expo-font';
+import { useRouter } from 'expo-router';
 
 const STREAK_DISPLAY_LEN = 7;
 const MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
@@ -30,6 +31,8 @@ function constrain(num: number, min: number, max: number) {
 }
 
 export default function HomeScreen() {
+
+  const router = useRouter();
 
   const [mood, setMood] = useState(25)
   const [userProgress, setUserProgress] = useState<UserProgress>({
@@ -332,7 +335,11 @@ export default function HomeScreen() {
               <Text style={styles.questTitle}>Spend It or Save It?</Text>
               <Text style={styles.questSubtitle}>Understand the difference between spending or saving.</Text>
             </View>
-            <TouchableOpacity style={styles.playButton}>
+            <TouchableOpacity style={styles.playButton}
+              onPress={() => {
+                                router.push(`/quests/quest_001`);
+                            }}
+            >
               <Image source={require("@/src/assets/images/play.png")} style={{ width: 60, height: 60 }} />
               <Text style={styles.playText}>Play</Text>
             </TouchableOpacity>
