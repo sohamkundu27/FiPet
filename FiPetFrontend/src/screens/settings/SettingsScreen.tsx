@@ -81,13 +81,11 @@ export default function SettingsScreen() {
           {
             title: "Log Out",
             action: () => {
-              setIsLoggingOut(true);
               router.replace('/landing');
               signOut(auth).then(() => {
                 // Sign out completed successfully
               }).catch((error) => {
                 console.error("Error signing out:", error);
-                setIsLoggingOut(false);
               });
             },
             color: redColor
