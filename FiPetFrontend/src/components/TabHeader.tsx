@@ -38,7 +38,7 @@ export default function TabHeader({xp, streak, coins, gradient, title}: TabHeade
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: 50,
+    paddingTop: 65,
     paddingHorizontal: 20,
     paddingBottom: 7,
     flexDirection: "row",
@@ -47,11 +47,11 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 24,
+    lineHeight: 24 * 1.5,
     fontFamily: "PoppinsBold",
     color: "#fff",
   },
   stats: {
-    paddingBottom: 5,
     flexDirection: "row",
     justifyContent: "flex-end",
   },
@@ -77,6 +77,8 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsRegular',
     fontSize: 15,
     margin: 0,
-    lineHeight: 17,
+    lineHeight: 15 * 1.5,
+    position: "relative",
+    top: 1,
   },
 });

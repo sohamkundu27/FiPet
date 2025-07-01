@@ -257,7 +257,7 @@ export default function HomeScreen() {
 
           <View style={styles.levelIndicator}>
             <Image source={require("@/src/assets/images/trophy.png")} style={styles.icon} />
-            <Text style={{ fontSize: 16, fontFamily: 'PoppinsRegular', color: "#374151" }}>Level {userProgress.level}</Text>
+            <Text style={{ fontSize: 16, lineHeight: 16*1.5, fontFamily: 'PoppinsRegular', color: "#374151" }}>Level {userProgress.level}</Text>
           </View>
         </View>
 
@@ -354,6 +354,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 18,
+    lineHeight: 18*1.5,
     color: '#4A5568',
     fontFamily: 'PoppinsRegular',
   },
@@ -385,6 +386,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 24,
+    lineHeight: 25*1.5,
     fontFamily: 'PoppinsBold',
     color: "#222",
   },
@@ -392,6 +394,7 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 10,
     fontSize: 14,
+    lineHeight: 14*1.5,
     fontFamily: 'PoppinsRegular'
   },
   progressCard: {
@@ -427,7 +430,8 @@ const styles = StyleSheet.create({
   cardButton: {
     color: "#2D8EFF",
     fontFamily: 'PoppinsRegular',
-    fontSize: 13
+    fontSize: 13,
+    lineHeight: 13*1.5,
   },
   quest: {
     borderRadius: 20,
@@ -445,10 +449,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontFamily: 'PoppinsSemiBold',
     fontSize: 20,
+    lineHeight: 20*1.5,
   },
   questSubtitle: {
     color: "#fff",
     fontSize: 13,
+    lineHeight: 13*1.5,
     marginTop: 2,
     maxWidth: 200,
     fontFamily: 'PoppinsRegular'
@@ -463,6 +469,7 @@ const styles = StyleSheet.create({
   playText: {
     color: "white",
     fontSize: 15,
+    lineHeight: 15*1.5,
     fontFamily: 'PoppinsMedium'
   },
   progressBarContainer: {
@@ -498,6 +505,7 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 12,
+    lineHeight: 12*1.5,
     color: "#6B7280",
     fontWeight: "600",
     marginBottom: 8,
@@ -534,6 +542,7 @@ const styles = StyleSheet.create({
   },
   levelText: {
     fontSize: 16,
+    lineHeight: 16*1.5,
     fontFamily: 'PoppinsRegular',
     color: "#374151",
     marginHorizontal: ((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 6,
@@ -553,6 +562,13 @@ const styles = StyleSheet.create({
     width: 17,
     height: 24,
     resizeMode: "contain",
-  }
+  },
+  icon: {
+    width: 20,
+    height: 20,
+    margin: 0,
+    marginRight: 5,
+    resizeMode: 'contain'
+  },
 })
 

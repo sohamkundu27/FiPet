@@ -1,15 +1,12 @@
 // import firestore from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image } from 'react-native';
-import { Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import firebase from '@react-native-firebase/app';
 import { collection, getDocs, doc } from '@firebase/firestore';
 import { db } from '../../config/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Polygon, Circle, Line, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import Svg, { Polygon, Circle, Line, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { useAuth } from '@/src/hooks/useAuth';
-import { useQuest } from '@/src/hooks/useQuest';
 import TabHeader from '@/src/components/TabHeader';
 
 type Quest = {
@@ -219,27 +216,6 @@ const GoldCoinIcon = () => (
   <Image style={{width: 20, height: 20, resizeMode: "contain"}} source={require("@/src/assets/images/coin.png")}/>
 );
 
-const XPIcon = () => (
-  <Svg width={28} height={16} viewBox="0 0 28 16">
-    <Defs>
-      <SvgLinearGradient id="xp-gradient" x1="0" y1="0" x2="1" y2="1">
-        <Stop offset="0%" stopColor="#4FC3F7" />
-        <Stop offset="100%" stopColor="#1976D2" />
-      </SvgLinearGradient>
-    </Defs>
-    <SvgText
-      x="0"
-      y="13"
-      fontSize="16"
-      fontWeight="bold"
-      fontFamily="Arial"
-      fill="url(#xp-gradient)"
-    >
-      XP
-    </SvgText>
-  </Svg>
-);
-
 const styles = StyleSheet.create({
     questCard: {
         borderRadius: 22,
@@ -257,6 +233,7 @@ const styles = StyleSheet.create({
     },
     questCardTitle: {
         fontSize: 24,
+        lineHeight: 25*1.5,
         fontWeight: 'bold',
         color: '#fff',
         marginBottom: 10,
@@ -289,6 +266,7 @@ const styles = StyleSheet.create({
     questCardStatText: {
         color: '#444',
         fontSize: 15,
+        lineHeight: 15*1.5,
         marginLeft: 6,
         fontFamily: 'Poppins', 
     },
@@ -299,12 +277,14 @@ const styles = StyleSheet.create({
     },
     objectiveEmoji: {
         fontSize: 18,
+        lineHeight: 18*1.5,
         marginRight: 8,
         fontFamily: 'Poppins', 
     },
     objectiveText: {
         color: '#fff',
         fontSize: 15,
+        lineHeight: 15*1.5,
         fontWeight: '500',
         marginLeft: 2,
         fontFamily: 'Poppins', 
@@ -327,6 +307,7 @@ const styles = StyleSheet.create({
     },
     playButtonText: {
         fontSize: 20,
+        lineHeight: 20*1.5,
         fontFamily: 'Poppins', 
     },
     correctAnswersBadge: {
@@ -345,6 +326,7 @@ const styles = StyleSheet.create({
     },
     correctAnswersText: {
         fontSize: 12,
+        lineHeight: 12*1.5,
         fontWeight: 'bold',
         color: '#333',
         fontFamily: 'Poppins',
