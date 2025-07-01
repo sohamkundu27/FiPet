@@ -9,6 +9,7 @@ import { doc, getDocs, collection, onSnapshot, query, where, orderBy, Timestamp,
 import { getLevelXPRequirement, getStreakXPRequirement } from "@/src/functions/getXPRequirement"
 import { UserProgress, dayAbbreviations, StreakProgress, StreakDay } from "@/src/types/UserProgress"
 import { useFonts } from 'expo-font';
+import TabHeader from "@/src/components/TabHeader"
 
 const STREAK_DISPLAY_LEN = 7;
 const MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
@@ -208,24 +209,16 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={["#F97216", "#F99F16"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.header}>
-        <Text style={styles.headerText}>Home</Text>
-        <View style={styles.stats}>
-          <View style={styles.statItem}>
-            <Image source={require("@/src/assets/images/xp.png")} style={styles.icon} />
-            <Text style={styles.statText}>{userProgress.currentXP}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Image source={require("@/src/assets/images/streak.png")} style={styles.icon} />
-            <Text style={styles.statText}>{streakProgress.currentStreak}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Image source={require("@/src/assets/images/coin.png")} style={styles.icon} />
-            <Text style={styles.statText}>{userProgress.coins}</Text>
-          </View>
-        </View>
-      </LinearGradient>
-
+      <TabHeader
+        xp={userProgress.currentXP}
+        coins={userProgress.coins}
+        streak={streakProgress.currentStreak}
+        title="Home"
+        gradient={{
+          startColor: "#F97216",
+          endColor: "#F99F16",
+        }}
+      />
       <ScrollView>
         <View style={styles.petSection}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
@@ -288,7 +281,11 @@ export default function HomeScreen() {
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 {streakProgress.days.map((day, key) => (
                   <View key={key} style={{ alignItems: "center" }}>
-                    <Text style={styles.left}>{day.achieved ? "🔥" : " "}</Text>
+                    <Text style={styles.left}>{day.achieved ? (
+                      <Image style={styles.streakProgressFire} source={require("@/src/assets/images/streak-fire-full.png")} />
+                    ) : (
+                      <Image style={styles.streakProgressFire} source={require("@/src/assets/images/streak-fire-empty.png")} />
+                    )}</Text>
                     <Text style={styles.left}>{day.dayAbbreviation}</Text>
                   </View>
                 ))}
@@ -360,42 +357,6 @@ const styles = StyleSheet.create({
     color: '#4A5568',
     fontFamily: 'PoppinsRegular',
   },
-  header: {
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  headerText: {
-    fontSize: 28,
-    fontFamily: "PoppinsBold",
-    color: "#fff",
-  },
-  stats: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 15,
-    backgroundColor: "#fff",
-    borderRadius: 25,
-    paddingHorizontal: 7,
-  },
-  icon: {
-    width: 22,
-    height: 22,
-    marginRight: 5,
-    resizeMode: 'contain'
-  },
-  statText: {
-    color: "black",
-    fontFamily: 'PoppinsRegular',
-    fontSize: 15,
-  },
   petSection: {
     alignItems: "center",
     marginTop: 25,
@@ -439,6 +400,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   left: {
     color: "#fff",
@@ -469,6 +435,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   questTitle: {
     color: "#fff",
@@ -578,5 +549,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
   },
+  streakProgressFire: {
+    width: 17,
+    height: 24,
+    resizeMode: "contain",
+  }
 })
 
