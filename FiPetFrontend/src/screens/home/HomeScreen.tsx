@@ -16,7 +16,7 @@ const MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
 /**
  * Modifies the date passed in to be the timestamp at the start of the day.
  */
-function startOfDay ( date: Date ): Date {
+function startOfDay(date: Date): Date {
   let sod = new Date(date);
   sod.setHours(0);
   sod.setMinutes(0);
@@ -25,7 +25,7 @@ function startOfDay ( date: Date ): Date {
   return sod;
 }
 
-function constrain( num: number, min: number, max: number ) {
+function constrain(num: number, min: number, max: number) {
   return Math.min(Math.max(num, min), max);
 }
 
@@ -50,14 +50,14 @@ export default function HomeScreen() {
 
   function loadStreakInfo() {
 
-    if ( !user ) {
+    if (!user) {
       return;
     }
-    
-    const streakCollection = collection( db, 'users', user.uid, 'streakData' );
-    const today = startOfDay( new Date() );
 
-    const displayStartDate = new Date(today.valueOf() - ((STREAK_DISPLAY_LEN-1) * MILLIS_IN_DAY));
+    const streakCollection = collection(db, 'users', user.uid, 'streakData');
+    const today = startOfDay(new Date());
+
+    const displayStartDate = new Date(today.valueOf() - ((STREAK_DISPLAY_LEN - 1) * MILLIS_IN_DAY));
     const displayStartTimestamp = new Timestamp(displayStartDate.getSeconds(), displayStartDate.getMilliseconds());
     const streakQuery = query(
       streakCollection,
@@ -71,43 +71,43 @@ export default function HomeScreen() {
       let currentDate = new Date(displayStartDate);
       let days: StreakDay[] = [];
 
-      while( currentDate.valueOf() < today.valueOf() ) {
+      while (currentDate.valueOf() < today.valueOf()) {
 
         const currentDay = currentDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-        if ( i >= snapshot.docs.length ) {
+        if (i >= snapshot.docs.length) {
           days.push({
             dayAbbreviation: dayAbbreviations[currentDay],
             achieved: false
           });
-          currentDate = new Date( currentDate.valueOf() + MILLIS_IN_DAY );
+          currentDate = new Date(currentDate.valueOf() + MILLIS_IN_DAY);
           continue;
         }
 
-        const streakStartTimestamp = snapshot.docs[i].get("startTime", {serverTimestamps: 'estimate'}) as Timestamp;
+        const streakStartTimestamp = snapshot.docs[i].get("startTime", { serverTimestamps: 'estimate' }) as Timestamp;
         const streakStartDate = startOfDay(streakStartTimestamp.toDate());
         const streakDuration = snapshot.docs[i].get("duration") as number;
 
-        if ( currentDate.valueOf() <  streakStartDate.valueOf() ) {
+        if (currentDate.valueOf() < streakStartDate.valueOf()) {
           days.push({
             dayAbbreviation: dayAbbreviations[currentDay],
             achieved: false
           });
-          currentDate = new Date( currentDate.valueOf() + MILLIS_IN_DAY );
-        } else if ( currentDate.valueOf() > streakStartDate.valueOf() + ((streakDuration - 1) * MILLIS_IN_DAY ) ) {
-          i ++;
+          currentDate = new Date(currentDate.valueOf() + MILLIS_IN_DAY);
+        } else if (currentDate.valueOf() > streakStartDate.valueOf() + ((streakDuration - 1) * MILLIS_IN_DAY)) {
+          i++;
         } else {
           days.push({
             dayAbbreviation: dayAbbreviations[currentDay],
             achieved: true
           });
-          currentDate = new Date( currentDate.valueOf() + MILLIS_IN_DAY );
+          currentDate = new Date(currentDate.valueOf() + MILLIS_IN_DAY);
         }
       }
 
       let _currentStreak;
       const currentDay = today.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
-      if ( i < snapshot.docs.length ) {
+      if (i < snapshot.docs.length) {
         const streakStart = snapshot.docs[i].get("startTime") as Timestamp;
         _currentStreak = ((today.valueOf() - startOfDay(streakStart.toDate()).valueOf()) / MILLIS_IN_DAY) + 1;
         await updateDoc(snapshot.docs[i].ref, {
@@ -120,7 +120,7 @@ export default function HomeScreen() {
         });
       } else {
         const refName = `${today.getMonth().toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}-${today.getFullYear()}`;
-        const streakDocRef = doc( streakCollection, refName );
+        const streakDocRef = doc(streakCollection, refName);
         await setDoc(streakDocRef, {
           startTime: serverTimestamp(),
           endTime: serverTimestamp(),
@@ -146,31 +146,32 @@ export default function HomeScreen() {
 
   function loadProgressInfo() {
 
-    if ( !user ) {
+    if (!user) {
       return;
     }
-    
-    const userDocRef = doc( db, 'users', user.uid );
 
-    const progressUnsub = onSnapshot( userDocRef, {
+    const userDocRef = doc(db, 'users', user.uid);
+
+    const progressUnsub = onSnapshot(userDocRef, {
       next: (snapshot) => {
         const userData = snapshot.data();
         const level = userData?.current_level || 0;
         const previousXP = userData?.previous_xp || 0;
         const previousLevel = userData?.previous_level || level;
         const currentXP = userData?.current_xp || 0;
+        setMood(userData?.pet_mood || 10)
         setUserProgress({
           level: level,
           currentXP: currentXP,
           earnedXP: currentXP - previousXP,
           requiredLevelXP: getLevelXPRequirement(level),
-          prevRequiredLevelXP: getLevelXPRequirement(level-1),
+          prevRequiredLevelXP: getLevelXPRequirement(level - 1),
           requiredStreakXP: getStreakXPRequirement(previousLevel, streakProgress),
           coins: userData?.coins || 0,
         })
       },
       error: (err) => {
-        console.error( err );
+        console.error(err);
       }
     });
 
@@ -183,7 +184,7 @@ export default function HomeScreen() {
   const xpPercentage = constrain(100 * userProgress.earnedXP / userProgress.requiredStreakXP, 0, 100) || 0;
   const earnedXP = userProgress.currentXP - userProgress.prevRequiredLevelXP;
   const earnRequired = userProgress.requiredLevelXP - userProgress.prevRequiredLevelXP;
-  const levelProgress = Math.round(constrain(100 * earnedXP/earnRequired, 0, 100)) || 0;
+  const levelProgress = Math.round(constrain(100 * earnedXP / earnRequired, 0, 100)) || 0;
 
   const windowWidth = Dimensions.get("window").width
   const petCircleSize = windowWidth * 0.65
