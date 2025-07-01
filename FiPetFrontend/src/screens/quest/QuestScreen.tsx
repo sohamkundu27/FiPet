@@ -1,6 +1,6 @@
 // import firestore from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image } from 'react-native';
 import { Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import firebase from '@react-native-firebase/app';
@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polygon, Circle, Line, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useQuest } from '@/src/hooks/useQuest';
+import TabHeader from '@/src/components/TabHeader';
 
 type Quest = {
     id: string;
@@ -111,33 +112,17 @@ export default function QuestScreen() {
 
     return (
         <View style={{ flex: 1}}>
-            {/* Gradient Header */}
-            <LinearGradient
-                colors={['#A259FF', '#3B82F6']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.headerGradient}
-            >
-                <View style={styles.headerRow}>
-                    <Text style={styles.headerTitle}>Quests</Text>
-                    <View style={styles.headerStatsRow}>
-                        <View style={styles.statPill}>
-                            <Text style={styles.xpText}>XP</Text>
-                            <Text style={styles.statText}>32700</Text>
-                        </View>
-                        <View style={styles.statPill}>
-                            <Text style={styles.statIcon}>🔥</Text>
-                            <Text style={styles.statText}>3</Text>
-                        </View>
-                        <View style={styles.statPill}>
-                            <GoldCoinIcon />
-                            <Text style={styles.statText}>1400</Text>
-                        </View>
-                    </View>
-                </View>
-            </LinearGradient>
-
-            <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 0 }}>
+          <TabHeader
+            xp={0}
+            coins={0}
+            streak={0}
+            title="Quests"
+            gradient={{
+              startColor: "#A259FF",
+              endColor: "#3B82F6",
+            }}
+          />
+            <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 25 }}>
                 {quests.map((q, idx) => (
                     <LinearGradient
                         key={q.id}
@@ -231,21 +216,7 @@ const CustomClockIcon = () => (
 );
 
 const GoldCoinIcon = () => (
-  <Svg width={20} height={20} viewBox="0 0 20 20">
-    <Circle cx="10" cy="10" r="10" fill="#FFD600"/>
-    <Circle cx="10" cy="10" r="8" fill="#FFEB3B"/>
-    <SvgText
-      x="10"
-      y="14"
-      fontSize="11"
-      fontWeight="bold"
-      fill="#FBC02D"
-      textAnchor="middle"
-      fontFamily="Arial"
-    >
-      $
-    </SvgText>
-  </Svg>
+  <Image style={{width: 20, height: 20, resizeMode: "contain"}} source={require("@/src/assets/images/coin.png")}/>
 );
 
 const XPIcon = () => (
@@ -270,67 +241,6 @@ const XPIcon = () => (
 );
 
 const styles = StyleSheet.create({
-    headerGradient: {
-        width: '100%',
-        height: 106,          
-        paddingHorizontal: 24,
-        paddingTop: 0,         
-        paddingBottom: 12,     
-        marginBottom: 28,
-        justifyContent: 'flex-end', 
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',
-        width: '100%',
-        flexWrap: 'nowrap',
-        minHeight: 36,
-    },
-    headerTitle: {
-        fontSize: 24,            
-        fontWeight: 'bold',        
-        color: '#fff',
-        letterSpacing: 0.5,
-        flexShrink: 1,
-        minWidth: 90,            
-        fontFamily: 'Poppins', 
-    },
-    headerStatsRow: {
-        flexDirection: 'row',
-        gap: 8,                  
-        alignItems: 'center',
-        flexWrap: 'wrap',
-    },
-    statPill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#F3F3F3',
-        borderRadius: 999,
-        paddingHorizontal: 10,
-        paddingVertical: 3,
-        marginRight: 6,
-        marginBottom: 4,
-    },
-    xpText: {
-        fontWeight: '900',
-        fontSize: 16,            
-        color: '#3B82F6',
-        marginRight: 4,         
-        letterSpacing: 0.5,      
-        fontFamily: 'Poppins', 
-    },
-    statIcon: {
-        fontSize: 14,            
-        marginRight: 4,          
-        fontFamily: 'Poppins', 
-    },
-    statText: {
-        fontWeight: '400',
-        fontSize: 14,            
-        color: '#444',
-        fontFamily: 'Poppins', 
-    },
     questCard: {
         borderRadius: 22,
         padding: 22,
