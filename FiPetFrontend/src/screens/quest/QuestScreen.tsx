@@ -1,7 +1,7 @@
 // import firestore from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { collection, getDocs, doc } from '@firebase/firestore';
 import { db } from '../../config/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +25,16 @@ type Quest = {
 };
 
 export default function QuestScreen() {
+
+    const navigation = useNavigation('/(tabs)');
+    useEffect(() => {
+      navigation.setOptions({
+        tabBarStyle: {
+          display: "block",
+        }
+      });
+    }, [navigation]);
+
     const {userProgress, streakProgress} = useGamificationStats();
     const router = useRouter();
     const [quests, setQuests] = useState<Quest[]>([]);
