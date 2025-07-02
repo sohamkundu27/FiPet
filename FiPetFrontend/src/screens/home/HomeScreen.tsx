@@ -6,11 +6,14 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress'
 import { useFonts } from 'expo-font';
 import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
 
   const {userProgress, streakProgress} = useGamificationStats();
   const [mood, setMood] = useState(25);
+
+  const router = useRouter();
 
   const xpPercentage = userProgress.streakProgress;
   const levelProgress = userProgress.levelProgress;
