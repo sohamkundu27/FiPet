@@ -1,190 +1,19 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, SafeAreaView } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { AnimatedCircularProgress } from 'react-native-circular-progress'
-import { useAuth } from "@/src/hooks/useAuth"
-import { db } from "@/src/config/firebase"
-import { doc, getDocs, collection, onSnapshot, query, where, orderBy, Timestamp, setDoc, serverTimestamp, updateDoc } from "@firebase/firestore"
-import { getLevelXPRequirement, getStreakXPRequirement } from "@/src/functions/getXPRequirement"
-import { UserProgress, dayAbbreviations, StreakProgress, StreakDay } from "@/src/types/UserProgress"
 import { useFonts } from 'expo-font';
-
-const STREAK_DISPLAY_LEN = 7;
-const MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
-
-/**
- * Modifies the date passed in to be the timestamp at the start of the day.
- */
-function startOfDay(date: Date): Date {
-  let sod = new Date(date);
-  sod.setHours(0);
-  sod.setMinutes(0);
-  sod.setSeconds(0);
-  sod.setMilliseconds(0);
-  return sod;
-}
-
-function constrain(num: number, min: number, max: number) {
-  return Math.min(Math.max(num, min), max);
-}
+import TabHeader from "@/src/components/TabHeader"
+import { useGamificationStats } from "@/src/hooks/useGamificationStats"
 
 export default function HomeScreen() {
 
-  const [mood, setMood] = useState(25)
-  const [userProgress, setUserProgress] = useState<UserProgress>({
-    level: 0,
-    currentXP: 0,
-    earnedXP: 0,
-    requiredLevelXP: 0,
-    prevRequiredLevelXP: 0,
-    requiredStreakXP: 0,
-    coins: 0,
-  });
-  const [streakProgress, setStreak] = useState<StreakProgress>({
-    currentStreak: 0,
-    days: []
-  });
-  const _auth = useAuth();
-  const user = _auth.userState;
+  const {userProgress, streakProgress} = useGamificationStats();
+  const [mood, setMood] = useState(25);
 
-  function loadStreakInfo() {
-
-    if (!user) {
-      return;
-    }
-
-    const streakCollection = collection(db, 'users', user.uid, 'streakData');
-    const today = startOfDay(new Date());
-
-    const displayStartDate = new Date(today.valueOf() - ((STREAK_DISPLAY_LEN - 1) * MILLIS_IN_DAY));
-    const displayStartTimestamp = new Timestamp(displayStartDate.getSeconds(), displayStartDate.getMilliseconds());
-    const streakQuery = query(
-      streakCollection,
-      where("endTime", ">=", displayStartTimestamp),
-      orderBy("endTime", "asc")
-    );
-
-    getDocs(streakQuery).then(async (snapshot) => {
-
-      let i = 0;
-      let currentDate = new Date(displayStartDate);
-      let days: StreakDay[] = [];
-
-      while (currentDate.valueOf() < today.valueOf()) {
-
-        const currentDay = currentDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
-
-        if (i >= snapshot.docs.length) {
-          days.push({
-            dayAbbreviation: dayAbbreviations[currentDay],
-            achieved: false
-          });
-          currentDate = new Date(currentDate.valueOf() + MILLIS_IN_DAY);
-          continue;
-        }
-
-        const streakStartTimestamp = snapshot.docs[i].get("startTime", { serverTimestamps: 'estimate' }) as Timestamp;
-        const streakStartDate = startOfDay(streakStartTimestamp.toDate());
-        const streakDuration = snapshot.docs[i].get("duration") as number;
-
-        if (currentDate.valueOf() < streakStartDate.valueOf()) {
-          days.push({
-            dayAbbreviation: dayAbbreviations[currentDay],
-            achieved: false
-          });
-          currentDate = new Date(currentDate.valueOf() + MILLIS_IN_DAY);
-        } else if (currentDate.valueOf() > streakStartDate.valueOf() + ((streakDuration - 1) * MILLIS_IN_DAY)) {
-          i++;
-        } else {
-          days.push({
-            dayAbbreviation: dayAbbreviations[currentDay],
-            achieved: true
-          });
-          currentDate = new Date(currentDate.valueOf() + MILLIS_IN_DAY);
-        }
-      }
-
-      let _currentStreak;
-      const currentDay = today.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
-      if (i < snapshot.docs.length) {
-        const streakStart = snapshot.docs[i].get("startTime") as Timestamp;
-        _currentStreak = ((today.valueOf() - startOfDay(streakStart.toDate()).valueOf()) / MILLIS_IN_DAY) + 1;
-        await updateDoc(snapshot.docs[i].ref, {
-          endTime: serverTimestamp(),
-          duration: _currentStreak,
-        });
-        days.push({
-          dayAbbreviation: dayAbbreviations[currentDay],
-          achieved: true
-        });
-      } else {
-        const refName = `${today.getMonth().toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}-${today.getFullYear()}`;
-        const streakDocRef = doc(streakCollection, refName);
-        await setDoc(streakDocRef, {
-          startTime: serverTimestamp(),
-          endTime: serverTimestamp(),
-          duration: 1,
-        });
-        _currentStreak = 1;
-        days.push({
-          dayAbbreviation: dayAbbreviations[currentDay],
-          achieved: true
-        });
-      }
-
-      setStreak({
-        currentStreak: _currentStreak,
-        days: days
-      });
-
-    }).catch((error) => {
-      console.error(error);
-    });
-
-  }
-
-  function loadProgressInfo() {
-
-    if (!user) {
-      return;
-    }
-
-    const userDocRef = doc(db, 'users', user.uid);
-
-    const progressUnsub = onSnapshot(userDocRef, {
-      next: (snapshot) => {
-        const userData = snapshot.data();
-        const level = userData?.current_level || 0;
-        const previousXP = userData?.previous_xp || 0;
-        const previousLevel = userData?.previous_level || level;
-        const currentXP = userData?.current_xp || 0;
-        setMood(userData?.pet_mood || 10)
-        setUserProgress({
-          level: level,
-          currentXP: currentXP,
-          earnedXP: currentXP - previousXP,
-          requiredLevelXP: getLevelXPRequirement(level),
-          prevRequiredLevelXP: getLevelXPRequirement(level - 1),
-          requiredStreakXP: getStreakXPRequirement(previousLevel, streakProgress),
-          coins: userData?.coins || 0,
-        })
-      },
-      error: (err) => {
-        console.error(err);
-      }
-    });
-
-    return progressUnsub;
-  }
-
-  useEffect(loadStreakInfo, [user]);
-  useEffect(loadProgressInfo, [user, streakProgress]);
-
-  const xpPercentage = constrain(100 * userProgress.earnedXP / userProgress.requiredStreakXP, 0, 100) || 0;
-  const earnedXP = userProgress.currentXP - userProgress.prevRequiredLevelXP;
-  const earnRequired = userProgress.requiredLevelXP - userProgress.prevRequiredLevelXP;
-  const levelProgress = Math.round(constrain(100 * earnedXP / earnRequired, 0, 100)) || 0;
+  const xpPercentage = userProgress.streakProgress;
+  const levelProgress = userProgress.levelProgress;
 
   const windowWidth = Dimensions.get("window").width
   const petCircleSize = windowWidth * 0.65
@@ -209,24 +38,16 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={["#F97216", "#F99F16"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.header}>
-        <Text style={styles.headerText}>Home</Text>
-        <View style={styles.stats}>
-          <View style={styles.statItem}>
-            <Image source={require("@/src/assets/images/xp.png")} style={styles.icon} />
-            <Text style={styles.statText}>{userProgress.currentXP}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Image source={require("@/src/assets/images/streak.png")} style={styles.icon} />
-            <Text style={styles.statText}>{streakProgress.currentStreak}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Image source={require("@/src/assets/images/coin.png")} style={styles.icon} />
-            <Text style={styles.statText}>{userProgress.coins}</Text>
-          </View>
-        </View>
-      </LinearGradient>
-
+      <TabHeader
+        xp={userProgress.currentXP}
+        coins={userProgress.coins}
+        streak={streakProgress.currentStreak}
+        title="Home"
+        gradient={{
+          startColor: "#F97216",
+          endColor: "#F99F16",
+        }}
+      />
       <ScrollView>
         <View style={styles.petSection}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
@@ -265,7 +86,7 @@ export default function HomeScreen() {
 
           <View style={styles.levelIndicator}>
             <Image source={require("@/src/assets/images/trophy.png")} style={styles.icon} />
-            <Text style={{ fontSize: 16, fontFamily: 'PoppinsRegular', color: "#374151" }}>Level {userProgress.level}</Text>
+            <Text style={{ fontSize: 16, lineHeight: 16*1.5, fontFamily: 'PoppinsRegular', color: "#374151" }}>Level {userProgress.level}</Text>
           </View>
         </View>
 
@@ -289,7 +110,11 @@ export default function HomeScreen() {
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 {streakProgress.days.map((day, key) => (
                   <View key={key} style={{ alignItems: "center" }}>
-                    <Text style={styles.left}>{day.achieved ? "🔥" : " "}</Text>
+                    <Text style={styles.left}>{day.achieved ? (
+                      <Image style={styles.streakProgressFire} source={require("@/src/assets/images/streak-fire-full.png")} />
+                    ) : (
+                      <Image style={styles.streakProgressFire} source={require("@/src/assets/images/streak-fire-empty.png")} />
+                    )}</Text>
                     <Text style={styles.left}>{day.dayAbbreviation}</Text>
                   </View>
                 ))}
@@ -358,44 +183,9 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 18,
+    lineHeight: 18*1.5,
     color: '#4A5568',
     fontFamily: 'PoppinsRegular',
-  },
-  header: {
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  headerText: {
-    fontSize: 28,
-    fontFamily: "PoppinsBold",
-    color: "#fff",
-  },
-  stats: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 15,
-    backgroundColor: "#fff",
-    borderRadius: 25,
-    paddingHorizontal: 7,
-  },
-  icon: {
-    width: 22,
-    height: 22,
-    marginRight: 5,
-    resizeMode: 'contain'
-  },
-  statText: {
-    color: "black",
-    fontFamily: 'PoppinsRegular',
-    fontSize: 15,
   },
   petSection: {
     alignItems: "center",
@@ -425,6 +215,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 24,
+    lineHeight: 25*1.5,
     fontFamily: 'PoppinsBold',
     color: "#222",
   },
@@ -432,6 +223,7 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 10,
     fontSize: 14,
+    lineHeight: 14*1.5,
     fontFamily: 'PoppinsRegular'
   },
   progressCard: {
@@ -440,6 +232,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   left: {
     color: "#fff",
@@ -462,7 +259,8 @@ const styles = StyleSheet.create({
   cardButton: {
     color: "#2D8EFF",
     fontFamily: 'PoppinsRegular',
-    fontSize: 13
+    fontSize: 13,
+    lineHeight: 13*1.5,
   },
   quest: {
     borderRadius: 20,
@@ -470,15 +268,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   questTitle: {
     color: "#fff",
     fontFamily: 'PoppinsSemiBold',
     fontSize: 20,
+    lineHeight: 20*1.5,
   },
   questSubtitle: {
     color: "#fff",
     fontSize: 13,
+    lineHeight: 13*1.5,
     marginTop: 2,
     maxWidth: 200,
     fontFamily: 'PoppinsRegular'
@@ -493,6 +298,7 @@ const styles = StyleSheet.create({
   playText: {
     color: "white",
     fontSize: 15,
+    lineHeight: 15*1.5,
     fontFamily: 'PoppinsMedium'
   },
   progressBarContainer: {
@@ -528,6 +334,7 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 12,
+    lineHeight: 12*1.5,
     color: "#6B7280",
     fontWeight: "600",
     marginBottom: 8,
@@ -564,6 +371,7 @@ const styles = StyleSheet.create({
   },
   levelText: {
     fontSize: 16,
+    lineHeight: 16*1.5,
     fontFamily: 'PoppinsRegular',
     color: "#374151",
     marginHorizontal: ((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 6,
@@ -578,6 +386,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#D1D5DB",
     marginHorizontal: 20,
     marginBottom: 20,
+  },
+  streakProgressFire: {
+    width: 17,
+    height: 24,
+    resizeMode: "contain",
+  },
+  icon: {
+    width: 20,
+    height: 20,
+    margin: 0,
+    marginRight: 5,
+    resizeMode: 'contain'
   },
 })
 
