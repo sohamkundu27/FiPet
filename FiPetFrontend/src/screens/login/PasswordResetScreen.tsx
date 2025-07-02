@@ -13,7 +13,7 @@ export default function PasswordResetScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
   const router = useRouter();
-  const auth = useAuth().authState;
+  const {auth} = useAuth();
 
   const [loaded] = useFonts({
     Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),

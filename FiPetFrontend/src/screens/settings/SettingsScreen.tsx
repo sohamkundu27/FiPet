@@ -3,14 +3,14 @@ import { ThemedView } from "@/src/components/ThemedView";
 import { useRouter } from "expo-router";
 import { ScrollView, Linking, View, Alert } from "react-native";
 import TextInputModal from "@/src/components/modals/TextInputModal";
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ConfirmModal from "@/src/components/modals/ConfirmModal";
 import BaseModal from "@/src/components/modals/BaseModal";
 import { db } from "@/src/config/firebase";
 import { signOut } from "@firebase/auth";
 import { doc, getDoc, updateDoc } from "@firebase/firestore";
 import { validateUsername } from "@/src/functions/validation";
-import { useAuth } from "@/src/hooks/useAuth";
+import { useAuth } from "@/src/hooks/useRequiresAuth";
 import { ThemedText } from "@/src/components/ThemedText";
 import { useThemeColor } from "@/src/hooks/useThemeColor";
 import { Colors } from "@/src/constants/Colors";
@@ -19,10 +19,7 @@ export default function SettingsScreen() {
   const version = "0.0.0";
   const router = useRouter();
   const [username, setUsername] = useState<string>("");
-  const {userState, authState} = useAuth();
-  const auth = authState;
-  const hasNavigated = useRef(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const {user, auth} = useAuth();
   
   const _modalVisibility = {
     "username": false,
@@ -34,16 +31,7 @@ export default function SettingsScreen() {
   // Move useThemeColor hook to the top to prevent conditional calls
   const redColor = useThemeColor({light: Colors.red, dark: Colors.lightred}, "text");
 
-  // Create userdoc only if userState exists and has uid
-  const userdoc = userState && userState.uid ? doc(db, 'users', userState.uid) : null;
-
-  // Handle navigation when user is not authenticated (but not when logging out intentionally)
-  useEffect(() => {
-    if (!userState && !hasNavigated.current && !isLoggingOut) {
-      hasNavigated.current = true;
-      router.replace('/login');
-    }
-  }, [userState, router, isLoggingOut]);
+  const userdoc = doc(db, 'users', user.uid);
 
   useEffect(() => {
     if (userdoc) {
@@ -65,17 +53,6 @@ export default function SettingsScreen() {
 
   function openModal(modalName: keyof typeof _modalVisibility) {
     setVisibility((prev)=>({...prev, [modalName]: true }));
-  }
-
-  // If no user, show redirect message
-  if (!userState) {
-    return (
-      <ThemedView style={{paddingTop: 30, height: "100%", paddingHorizontal: 10}}>
-        <ScrollView>
-          <ThemedText>Redirecting to login...</ThemedText>
-        </ScrollView>
-      </ThemedView>
-    );
   }
 
   return (
@@ -104,13 +81,11 @@ export default function SettingsScreen() {
           {
             title: "Log Out",
             action: () => {
-              setIsLoggingOut(true);
               router.replace('/landing');
               signOut(auth).then(() => {
                 // Sign out completed successfully
               }).catch((error) => {
                 console.error("Error signing out:", error);
-                setIsLoggingOut(false);
               });
             },
             color: redColor
