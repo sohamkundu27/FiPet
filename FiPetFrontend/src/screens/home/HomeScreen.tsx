@@ -157,7 +157,11 @@ export default function HomeScreen() {
               <Text style={styles.questTitle}>Spend It or Save It?</Text>
               <Text style={styles.questSubtitle}>Understand the difference between spending or saving.</Text>
             </View>
-            <TouchableOpacity style={styles.playButton}>
+            <TouchableOpacity style={styles.playButton}
+              onPress={() => {
+                                router.push(`/quests/quest_001`);
+                            }}
+            >
               <Image source={require("@/src/assets/images/play.png")} style={{ width: 60, height: 60 }} />
               <Text style={styles.playText}>Play</Text>
             </TouchableOpacity>
