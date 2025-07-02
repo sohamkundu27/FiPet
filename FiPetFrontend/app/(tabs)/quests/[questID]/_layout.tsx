@@ -1,17 +1,7 @@
 import { QuestProvider } from "@/src/components/questProvider";
-import { Stack, useLocalSearchParams, useNavigation  } from "expo-router";
-import { useEffect } from "react";
+import { Stack, useLocalSearchParams } from "expo-router";
 
 export default function Layout () {
-
-  const navigation = useNavigation('/(tabs)');
-  useEffect(() => {
-    navigation.setOptions({
-      tabBarStyle: {
-        display: "none",
-      }
-    });
-  }, [navigation]);
 
   const { questID } = useLocalSearchParams<{ questID?: string }>();
   if ( ! questID ) {
