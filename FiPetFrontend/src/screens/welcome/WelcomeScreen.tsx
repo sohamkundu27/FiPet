@@ -527,12 +527,14 @@ export default function WelcomeScreen() {
                 <TouchableOpacity
                   onPress={handleContinue}
                 >
-                  <View style={styles.hatchingEgg}>
-                    <Text style={styles.hatchingEggEmoji}>🥚</Text>
-                  </View>
+                  <Image
+                    source={require('@/src/assets/images/welcome_screen_egg.gif')}
+                    style={styles.hatchingEggImage}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.hatchingSubtitle}>Tap the egg to reveal the pet!</Text>
+              <Text style={styles.hatchingSubtitle}>Tap the egg{'\n'}to reveal the pet!</Text>
             </View>
           );
         case 6:
@@ -1282,31 +1284,24 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 40,
     textAlign: 'center',
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Poppins_600SemiBold',
   },
   hatchingEggContainer: {
     width: '100%',
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: -10,
+    marginTop: -20,
   },
-  hatchingEgg: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  hatchingEggEmoji: {
-    fontSize: 80,
-    fontFamily: 'Poppins_400Regular',
+  hatchingEggImage: {
+    width: 350,
+    height: 350,
   },
   hatchingSubtitle: {
     fontSize: 22,
     color: '#FFFFFF',
     textAlign: 'center',
-    marginTop: 40,
-    fontFamily: 'Poppins_400Regular',
+    marginTop: 2,
+    fontFamily: 'Poppins_600SemiBold',
   },
   hatchingContainer: {
     flex: 1,
