@@ -25,6 +25,7 @@ type Quest = {
 };
 
 export default function QuestScreen() {
+
     const {userProgress, streakProgress} = useGamificationStats();
     const router = useRouter();
     const [quests, setQuests] = useState<Quest[]>([]);

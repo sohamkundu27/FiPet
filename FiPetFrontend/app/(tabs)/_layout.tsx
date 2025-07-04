@@ -1,6 +1,6 @@
 import { GamificationProvider } from '@/src/components/providers/GamificationProvider';
 import { RequiresAuth } from '@/src/components/providers/RequiresAuth';
-import { Tabs } from 'expo-router';
+import { Tabs, useSegments } from 'expo-router';
 import { Image } from 'react-native';
 import { Colors } from '@/src/constants/Colors';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
@@ -8,6 +8,15 @@ import { useThemeColor } from '@/src/hooks/useThemeColor';
 export default function TabLayout() {
   const headerBG = useThemeColor({light: Colors.primary.default, dark: Colors.primary.darker}, 'background')
   const headerText = useThemeColor({light: "#000", dark: "#FFF"}, 'background')
+  const segments = useSegments();
+  const hiddenTabBarRoutes  = ['[questID]'];
+  let shouldHideTabBar = false;
+  for (let route of hiddenTabBarRoutes) {
+    if (segments.includes(route)) { // @ts-ignore
+      shouldHideTabBar = true;
+    }
+  }
+  console.log(segments);
 
   const settingsOptions = {
       headerStyle: {
@@ -30,6 +39,7 @@ export default function TabLayout() {
               borderTopColor: '#ddd',
               height: 80,
               paddingBottom: 10,
+              display: shouldHideTabBar ? 'none' : 'block',
             },
             tabBarLabelStyle: {
               fontSize: 13,
