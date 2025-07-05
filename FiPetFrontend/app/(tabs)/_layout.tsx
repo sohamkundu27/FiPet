@@ -90,11 +90,65 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
+            name="petHome"
+            options={{
+              title: 'Pet House',
+              tabBarShowLabel: false,
+              tabBarIcon: ({ focused }) => (
+                <Image
+                  source={
+                    focused
+                      ? require('@/src/assets/images/petHome-selected.png')
+                      : require('@/src/assets/images/petHome.png')
+                  }
+                  style={{ width: 35, height: 35 }}
+                  resizeMode="contain"
+                />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="battle"
+            options={{
+              title: 'Battle',
+              tabBarShowLabel: false,
+              tabBarIcon: ({ focused }) => (
+                <Image
+                  source={
+                    focused
+                      ? require('@/src/assets/images/battle-selected.png')
+                      : require('@/src/assets/images/battle.png')
+                  }
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="store"
+            options={{
+              title: 'store',
+              tabBarShowLabel: false,
+              tabBarIcon: ({ focused }) => (
+                <Image
+                  source={
+                    focused
+                      ? require('@/src/assets/images/store-selected.png')
+                      : require('@/src/assets/images/store.png')
+                  }
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
+              ),
+            }}
+          />
+          <Tabs.Screen
             name="settings"
             options={{
               title: 'Settings',
               ...settingsOptions,
-              tabBarShowLabel: true,
+              tabBarShowLabel: false,
               tabBarIcon: ({ focused }) => (
                 <Image
                   source={
