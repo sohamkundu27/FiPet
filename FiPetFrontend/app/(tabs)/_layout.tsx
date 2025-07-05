@@ -148,7 +148,7 @@ export default function TabLayout() {
             options={{
               title: 'Settings',
               ...settingsOptions,
-              tabBarShowLabel: true,
+              tabBarShowLabel: false,
               tabBarIcon: ({ focused }) => (
                 <Image
                   source={
