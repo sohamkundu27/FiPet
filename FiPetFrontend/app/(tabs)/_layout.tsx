@@ -143,6 +143,25 @@ export default function TabLayout() {
               ),
             }}
           />
+          <Tabs.Screen
+            name="settings"
+            options={{
+              title: 'Settings',
+              ...settingsOptions,
+              tabBarShowLabel: true,
+              tabBarIcon: ({ focused }) => (
+                <Image
+                  source={
+                    focused
+                      ? require('@/src/assets/images/settings.png')
+                      : require('@/src/assets/images/settings.png')
+                  }
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
+              ),
+            }}
+          />
         </Tabs>
       </GamificationProvider>
     </RequiresAuth>
