@@ -111,6 +111,7 @@ export default function TabLayout() {
             name="battle"
             options={{
               title: 'Battle',
+              headerShown: false,
               tabBarShowLabel: false,
               tabBarIcon: ({ focused }) => (
                 <Image
