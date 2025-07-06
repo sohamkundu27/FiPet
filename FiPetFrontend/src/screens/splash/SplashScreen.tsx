@@ -25,7 +25,6 @@ export default function SplashScreen({
       router.prefetch(redirect);
     }
     if ( ready && timerDone ) {
-      console.log("navigating");
       router.navigate(redirect);
     }
   }, [ready, timerDone, redirect, router]);

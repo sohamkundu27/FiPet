@@ -1,6 +1,5 @@
 import { useAuth } from '@/src/hooks/useAuth';
 import SplashScreen from '@/src/screens/splash/SplashScreen';
-import { Redirect } from 'expo-router';
 
 export default function Index() {
   const { ready } = useAuth();
@@ -10,7 +9,7 @@ export default function Index() {
     );
   } else {
     return (
-      <Redirect href="/home"/>
+      <SplashScreen redirect="/home" ready={true}/>
     );
   }
 } 

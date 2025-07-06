@@ -16,7 +16,6 @@ export default function TabLayout() {
       shouldHideTabBar = true;
     }
   }
-  console.log(segments);
 
   const settingsOptions = {
       headerStyle: {
