@@ -93,6 +93,7 @@ export default function TabLayout() {
             name="petHome"
             options={{
               title: 'Pet House',
+              headerShown: false,
               tabBarShowLabel: false,
               tabBarIcon: ({ focused }) => (
                 <Image
