@@ -130,6 +130,7 @@ export default function TabLayout() {
             name="store"
             options={{
               title: 'store',
+              headerShown: false,
               tabBarShowLabel: false,
               tabBarIcon: ({ focused }) => (
                 <Image
