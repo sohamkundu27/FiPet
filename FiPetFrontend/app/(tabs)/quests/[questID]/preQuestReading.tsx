@@ -13,6 +13,8 @@ export default function PreQuestReadingScreen() {
   const [preQuest, setPreQuest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchPreQuest = async () => {
@@ -37,7 +39,7 @@ export default function PreQuestReadingScreen() {
     );
   }
 
-  const pageData = preQuest[`p${page}`];
+  const pageData = preQuest[`page${page}`];
   const totalPages = 4;
   const isLastPage = page === totalPages;
   const isFirstPage = page === 1;
@@ -54,6 +56,7 @@ export default function PreQuestReadingScreen() {
   const handleNext = () => {
     if (!isLastPage) {
       setPage(page + 1);
+      setImageError(false); // Reset image error when changing pages
     } else {
       // Go to first question of the quest
       if (allQuestions.length > 0) {
@@ -65,7 +68,38 @@ export default function PreQuestReadingScreen() {
   };
 
   const handleBack = () => {
-    if (!isFirstPage) setPage(page - 1);
+    if (!isFirstPage) {
+      setPage(page - 1);
+      setImageError(false); // Reset image error when changing pages
+    }
+  };
+
+  // Function to render the image based on page data
+  const renderImage = () => {
+    if (pageData.imageUrl) {
+      return (
+        <Image 
+          source={{ uri: pageData.imageUrl }} 
+          style={styles.foxImage} 
+          resizeMode="contain"
+          onLoadStart={() => setImageLoading(true)}
+          onLoadEnd={() => setImageLoading(false)}
+          onError={() => {
+            setImageLoading(false);
+            setImageError(true);
+          }}
+        />
+      );
+    } else {
+      // Fallback to default image if no imageUrl is provided
+      return (
+        <Image 
+          source={require('@/src/assets/images/preQuestReading1.png')} 
+          style={styles.foxImage} 
+          resizeMode="contain" 
+        />
+      );
+    }
   };
 
   return (
@@ -93,7 +127,27 @@ export default function PreQuestReadingScreen() {
         {/* Scrollable content below */}
         <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.topText}>{String(pageData?.top || '')}</Text>
-          <Image source={require('@/src/assets/images/preQuestReading1.png')} style={styles.foxImage} resizeMode="contain" />
+          
+          {/* Image container with loading and error states */}
+          <View style={styles.imageContainer}>
+            {imageLoading && (
+              <View style={styles.imageLoadingContainer}>
+                <ActivityIndicator size="large" color="#6C63FF" />
+              </View>
+            )}
+            {imageError && (
+              <View style={styles.imageErrorContainer}>
+                <Text style={styles.imageErrorText}>Image failed to load</Text>
+                <Image 
+                  source={require('@/src/assets/images/preQuestReading1.png')} 
+                  style={styles.foxImage} 
+                  resizeMode="contain" 
+                />
+              </View>
+            )}
+            {!imageLoading && !imageError && renderImage()}
+          </View>
+          
           <Text style={styles.bottomText}>{String(pageData?.bottom || '')}</Text>
           <View style={styles.buttonRow}>
             {!isFirstPage && (
@@ -208,5 +262,36 @@ const styles = StyleSheet.create({
   backArrow: {
     width: 32,
     height: 24,
+  },
+  imageContainer: {
+    width: '100%',
+    height: 332,
+    marginBottom: 32,
+    position: 'relative',
+  },
+  imageLoadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageErrorContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageErrorText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 16,
   },
 }); 

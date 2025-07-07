@@ -30,6 +30,7 @@ export interface PracticeQuestion {
 export interface PreQuestReadingPage {
   top: string;
   bottom: string;
+  imageUrl?: string;
 }
 
 export interface PreQuestReading {
