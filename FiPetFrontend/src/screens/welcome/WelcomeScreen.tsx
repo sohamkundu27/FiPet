@@ -137,7 +137,8 @@ export default function WelcomeScreen() {
   const [selectedReferralSource, setSelectedReferralSource] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const {auth} = useAuth();
+  const authContext = useAuth();
+  const auth = authContext.auth;
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loaded] = useFonts({
     Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),
@@ -298,6 +299,11 @@ export default function WelcomeScreen() {
       setIsLoading(true);
 
       try {
+        // Check if auth is available
+        if (!auth) {
+          throw new Error('Authentication service not available');
+        }
+        
         // Create account first
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         console.log('Account created successfully:', userCredential.user.uid);
