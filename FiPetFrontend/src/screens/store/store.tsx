@@ -11,7 +11,7 @@ export default function Store() {
         xp={userProgress.currentXP}
         coins={userProgress.coins}
         streak={streakProgress.currentStreak}
-        title="Home"
+        title="Store"
         gradient={{
           startColor: "#0AC617",
           endColor: "#E9DE00",
