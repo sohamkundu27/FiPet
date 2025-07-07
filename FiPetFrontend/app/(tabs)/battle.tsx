@@ -1,4 +1,4 @@
 
 
-import Battle from '@/src/screens/battle/battle';
+import Battle from '@/src/screens/battle/battlescreen';
 export default Battle;
