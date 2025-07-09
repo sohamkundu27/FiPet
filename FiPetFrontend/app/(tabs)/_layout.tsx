@@ -9,11 +9,17 @@ export default function TabLayout() {
   const headerBG = useThemeColor({light: Colors.primary.default, dark: Colors.primary.darker}, 'background')
   const headerText = useThemeColor({light: "#000", dark: "#FFF"}, 'background')
   const segments = useSegments();
-  const hiddenTabBarRoutes  = ['[questID]'];
+  const hiddenTabBarRoutes  = [['[questID]'], ['petHome', 'level']];
   let shouldHideTabBar = false;
   for (let route of hiddenTabBarRoutes) {
-    if (segments.includes(route)) { // @ts-ignore
-      shouldHideTabBar = true;
+    let includesAll = true;
+    for ( let segment of route ) {
+      if (!segments.includes(segment)) { // @ts-ignore
+        includesAll = false;
+      }
+    }
+    if (includesAll) {
+        shouldHideTabBar = true;
     }
   }
 
