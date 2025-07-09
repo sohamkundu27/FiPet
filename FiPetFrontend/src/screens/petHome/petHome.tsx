@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, Dimensions, Text, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { View, Image, Dimensions, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGamificationStats } from '@/src/hooks/useGamificationStats';
 import TabHeader from '@/src/components/TabHeader';
 
@@ -7,6 +8,7 @@ const windowHeight = Dimensions.get('window').height;
 
 export default function PetHouse() {
   const {userProgress, streakProgress} = useGamificationStats();
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
@@ -63,10 +65,14 @@ export default function PetHouse() {
             shadowRadius: 3.84,
             elevation: 5,
           }}>
-            <Image
-              source={require('@/src/assets/images/trophy.png')}
-              style={{ width: 30, height: 30, resizeMode: 'contain' }}
-            />
+            <TouchableOpacity
+              onPress={() => {router.push("/petHome/level");}}
+            >
+              <Image
+                source={require('@/src/assets/images/trophy.png')}
+                style={{ width: 30, height: 30, resizeMode: 'contain' }}
+              />
+            </TouchableOpacity>
           </View>
         </View>
         <View style={{
