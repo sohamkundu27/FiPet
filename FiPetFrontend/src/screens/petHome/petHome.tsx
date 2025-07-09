@@ -40,41 +40,44 @@ export default function PetHouse() {
         
         {/* Top right circles - going down */}
         {/* Progress circle 1 - Level */}
-        <View style={{
-          position: 'absolute',
-          top: 45,
-          right: 15,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: '#FFDD3C',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 3,
-        }}>
+        <TouchableOpacity
+          onPress={() => {router.push("/petHome/level");}}
+          activeOpacity={0.5}
+          style={{
+            position: 'absolute',
+            top: 45,
+            right: 15,
+          }}
+        >
           <View style={{
-            width: 50,
-            height: 50,
-            borderRadius: 25,
-            backgroundColor: '#fff',
+            width: 60,
+            height: 60,
+            borderRadius: 30,
+            backgroundColor: '#FFDD3C',
             justifyContent: 'center',
             alignItems: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
+            zIndex: 3,
           }}>
-            <TouchableOpacity
-              onPress={() => {router.push("/petHome/level");}}
-            >
+            <View style={{
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: '#fff',
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }}>
               <Image
                 source={require('@/src/assets/images/trophy.png')}
                 style={{ width: 30, height: 30, resizeMode: 'contain' }}
               />
-            </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
         <View style={{
           position: 'absolute',
           top: 110,
@@ -91,7 +94,7 @@ export default function PetHouse() {
             fontSize: 10,
             color: '#333',
             fontFamily: 'Poppins-Regular',
-          }}>Level 6</Text>
+          }}>Level {userProgress.level}</Text>
         </View>
         
         {/* Progress circle 2 - Happiness */}
