@@ -1,20 +1,56 @@
 // Goal: Page shows XP/rewards and completion screen.
 // STATUS: NOT IMPLEMENTED
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View, Image, Text, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuest } from '@/src/hooks/useQuest';
+import { useAuth } from '@/src/hooks/useAuth';
+import { doc, setDoc, collection } from '@firebase/firestore';
+import { db } from '@/src/config/firebase';
 
 export default function QuestComplete() {
   const router = useRouter();
-  // Get quest and answer ratio from context
-  const { quest, getCorrectAnswerRatio } = useQuest();
+  const { quest, getCorrectAnswerRatio, getTotalXPEarned, isComplete, addXP, questXpAwarded } = useQuest();
+  const { user } = useAuth();
+  const [questBonusAwarded, setQuestBonusAwarded] = useState(false);
   const correctRatio = getCorrectAnswerRatio();
   const mood = correctRatio > 0.8 ? 'Happy' : 'Sad';
-  const xpEarned = mood === 'Sad' ? 0 : (quest?.xpReward || 0);
+  
+  // Individual question XP is already awarded, so we just show the total here
+  const questionXP = getTotalXPEarned();
+  // Only award quest completion bonus if they did well and haven't received it before
+  const questBonusXP = (mood === 'Sad' || questXpAwarded) ? 0 : (quest?.xpReward || 0);
+  const xpEarned = questionXP + questBonusXP;
+  
   const title = mood === 'Sad' ? 'So Close' : 'Well done!';
   const emoji = mood === 'Sad' ? '😢' : '🎉';
+
+  useEffect(() => {
+    // Only award the quest completion bonus if not already awarded
+    if (isComplete() && !questBonusAwarded && questBonusXP > 0 && !questXpAwarded && user && quest) {
+      const awardQuestBonus = async () => {
+        try {
+          await addXP(questBonusXP);
+          setQuestBonusAwarded(true);
+          
+          // Save quest bonus award status to Firestore
+          const userProgressRef = doc(db, 'users', user.uid, 'questProgress', quest.id);
+          const xpProgressRef = doc(collection(userProgressRef, 'xpProgress'), 'tracking');
+          await setDoc(xpProgressRef, {
+            questBonusAwarded: true,
+            lastUpdated: new Date().toISOString()
+          }, { merge: true });
+          
+          console.log(`Quest completed! Awarded ${questBonusXP} completion bonus XP (${questionXP} was already awarded for questions)`);
+        } catch (error) {
+          console.error('Error awarding quest bonus:', error);
+        }
+      };
+      
+      awardQuestBonus();
+    }
+  }, [isComplete, questBonusXP, addXP, questBonusAwarded, questionXP, questXpAwarded, user, quest]);
 
   return (
     <View style={styles.container}>
@@ -37,7 +73,7 @@ export default function QuestComplete() {
         <TouchableOpacity style={styles.outlineButton} onPress={() => router.replace('/home')}>
           <Text style={styles.outlineButtonText}>RETURN HOME</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.gradientButton} onPress={() => router.replace('/quest')}>
+        <TouchableOpacity style={styles.gradientButton} onPress={() => router.replace('/quests')}>
           <LinearGradient
             colors={["#4F8CFF", "#7C3AED"]}
             start={{ x: 0, y: 0 }}

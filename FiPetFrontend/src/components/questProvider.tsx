@@ -14,7 +14,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import { Quest, Question } from "../types/quest";
 import { getQuestWithQuestions } from "../services/questService";
-import { doc, setDoc, collection } from '@firebase/firestore';
+import { doc, setDoc, collection, updateDoc, increment, getDoc } from '@firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../hooks/useAuth';
 
@@ -121,6 +121,9 @@ type QuestContextType = {
   error: string | null,
   quest: Quest | null,
   getCorrectAnswerRatio: () => number,
+  getTotalXPEarned: () => number,
+  addXP: (xp: number) => Promise<void>,
+  questXpAwarded: boolean,
 };
 
 export const QuestContext = React.createContext<QuestContextType>(null!);
@@ -129,9 +132,48 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
   const [quest, setQuest] = useState<Quest | null>(null);
   const [questions, setQuestions] = useState<ExtendedQuestion[]>([]);
   const [answeredQuestions, setAnsweredQuestions] = useState<QuestAnswerDict>({});
+  const [xpAwardedQuestions, setXpAwardedQuestions] = useState<Set<string>>(new Set());
+  const [questXpAwarded, setQuestXpAwarded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+
+  // Function to add XP to the user's current XP total
+  const addXP = async (xp: number) => {
+    if (!user) {
+      console.error('No user logged in');
+      return;
+    }
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        current_xp: increment(xp)
+      });
+      console.log(`Added ${xp} XP to user ${user.uid}`);
+    } catch (error) {
+      console.error('Error adding XP:', error);
+    }
+  };
+
+  // Function to load user's XP progress for this quest
+  const loadXpProgress = async () => {
+    if (!user) return;
+    
+    try {
+      const userProgressRef = doc(db, 'users', user.uid, 'questProgress', questID);
+      const xpProgressRef = doc(collection(userProgressRef, 'xpProgress'), 'tracking');
+      
+      const xpProgressSnap = await getDoc(xpProgressRef);
+      if (xpProgressSnap.exists()) {
+        const data = xpProgressSnap.data();
+        setXpAwardedQuestions(new Set(data.awardedQuestions || []));
+        setQuestXpAwarded(data.questBonusAwarded || false);
+      }
+    } catch (error) {
+      console.error('Error loading XP progress:', error);
+    }
+  };
 
   // Fetch quest and questions on mount
   useEffect(() => {
@@ -172,6 +214,9 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
         });
         
         setQuestions(extendedQuestions);
+        
+        // Load user's XP progress after quest data is loaded
+        await loadXpProgress();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch quest data');
         console.error('Error fetching quest data:', err);
@@ -319,6 +364,35 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     };
     setAnsweredQuestions(newAnsweredQuestions);
     
+    // Award XP for correct answers only if not already awarded
+    if (isCorrect && outcome.xpReward > 0 && !xpAwardedQuestions.has(question.id)) {
+      addXP(outcome.xpReward);
+      
+      // Update the awarded questions set
+      const newXpAwardedQuestions = new Set(xpAwardedQuestions);
+      newXpAwardedQuestions.add(question.id);
+      setXpAwardedQuestions(newXpAwardedQuestions);
+      
+      console.log(`Question answered correctly! Awarded ${outcome.xpReward} XP for question ${question.id}`);
+      
+      // Save XP progress to Firestore
+      if (user) {
+        try {
+          const userProgressRef = doc(db, 'users', user.uid, 'questProgress', questID);
+          const xpProgressRef = doc(collection(userProgressRef, 'xpProgress'), 'tracking');
+          await setDoc(xpProgressRef, {
+            awardedQuestions: Array.from(newXpAwardedQuestions),
+            questBonusAwarded: questXpAwarded,
+            lastUpdated: new Date().toISOString()
+          }, { merge: true });
+        } catch (error) {
+          console.error('Error saving XP progress:', error);
+        }
+      }
+    } else if (isCorrect && xpAwardedQuestions.has(question.id)) {
+      console.log(`Question ${question.id} already awarded XP - skipping`);
+    }
+    
     // Save answer to Firestore
     if (user) {
       try {
@@ -365,6 +439,14 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     return correct / total;
   };
 
+  // Calculate total XP earned
+  const getTotalXPEarned = () => {
+    return Object.values(answeredQuestions).reduce(
+      (sum, ans) => sum + (ans.outcome?.xpReward || 0),
+      0
+    );
+  };
+
   // Show loading or error state
   if (loading) {
     return (
@@ -405,6 +487,9 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       error,
       quest,
       getCorrectAnswerRatio,
+      getTotalXPEarned,
+      addXP,
+      questXpAwarded,
     }}>
       {children}
     </QuestContext.Provider>
