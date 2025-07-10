@@ -122,6 +122,14 @@ export default function QuestScreen() {
             }}
           />
             <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 25 }}>
+                {/* Test Button */}
+                <TouchableOpacity
+                    style={styles.testButton}
+                    onPress={() => router.push('/testPreQuestImageLoading')}
+                >
+                    <Text style={styles.testButtonText}>🧪 Test PreQuest Images</Text>
+                </TouchableOpacity>
+
                 {quests.map((q, idx) => (
                     <LinearGradient
                         key={q.id}
@@ -331,6 +339,26 @@ const styles = StyleSheet.create({
         lineHeight: 12*1.5,
         fontWeight: 'bold',
         color: '#333',
+        fontFamily: 'Poppins',
+    },
+    testButton: {
+        backgroundColor: '#FF6B6B',
+        borderRadius: 15,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        alignSelf: 'center',
+        marginBottom: 20,
+        ...(Platform.OS === 'web'
+            ? { boxShadow: '0 4px 16px rgba(255, 107, 107, 0.2)' }
+            : {
+                shadowColor: '#FF6B6B',
+                shadowOpacity: 0.2,
+            }),
+    },
+    testButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
         fontFamily: 'Poppins',
     },
 });

@@ -19,6 +19,8 @@ export default function PreQuestReadingScreen() {
       if (!quest?.preQuest) return;
       setLoading(true);
       const data = await getPreQuestReadingById(quest.preQuest);
+      console.log('PreQuest data loaded:', data);
+      console.log('Available pages:', Object.keys(data || {}));
       setPreQuest(data);
       setLoading(false);
     };
@@ -37,10 +39,14 @@ export default function PreQuestReadingScreen() {
     );
   }
 
-  const pageData = preQuest[`p${page}`];
+  const pageData = preQuest[`page${page}`];
   const totalPages = 4;
   const isLastPage = page === totalPages;
   const isFirstPage = page === 1;
+
+  // Debug logging
+  console.log(`Current page: ${page}, Page data:`, pageData);
+  console.log('All preQuest keys:', Object.keys(preQuest || {}));
 
   // Check if pageData exists
   if (!pageData) {
@@ -93,7 +99,21 @@ export default function PreQuestReadingScreen() {
         {/* Scrollable content below */}
         <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.topText}>{String(pageData?.top || '')}</Text>
-          <Image source={require('@/src/assets/images/preQuestReading1.png')} style={styles.foxImage} resizeMode="contain" />
+          {pageData?.imageUrl ? (
+            <Image 
+              key={`${page}-${pageData.imageUrl}`}
+              source={{ uri: pageData.imageUrl }} 
+              style={styles.foxImage} 
+              resizeMode="contain" 
+            />
+          ) : (
+            <Image 
+              key={`fallback-${page}`}
+              source={require('@/src/assets/images/preQuestReading1.png')} 
+              style={styles.foxImage} 
+              resizeMode="contain" 
+            />
+          )}
           <Text style={styles.bottomText}>{String(pageData?.bottom || '')}</Text>
           <View style={styles.buttonRow}>
             {!isFirstPage && (
