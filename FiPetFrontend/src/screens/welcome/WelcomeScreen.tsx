@@ -575,6 +575,13 @@ export default function WelcomeScreen() {
             <View style={styles.contentContainer}>
               <Text style={styles.accountHeading}>You're almost ready!</Text>
               
+              <TouchableOpacity 
+                style={styles.alreadyHaveAccountButton}
+                onPress={() => router.push('/login')}
+              >
+                <Text style={styles.alreadyHaveAccountText}>Already have an account?</Text>
+              </TouchableOpacity>
+              
               <View style={styles.formSection}>
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Enter your email</Text>
@@ -640,13 +647,6 @@ export default function WelcomeScreen() {
                     <Text style={styles.termsLink}>Terms & Conditions</Text>
                   </Text>
                 </View>
-
-                <TouchableOpacity 
-                  style={styles.alreadyHaveAccountButton}
-                  onPress={() => router.push('/login')}
-                >
-                  <Text style={styles.alreadyHaveAccountText}>Already have an account?</Text>
-                </TouchableOpacity>
               </View>
             </View>
           );
@@ -1378,17 +1378,14 @@ const styles = StyleSheet.create({
   },
   alreadyHaveAccountButton: {
     marginBottom: 20,
-    paddingVertical: 8,
     paddingHorizontal: 20,
-    borderWidth: 2,
-    borderColor: '#F97216',
-    borderRadius: 20,
     alignSelf: 'stretch',
   },
   alreadyHaveAccountText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#F97216',
     textAlign: 'center',
     fontFamily: 'Poppins_500Medium',
+    textDecorationLine: 'underline',
   },
 }); 
