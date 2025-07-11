@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Image, Dimensions, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGamificationStats } from '@/src/hooks/useGamificationStats';
@@ -9,6 +9,7 @@ const windowHeight = Dimensions.get('window').height;
 export default function PetHouse() {
   const {userProgress, streakProgress} = useGamificationStats();
   const router = useRouter();
+  const [showInventory, setShowInventory] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -244,27 +245,208 @@ export default function PetHouse() {
           backgroundColor: '#E2B486',
           zIndex: 0,
         }} />
+
+        {/* Inventory View */}
+        {showInventory && (
+          <View style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: '#8CDDD1',
+            zIndex: 5,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+
+
+            {/* Inventory Content */}
+            <View style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingTop: 100,
+              paddingBottom: 100,
+              flexDirection: 'column',
+              gap: 80,
+            }}>
+              {/* Inventory Shelf 1 */}
+              <View style={{ position: 'relative' }}>
+                <Image
+                  source={require('@/src/assets/images/Inventory_Shelf.png')}
+                  style={{
+                    width: 350,
+                    height: 50,
+                    resizeMode: 'contain',
+                  }}
+                />
+                <View style={{
+                  position: 'absolute',
+                  top: -67,
+                  left: 0,
+                  right: 0,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 40,
+                }}>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                </View>
+              </View>
+              
+              {/* Inventory Shelf 2 */}
+              <View style={{ position: 'relative' }}>
+                <Image
+                  source={require('@/src/assets/images/Inventory_Shelf.png')}
+                  style={{
+                    width: 350,
+                    height: 50,
+                    resizeMode: 'contain',
+                  }}
+                />
+                <View style={{
+                  position: 'absolute',
+                  top: -67,
+                  left: 0,
+                  right: 0,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 40,
+                }}>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                </View>
+              </View>
+              
+              {/* Inventory Shelf 3 */}
+              <View style={{ position: 'relative' }}>
+                <Image
+                  source={require('@/src/assets/images/Inventory_Shelf.png')}
+                  style={{
+                    width: 350,
+                    height: 50,
+                    resizeMode: 'contain',
+                  }}
+                />
+                <View style={{
+                  position: 'absolute',
+                  top: -67,
+                  left: 0,
+                  right: 0,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 40,
+                }}>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                </View>
+              </View>
+              
+              {/* Inventory Shelf 4 */}
+              <View style={{ position: 'relative' }}>
+                <Image
+                  source={require('@/src/assets/images/Inventory_Shelf.png')}
+                  style={{
+                    width: 350,
+                    height: 50,
+                    resizeMode: 'contain',
+                  }}
+                />
+                <View style={{
+                  position: 'absolute',
+                  top: -67,
+                  left: 0,
+                  right: 0,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 40,
+                }}>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                  <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Close button */}
+            <TouchableOpacity
+              onPress={() => setShowInventory(false)}
+              style={{
+                position: 'absolute',
+                bottom: 30,
+                left: 25,
+                width: 50,
+                height: 50,
+                borderRadius: 30,
+                backgroundColor: '#fff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 6,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5,
+              }}
+            >
+              <Text style={{ fontSize: 24, color: '#333', fontFamily: 'Poppins-Regular' }}>×</Text>
+            </TouchableOpacity>
+
+            {/* Bottom right button */}
+            <View style={{
+              position: 'absolute',
+              bottom: 30,
+              right: 25,
+              width: 50,
+              height: 50,
+              borderRadius: 30,
+              backgroundColor: '#fff',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 6,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }}>
+              <Text style={{ fontSize: 24, color: '#333' }}>+</Text>
+            </View>
+          </View>
+        )}
         
         {/* Inventory button - bottom left */}
-        <View style={{
-          position: 'absolute',
-          bottom: 30,
-          left: 25,
-          width: 50,
-          height: 50,
-          borderRadius: 30,
-          backgroundColor: '#fff',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 4,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 3.84,
-          elevation: 5,
-        }}>
+        <TouchableOpacity
+          onPress={() => setShowInventory(!showInventory)}
+          activeOpacity={0.7}
+          style={{
+            position: 'absolute',
+            bottom: 30,
+            left: 25,
+            width: 50,
+            height: 50,
+            borderRadius: 30,
+            backgroundColor: '#fff',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 4,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+          }}
+        >
           <Text style={{ fontSize: 24, color: '#333', fontFamily: 'Poppins-Regular' }}>→</Text>
-        </View>
+        </TouchableOpacity>
         <View style={{
           position: 'absolute',
           bottom: 5,
