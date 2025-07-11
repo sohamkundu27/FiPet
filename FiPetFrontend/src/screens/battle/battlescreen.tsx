@@ -38,7 +38,7 @@ export default function BattleScreen() {
         }}
       />
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingTop: 20 }}>
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Image source={require("@/src/assets/images/daily-streak.png")} style={styles.sectionIcon} />
@@ -49,17 +49,19 @@ export default function BattleScreen() {
           </View>
 
           <View style={styles.sectionContent}>
-            <TouchableOpacity style={styles.startButton}>
-              <Image source={require("@/src/assets/images/play.png")} style={styles.buttonIcon} />
-              <Text style={styles.startButtonText}>Start A Game</Text>
-            </TouchableOpacity>
+            <View style={styles.startButton}>
+                <TouchableOpacity style={styles.startButtonInner}>
+                <Image source={require("@/src/assets/images/play.png")} style={styles.buttonIcon} /> {/* change this to be the plus icon */}
+                <Text style={styles.startButtonText}>Start A Game</Text>
+                </TouchableOpacity>
+            </View>
+            
 
             <LinearGradient
               colors={['#A855F7', '#3B82F6']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={styles.findButton}
-            >
+              style={styles.findButton}>
               <TouchableOpacity style={styles.findButtonInner}>
                 <Image source={require("@/src/assets/images/play.png")} style={styles.buttonIcon} />
                 <Text style={styles.findButtonText}>Find A Game</Text>
@@ -79,16 +81,16 @@ export default function BattleScreen() {
 
           <View style={styles.leaderboardBox}>
             <View style={styles.leaderboardHeader}>
-              <Text style={styles.tableHeader}>Place</Text>
-              <Text style={styles.tableHeader}>Username</Text>
-              <Text style={styles.tableHeader}>XP</Text>
-              <Text style={styles.tableHeader}>Streak</Text>
+              <Text style={[styles.tableHeader, styles.tableHeaderRank]}>Place</Text>
+              <Text style={[styles.tableHeader, styles.tableHeaderUsername]}>Username</Text>
+              <Text style={[styles.tableHeader, styles.tableHeaderXP]}>XP</Text>
+              <Text style={[styles.tableHeader, styles.tableHeaderStreak]}>Streak</Text>
             </View>
 
             {[
-              { name: '@userabc1...', score: '10.4M', streak: 1092 },
+              { name: '@userabc1_long_username', score: '10.4M', streak: 1092 },
               { name: '@alfkd', score: '10.4M', streak: 1092 },
-              { name: '@randus...', score: '10.4M', streak: 1092 },
+              { name: '@randus_longusername', score: '10.4M', streak: 1092 },
               { name: '@ilovefipet', score: '10.4M', streak: 1092 },
               { name: '@afd4kd', score: '10.4M', streak: 1092 },
               { name: '@user12b', score: '9.8M', streak: 453 },
@@ -97,7 +99,9 @@ export default function BattleScreen() {
               <View key={index}>
                 <View style={styles.leaderboardRow}>
                   <Text style={styles.rank}>{index + 4}th</Text>
-                  <Text style={styles.username}>{user.name}</Text>
+                  <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">
+                    {user.name}
+                  </Text>
                   <View style={styles.xpCell}>
                     <Text style={styles.xpText}>{user.score}</Text>
                     <Image source={require("@/src/assets/images/xp.png")} style={styles.xpIcon} />
@@ -114,14 +118,14 @@ export default function BattleScreen() {
             {/* <View style={styles.dottedDivider} /> */}
 
             <View style={styles.leaderboardRow}>
-              <Text style={styles.rank}>3,042</Text>
-              <Text style={styles.username}>You</Text>
+              <Text style={[styles.rank, { fontFamily: 'PoppinsBold' }]}>3,042</Text>
+              <Text style={[styles.username, { fontFamily: 'PoppinsBold' }]} numberOfLines={1} ellipsizeMode="tail">You</Text>
               <View style={styles.xpCell}>
-                <Text style={styles.xpText}>32.7K</Text>
+                <Text style={[styles.xpText, { fontFamily: 'PoppinsBold' }]}>32.7K</Text>
                 <Image source={require("@/src/assets/images/xp.png")} style={styles.xpIcon} />
               </View>
               <View style={styles.streakCell}>
-                <Text style={styles.streakText}>37</Text>
+                <Text style={[styles.streakText, { fontFamily: 'PoppinsBold' }]}>37</Text>
                 <Image source={require("@/src/assets/images/streak-fire-full.png")} style={styles.streakIcon} />
               </View>
             </View>
@@ -131,6 +135,7 @@ export default function BattleScreen() {
     </View>
   )
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -157,8 +162,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionIcon: {
-    width: 50,
-    height: 50,
+    width: 55,
+    height: 55,
     marginRight: 10,
     resizeMode: 'contain',
   },
@@ -180,18 +185,20 @@ const styles = StyleSheet.create({
   },
   startButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#F3F4F6',
     borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
     elevation: 4,
+  },
+  startButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 18,
   },
   findButton: {
     flex: 1,
@@ -213,12 +220,12 @@ const styles = StyleSheet.create({
   },
   startButtonText: {
     fontFamily: 'PoppinsSemiBold',
-    fontSize: 15,
+    fontSize: 18,
     color: '#4F46E5',
   },
   findButtonText: {
     fontFamily: 'PoppinsSemiBold',
-    fontSize: 15,
+    fontSize: 18,
     color: '#fff',
   },
   leaderboardBox: {
@@ -243,7 +250,24 @@ const styles = StyleSheet.create({
     fontFamily: 'PoppinsMedium',
     fontSize: 14,
     color: '#6B7280',
+  },
+  tableHeaderRank: {
+    width: '18%',
+    textAlign: 'left',
+  },
+  tableHeaderUsername: {
+    width: '32%',
+    textAlign: 'left',
+  },
+  tableHeaderXP: {
     width: '25%',
+    textAlign: 'right',
+    paddingRight: 58
+  },
+  tableHeaderStreak: {
+    width: '20%',
+    textAlign: 'right',
+    paddingRight: 16
   },
   leaderboardRow: {
     flexDirection: 'row',
@@ -264,21 +288,24 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   rank: {
-    width: '25%',
+    width: '18%',
     fontSize: 15,
     fontFamily: 'PoppinsRegular',
     color: '#1F2937',
   },
   username: {
-    width: '25%',
+    width: '32%',
     fontSize: 15,
     fontFamily: 'PoppinsRegular',
     color: '#374151',
+    overflow: 'hidden',
   },
   xpCell: {
     width: '25%',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingLeft: 25
   },
   xpText: {
     fontSize: 15,
@@ -295,6 +322,8 @@ const styles = StyleSheet.create({
     width: '25%',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingLeft: 30
   },
   streakText: {
     fontSize: 15,
@@ -308,3 +337,4 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
 })
+
