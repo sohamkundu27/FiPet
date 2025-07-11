@@ -121,31 +121,22 @@ export default function QuestScreen() {
               endColor: "#3B82F6",
             }}
           />
-            <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 25 }}>
+            <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 20 }}>
                 {quests.map((q, idx) => (
                     <LinearGradient
                         key={q.id}
                         colors={idx % 2 === 0 ? ['#A259FF', '#3B82F6'] : ['#3B82F6', '#38BDF8']}
                         start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }} 
+                        end={{ x: 1, y: 1 }} 
                         style={styles.questCard}
                     >
                         {/* Correct Answers Counter */}
                         <CorrectAnswersCounter questId={q.id} />
                         
                         <Text style={styles.questCardTitle}>{q.title}</Text>
-                        <View style={styles.questCardStatsRow}>
-                            <View style={styles.questCardStat}>
-                                <GoldCoinIcon />
-                                <Text style={styles.questCardStatText}>{q.xpReward}</Text>
-                            </View>
-                            <View style={styles.questCardStat}>
-                                <CustomClockIcon />
-                                <Text style={styles.questCardStatText}>{q.duration || '30 min'}</Text>
-                            </View>
-                        </View>
+                        
                         {/* Objectives (descriptions) */}
-                        <View style={{ marginTop: 10, marginRight: 18 }}>
+                        <View style={styles.objectivesContainer}>
                             {q.descriptions && q.descriptions.length > 0 ? (
                                 q.descriptions.map((desc: string, i: number) => (
                                     <View style={styles.objectiveRow} key={i}>
@@ -160,28 +151,42 @@ export default function QuestScreen() {
                                 </View>
                             )}
                         </View>
-                        {/* Play Button */}
-                        <TouchableOpacity
-                            style={styles.playButton}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                                if (q.preQuest) {
-                                    router.push(`/quests/${q.id}/preQuestReading`);
-                                } else {
-                                    router.push(`/quests/${q.id}`);
-                                }
-                            }}
-                        >
-                            <GradientPlayIcon colors={idx % 2 === 0 ? ['#A259FF', '#3B82F6'] : ['#3B82F6', '#38BDF8']} />
-                            <Text
-                              style={[
-                                styles.playButtonText,
-                                { color: (idx % 2 === 0 ? '#A259FF' : '#3B82F6') }
-                              ]}
+
+                        {/* Bottom Row - Stats and Play Button */}
+                        <View style={styles.bottomRow}>
+                            <View style={styles.questCardStatsRow}>
+                                <View style={styles.questCardStat}>
+                                    <GoldCoinIcon />
+                                    <Text style={styles.questCardStatText}>{q.xpReward}</Text>
+                                </View>
+                                <View style={styles.questCardStat}>
+                                    <CustomClockIcon />
+                                    <Text style={styles.questCardStatText}>{q.duration || '30 min'}</Text>
+                                </View>
+                            </View>
+                            
+                            <TouchableOpacity
+                                style={styles.playButton}
+                                activeOpacity={0.85}
+                                onPress={() => {
+                                    if (q.preQuest) {
+                                        router.push(`/quests/${q.id}/preQuestReading`);
+                                    } else {
+                                        router.push(`/quests/${q.id}`);
+                                    }
+                                }}
                             >
-                              Play
-                            </Text>
-                        </TouchableOpacity>
+                                <GradientPlayIcon colors={['#A259FF', '#3B82F6']} />
+                                <Text
+                                  style={[
+                                    styles.playButtonText,
+                                    { color: '#A259FF' }
+                                  ]}
+                                >
+                                  Play
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </LinearGradient>
                 ))}
             </ScrollView>
@@ -195,14 +200,14 @@ function getObjectiveEmoji(idx: number) {
 }
 
 const GradientPlayIcon = ({ colors }: { colors: readonly [string, string, ...string[]] }) => (
-    <Svg width={32} height={32} viewBox="0 0 32 32">
+    <Svg width={24} height={24} viewBox="0 0 30 30}>">
         <Defs>
             <SvgLinearGradient id="play-gradient" x1="0" y1="0" x2="1" y2="1">
                 <Stop offset="0%" stopColor={colors[0]} />
                 <Stop offset="100%" stopColor={colors[1]} />
             </SvgLinearGradient>
         </Defs>
-        <Polygon points="8,6 26,16 8,26" fill="url(#play-gradient)" />
+        <Polygon points="6,1 24,12 6,24" fill="url(#play-gradient)" />
     </Svg>
 );
 
@@ -220,96 +225,109 @@ const GoldCoinIcon = () => (
 
 const styles = StyleSheet.create({
     questCard: {
-        borderRadius: 22,
-        padding: 22,
-        marginBottom: 24,
+        borderRadius: 24,
+        padding: 24,
+        marginBottom: 16,
+        marginHorizontal: 2,
         ...(Platform.OS === 'web'
-            ? { boxShadow: '0 6px 18px rgba(0,0,0,0.12)' }
+            ? { boxShadow: '0 8px 32px rgba(162, 89, 255, 0.15)' }
             : {
-                    shadowColor: '#000',
-                    shadowOpacity: 0.12,
-                    shadowRadius: 10,
-                    shadowOffset: { width: 0, height: 6 },
-                    elevation: 3,
+                    shadowColor: '#A259FF',
+                    shadowOpacity: 0.15,
+                    shadowRadius: 16,
+                    shadowOffset: { width: 0, height: 8 },
+                    elevation: 8,
               }),
     },
     questCardTitle: {
-        fontSize: 24,
-        lineHeight: 25*1.5,
-        fontWeight: 'bold',
+        fontSize: 26,
+        lineHeight: 28*1.2,
+        fontWeight: '600',
         color: '#fff',
-        marginBottom: 10,
-        letterSpacing: 0.5,
+        marginBottom: 20,
+        letterSpacing: -0.5,
         fontFamily: 'Poppins', 
+    },
+    objectivesContainer: {
+        flex: 1,
+        marginBottom: 20,
+    },
+    bottomRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     questCardStatsRow: {
         flexDirection: 'row',
-        gap: 4,
-        marginBottom: 8,
-
+        gap: 8,
     },
     questCardStat: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 15,
-        paddingHorizontal: 5,
-        paddingVertical: 5,
-        marginRight: 10,
+        backgroundColor: '#E9E9E9',
+        borderRadius: 12,
+        paddingHorizontal: 6,
+        paddingVertical: 4,
+        marginRight: 8,
         ...(Platform.OS === 'web'
-            ? { boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }
+            ? { boxShadow: '0 4px 16px rgba(255,255,255,0.1)' }
             : {
-                    shadowColor: '#000',
-                    shadowOpacity: 0.08,
-                    shadowRadius: 4,
-                    shadowOffset: { width: 0, height: 2 },
+                    shadowColor: '#fff',
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    shadowOffset: { width: 0, height: 4 },
               }),
     },
     questCardStatText: {
-        color: '#444',
-        fontSize: 15,
-        lineHeight: 15*1.5,
-        marginLeft: 6,
+        color: '#334155',
+        fontSize: 12,
+        lineHeight: 16*1.3,
+        marginLeft: 8,
+       
         fontFamily: 'Poppins', 
     },
     objectiveRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 4,
+        alignItems: 'flex-start',
+        marginBottom: 8,
     },
     objectiveEmoji: {
         fontSize: 18,
         lineHeight: 18*1.5,
-        marginRight: 8,
+        marginRight: 12,
         fontFamily: 'Poppins', 
+        width: 24,
     },
     objectiveText: {
         color: '#fff',
-        fontSize: 15,
-        lineHeight: 15*1.5,
-        fontWeight: '500',
-        marginLeft: 2,
+        fontSize: 16,
+        lineHeight: 16*1.4,
+        fontWeight: '400',
+        flex: 1,
         fontFamily: 'Poppins', 
+        opacity: 0.95,
     },
     playButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 32,
-        paddingHorizontal: 18,
-        paddingVertical: 4,
-        alignSelf: 'flex-start',
-        marginTop: 24,
+        backgroundColor: '#E9E9E9',
+        borderRadius: 15,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
         ...(Platform.OS === 'web'
-            ? { boxShadow: '0 4px 16px rgba(124,58,237,0.10)' }
+            ? { boxShadow: '0 6px 20px rgba(255,255,255,0.15)' }
             : {
-                shadowColor: '#7C3AED',
-                shadowOpacity: 0.1,
+                shadowColor: '#fff',
+                shadowOpacity: 0.15,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 6 },
             }),
     },
     playButtonText: {
-        fontSize: 20,
-        lineHeight: 20*1.5,
+        fontSize: 16,
+        lineHeight: 16*1.3,
+        fontWeight: '600',
+        marginLeft: 6,
         fontFamily: 'Poppins', 
     },
     correctAnswersBadge: {

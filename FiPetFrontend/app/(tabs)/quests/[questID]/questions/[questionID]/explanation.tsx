@@ -87,7 +87,11 @@ export default function QuestionExplanationScreen() {
           </View>
         </View>
         {/* Scrollable content below */}
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView 
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Question Number */}
           <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
 
@@ -139,9 +143,10 @@ export default function QuestionExplanationScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#fff',
     padding: 24,
+    paddingBottom: 50,
   },
   progressBarSteps: {
     flexDirection: 'row',
@@ -174,7 +179,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 24,
   },
-  progressHeader: undefined,
   questionNumber: {
     fontSize: 16,
     color: '#888',

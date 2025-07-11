@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity, Text, Image, Modal } from "react-native";
+import { StyleSheet, View, TouchableOpacity, Text, Image, Modal, ScrollView } from "react-native";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuest } from "@/src/hooks/useQuest";
 import { ThemedText } from "@/src/components/ThemedText";
@@ -130,87 +130,95 @@ export default function QuestQuestion() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Progress Bar Header */}
-      <View style={styles.progressHeader}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
-          <Image
-            source={require('@/src/assets/images/arrow.png')}
-            style={styles.backArrow}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-        <View style={styles.progressBarSteps}>
-          {allQuestions.map((_, step) => (
-            <View
-              key={step}
-              style={[
-                styles.progressStep,
-                step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
-              ]}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Progress Bar Header */}
+        <View style={styles.progressHeader}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
+            <Image
+              source={require('@/src/assets/images/arrow.png')}
+              style={styles.backArrow}
+              resizeMode="contain"
             />
-          ))}
+          </TouchableOpacity>
+          <View style={styles.progressBarSteps}>
+            {allQuestions.map((_, step) => (
+              <View
+                key={step}
+                style={[
+                  styles.progressStep,
+                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
+                  step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
+                ]}
+              />
+            ))}
+          </View>
         </View>
-      </View>
 
-      {/* Question Number */}
-      <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
+        {/* Question Number */}
+        <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
 
-      {/* Question Text */}
-      <Text style={styles.questionText}>{question.prompt}</Text>
+        {/* Question Text */}
+        <Text style={styles.questionText}>{question.prompt}</Text>
 
-      {/* Options */}
-      <View style={styles.optionsContainer}>
-        {options.map((option) => {
-          const isSelected =
-            question.type === "multiselect"
-              ? selectedOptions.some((o) => o.id === option.id)
-              : selectedOptionProp?.id === option.id;
+        {/* Options */}
+        <View style={styles.optionsContainer}>
+          {options.map((option) => {
+            const isSelected =
+              question.type === "multiselect"
+                ? selectedOptions.some((o) => o.id === option.id)
+                : selectedOptionProp?.id === option.id;
 
-          return (
-            <TouchableOpacity
-              key={option.id}
-              style={[
-                styles.optionButton,
-                isSelected && styles.selectedOptionButton,
-                checked && styles.disabledOptionButton,
-              ]}
-              onPress={() => handleOptionSelect(option)}
-              disabled={checked}
-            >
-              <Text style={styles.optionText}>{option.text}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+            return (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.optionButton,
+                  isSelected && styles.selectedOptionButton,
+                  checked && styles.disabledOptionButton,
+                ]}
+                onPress={() => handleOptionSelect(option)}
+                disabled={checked}
+              >
+                <Text style={styles.optionText}>{option.text}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-      {/* Check Answer Button */}
+        {/* Feedback */}
+        <OutcomeDisplay />
+
+        {/* Continue/Next Button */}
+        <View style={styles.continueContainer}>
+          <ContinueButton />
+        </View>
+      </ScrollView>
+
+      {/* Check Answer Button - Fixed at bottom */}
       {!checked && (
-        <TouchableOpacity
-          style={[
-            styles.checkAnswerButton,
-            (question.type === "multiselect" && selectedOptions.length === 0) ||
-            (!selectedOptionProp)
-              ? styles.disabledCheckAnswerButton
-              : null,
-          ]}
-          onPress={checkAnswer}
-          disabled={
-            (question.type === "multiselect" && selectedOptions.length === 0) ||
-            !selectedOptionProp
-          }
-        >
-          <Text style={styles.checkAnswerText}>CHECK ANSWER</Text>
-        </TouchableOpacity>
+        <View style={styles.checkAnswerContainer}>
+          <TouchableOpacity
+            style={[
+              styles.checkAnswerButton,
+              (question.type === "multiselect" && selectedOptions.length === 0) ||
+              (!selectedOptionProp)
+                ? styles.disabledCheckAnswerButton
+                : null,
+            ]}
+            onPress={checkAnswer}
+            disabled={
+              (question.type === "multiselect" && selectedOptions.length === 0) ||
+              !selectedOptionProp
+            }
+          >
+            <Text style={styles.checkAnswerText}>CHECK ANSWER</Text>
+          </TouchableOpacity>
+        </View>
       )}
-
-      {/* Feedback */}
-      <OutcomeDisplay />
-
-      {/* Continue/Next Button */}
-      <View style={styles.continueContainer}>
-        <ContinueButton />
-      </View>
 
       {/* Correct Modal */}
       <Modal
@@ -245,8 +253,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: 24,
-    justifyContent: 'flex-start',
+    paddingBottom: 100, // Extra space for fixed button
+  },
+  checkAnswerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    paddingBottom: 34, // Safe area bottom
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
   progressHeader: {
     flexDirection: 'row',
@@ -330,7 +355,6 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     paddingVertical: 16,
     alignItems: 'center',
-    marginTop: 'auto',
   },
   disabledCheckAnswerButton: {
     backgroundColor: '#ccc',
