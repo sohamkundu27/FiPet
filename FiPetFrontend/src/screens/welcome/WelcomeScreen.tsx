@@ -640,6 +640,13 @@ export default function WelcomeScreen() {
                     <Text style={styles.termsLink}>Terms & Conditions</Text>
                   </Text>
                 </View>
+
+                <TouchableOpacity 
+                  style={styles.alreadyHaveAccountButton}
+                  onPress={() => router.push('/login')}
+                >
+                  <Text style={styles.alreadyHaveAccountText}>Already have an account?</Text>
+                </TouchableOpacity>
               </View>
             </View>
           );
@@ -775,6 +782,9 @@ export default function WelcomeScreen() {
             <ProgressBar progress={progress} onBack={() => {
               if (currentStep === 0) {
                 router.push('/landing');
+              } else if (currentStep === 6) {
+                // Skip the egg hatching screen and go back to step 4
+                setCurrentStep(4);
               } else {
                 setCurrentStep(Math.max(0, currentStep - 1));
               }
@@ -1365,5 +1375,20 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingBottom: 20,
+  },
+  alreadyHaveAccountButton: {
+    marginBottom: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderWidth: 2,
+    borderColor: '#F97216',
+    borderRadius: 20,
+    alignSelf: 'stretch',
+  },
+  alreadyHaveAccountText: {
+    fontSize: 14,
+    color: '#F97216',
+    textAlign: 'center',
+    fontFamily: 'Poppins_500Medium',
   },
 }); 
