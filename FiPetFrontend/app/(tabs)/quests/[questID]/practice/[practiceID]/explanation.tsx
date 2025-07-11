@@ -78,20 +78,26 @@ export default function PracticeExplanationScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </>
     );
   }
 
   if (!practiceQuestion) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Practice question not found</Text>
-        <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-          <Text style={styles.continueButtonText}>BACK TO QUEST</Text>
-        </TouchableOpacity>
-      </View>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Practice question not found</Text>
+          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+            <Text style={styles.continueButtonText}>BACK TO QUEST</Text>
+          </TouchableOpacity>
+        </View>
+      </>
     );
   }
 
@@ -118,7 +124,8 @@ export default function PracticeExplanationScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={styles.screenContainer}>
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
         {/* Fixed progress bar and back arrow at the top */}
         <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingTop: 87, paddingHorizontal: 16, marginBottom: 16 }}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
@@ -184,12 +191,17 @@ export default function PracticeExplanationScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
+        </View>
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -342,4 +354,4 @@ const styles = StyleSheet.create({
     width: 32,
     height: 24,
   },
-}); 
+});
