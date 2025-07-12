@@ -16,7 +16,16 @@ export default function PreQuestReadingScreen() {
 
   useEffect(() => {
     const fetchPreQuest = async () => {
-      if (!quest?.preQuest) return;
+      if (!quest?.preQuest) {
+        // If no prereading is specified, skip to the first question
+        const allQuestions = getAllQuestions();
+        if (allQuestions.length > 0) {
+          router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
+        } else {
+          router.replace(`/quests/${questID}`);
+        }
+        return;
+      }
       setLoading(true);
       const data = await getPreQuestReadingById(quest.preQuest);
       setPreQuest(data);
@@ -28,11 +37,26 @@ export default function PreQuestReadingScreen() {
   const allQuestions = getAllQuestions();
   const currentIndex = page - 1;
 
-  if (loading || !preQuest) {
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
         <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  // If no prereading data is available, skip to the first question
+  if (!preQuest) {
+    if (allQuestions.length > 0) {
+      router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
+    } else {
+      router.replace(`/quests/${questID}`);
+    }
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6C63FF" />
+        <Text style={styles.loadingText}>Redirecting...</Text>
       </View>
     );
   }
