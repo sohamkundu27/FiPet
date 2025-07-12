@@ -86,7 +86,7 @@ export default function PreQuestReadingScreen() {
   const isLastPage = page === totalPages;
   const isFirstPage = page === 1;
 
-  if (loading) {
+  if (loading || !preQuest) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
