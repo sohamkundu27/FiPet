@@ -33,14 +33,20 @@ export default function PreQuestReadingScreen() {
 
   useEffect(() => {
     const fetchPreQuest = async () => {
-      console.log('fetchPreQuest called with quest:', quest);
-      
+<<<<<<< HEAD
+      if (!quest?.preQuest) return;
+=======
       if (!quest?.preQuest) {
-        setLoading(false);
-        setPreQuest(null);
+        // If no prereading is specified, skip to the first question
+        const allQuestions = getAllQuestions();
+        if (allQuestions.length > 0) {
+          router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
+        } else {
+          router.replace(`/quests/${questID}`);
+        }
         return;
       }
-      
+>>>>>>> bfe0a5f (if prereading does not exist, the prequest goes straight to the quest)
       setLoading(true);
       try {
         console.log('Fetching pre-quest reading with ID:', quest.preQuest);
@@ -86,7 +92,11 @@ export default function PreQuestReadingScreen() {
   const isLastPage = page === totalPages;
   const isFirstPage = page === 1;
 
+<<<<<<< HEAD
   if (loading || !preQuest) {
+=======
+  if (loading) {
+>>>>>>> bfe0a5f (if prereading does not exist, the prequest goes straight to the quest)
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
@@ -95,42 +105,28 @@ export default function PreQuestReadingScreen() {
     );
   }
 
-  // Handle missing preQuest document
+<<<<<<< HEAD
+=======
+  // If no prereading data is available, skip to the first question
   if (!preQuest) {
-    return (
-      <View style={[styles.loadingContainer, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }]}>
-        <Text style={[styles.loadingText, { textAlign: 'center', paddingHorizontal: 8 }]}>
-          Pre-quest reading not found. Please contact support or try another quest.
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            marginTop: 20,
-            paddingVertical: 12,
-            paddingHorizontal: 32,
-            backgroundColor: '#FF7A00', // App's orange
-            borderRadius: 24,
-          }}
-        >
-          <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  const pageData = preQuest?.[`p${page}` as keyof PreQuestReading] as PreQuestReadingPage | undefined;
-
-  // Check if current page exceeds available pages
-  if (preQuest && totalPages > 0 && page > totalPages) {
-    console.log(`Page ${page} exceeds total pages ${totalPages}, resetting to page 1`);
-    setPage(1);
+    if (allQuestions.length > 0) {
+      router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
+    } else {
+      router.replace(`/quests/${questID}`);
+    }
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
-        <Text style={styles.loadingText}>Loading page...</Text>
+        <Text style={styles.loadingText}>Redirecting...</Text>
       </View>
     );
   }
+
+>>>>>>> bfe0a5f (if prereading does not exist, the prequest goes straight to the quest)
+  const pageData = preQuest[`p${page}`];
+  const totalPages = 4;
+  const isLastPage = page === totalPages;
+  const isFirstPage = page === 1;
 
   // Check if pageData exists
   if (!pageData) {
