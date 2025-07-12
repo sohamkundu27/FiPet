@@ -36,11 +36,9 @@ export default function PreQuestReadingScreen() {
       console.log('fetchPreQuest called with quest:', quest);
       
       if (!quest?.preQuest) {
-        console.log('No preQuest field found in quest, skipping to first question');
-        setLoading(false);
         // If no prereading is specified, skip to the first question
-        const allQuestions = getAllQuestions ? getAllQuestions() : [];
-        if (allQuestions && allQuestions.length > 0) {
+        const allQuestions = getAllQuestions();
+        if (allQuestions.length > 0) {
           router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
         } else {
           router.replace(`/quests/${questID}`);
@@ -103,9 +101,8 @@ export default function PreQuestReadingScreen() {
   }
 
   // If no prereading data is available, skip to the first question
-  if (!preQuest && !loading) {
-    console.log('No preQuest data available, redirecting to first question');
-    if (allQuestions && allQuestions.length > 0) {
+  if (!preQuest) {
+    if (allQuestions.length > 0) {
       router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
     } else {
       router.replace(`/quests/${questID}`);
@@ -113,7 +110,7 @@ export default function PreQuestReadingScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
-        <Text style={styles.loadingText}>Redirecting to questions...</Text>
+        <Text style={styles.loadingText}>Redirecting...</Text>
       </View>
     );
   }
