@@ -1,9 +1,11 @@
 /**
  * This file defines the QuestProvider which provides subsequent pages with information about a single quest.
  *
- * TODOS:
- * TODO: Update to use Firebase quests instead of ignoring 'questID' for the single example quest.
- * TODO: Update to use Firebase to track quest completion. (stored in memory at the moment using an AnswerDict)
+ * FEATURES:
+ * Uses Firebase quests with real-time questID support
+ * Firebase integration for quest completion tracking
+ * Real-time user progress synchronization
+ * XP tracking and persistence
  *
  * NOTES:
  * I considered whether or not to make the instance of this provider provide multiple quests,
@@ -14,7 +16,15 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import { Quest, Question } from "../types/quest";
 import { getQuestWithQuestions } from "../services/questService";
-import { doc, setDoc, collection, updateDoc, increment, getDoc } from '@firebase/firestore';
+import { 
+  saveUserAnswer, 
+  loadUserQuestAnswers, 
+  loadUserXpProgress, 
+  saveUserXpProgress, 
+  initializeQuestProgress,
+  subscribeToQuestProgress
+} from "../services/userQuestProgressService";
+import { doc, updateDoc, increment } from '@firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../hooks/useAuth';
 
@@ -123,6 +133,7 @@ type QuestContextType = {
   getCorrectAnswerRatio: () => number,
   getTotalXPEarned: () => number,
   addXP: (xp: number) => Promise<void>,
+  addCoins: (coins: number) => Promise<void>,
   questXpAwarded: boolean,
 };
 
@@ -150,9 +161,25 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       await updateDoc(userDocRef, {
         current_xp: increment(xp)
       });
-      console.log(`Added ${xp} XP to user ${user.uid}`);
     } catch (error) {
       console.error('Error adding XP:', error);
+    }
+  };
+
+  // Function to add coins to the user's current coin total
+  const addCoins = async (coins: number) => {
+    if (!user) {
+      console.error('No user logged in');
+      return;
+    }
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        coins: increment(coins)
+      });
+    } catch (error) {
+      console.error('Error adding coins:', error);
     }
   };
 
@@ -161,15 +188,9 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     if (!user) return;
     
     try {
-      const userProgressRef = doc(db, 'users', user.uid, 'questProgress', questID);
-      const xpProgressRef = doc(collection(userProgressRef, 'xpProgress'), 'tracking');
-      
-      const xpProgressSnap = await getDoc(xpProgressRef);
-      if (xpProgressSnap.exists()) {
-        const data = xpProgressSnap.data();
-        setXpAwardedQuestions(new Set(data.awardedQuestions || []));
-        setQuestXpAwarded(data.questBonusAwarded || false);
-      }
+      const xpProgress = await loadUserXpProgress(user.uid, questID);
+      setXpAwardedQuestions(new Set(xpProgress.awardedQuestions));
+      setQuestXpAwarded(xpProgress.questBonusAwarded);
     } catch (error) {
       console.error('Error loading XP progress:', error);
     }
@@ -183,6 +204,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
         setError(null);
         
         const questData = await getQuestWithQuestions(questID);
+        
         if (!questData) {
           setError(`Quest with ID ${questID} not found`);
           return;
@@ -192,16 +214,6 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
         
         // Convert questions to ExtendedQuestion format
         const extendedQuestions: ExtendedQuestion[] = questData.questions.map((q, questionIndex) => {
-          console.log(`Question ${questionIndex}:`, {
-            id: q.id,
-            prompt: q.prompt,
-            options: q.options,
-            correctAnswers: q.correctAnswers,
-            correctAnswersTypes: q.correctAnswers?.map(ca => typeof ca),
-            correctAnswersLength: q.correctAnswers?.length,
-            type: q.type
-          });
-          
           return {
             ...q,
             optionObjects: q.options.map((optionText, optionIndex) => ({
@@ -215,8 +227,16 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
         
         setQuestions(extendedQuestions);
         
-        // Load user's XP progress after quest data is loaded
-        await loadXpProgress();
+        // Initialize quest progress for user if not exists
+        if (user) {
+          await initializeQuestProgress(user.uid, questID, questData.questions.length);
+          
+          // Load user's answers and XP progress
+          const userAnswers = await loadUserQuestAnswers(user.uid, questID);
+          setAnsweredQuestions(userAnswers);
+          
+          await loadXpProgress();
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch quest data');
         console.error('Error fetching quest data:', err);
@@ -226,7 +246,20 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     };
 
     fetchQuestData();
-  }, [questID]);
+  }, [questID, user]);
+
+  // Set up real-time subscription to quest progress
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = subscribeToQuestProgress(user.uid, questID, (progress) => {
+      setAnsweredQuestions(progress.answers);
+      setXpAwardedQuestions(new Set(progress.xpProgress.awardedQuestions));
+      setQuestXpAwarded(progress.xpProgress.questBonusAwarded);
+    });
+
+    return () => unsubscribe();
+  }, [user, questID]);
 
   // if _furthestQuestion is null, it is assumed that the quest is complete.
   let _furthestQuestion: ExtendedQuestion | null = questions.length > 0 ? questions[0] : null;
@@ -238,24 +271,20 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     // Start from the first question
     _furthestQuestion = questions.length > 0 ? questions[0] : null;
     
-    console.log('Updating furthest question. Starting with:', _furthestQuestion?.prompt);
-    console.log('Answered questions:', Object.keys(answeredQuestions));
-    
     // Find the first unanswered question
     while ( _furthestQuestion != null && _furthestQuestion.id in answeredQuestions ) {
-      let answer: QuestAnswer = answeredQuestions[_furthestQuestion.id];
-      console.log('Question answered:', _furthestQuestion.prompt, 'Next question:', answer.nextQuestion?.prompt || 'None');
+      // Find the next question based on the current question's position in the array
+      const currentQuestionIndex = questions.findIndex(q => q.id === _furthestQuestion!.id);
+      const nextQuestionIndex = currentQuestionIndex + 1;
       
-      if (answer.nextQuestion) {
-        _furthestQuestion = answer.nextQuestion;
+      if (nextQuestionIndex < questions.length) {
+        _furthestQuestion = questions[nextQuestionIndex];
       } else {
         // No next question, quest is complete
         _furthestQuestion = null;
         break;
       }
     }
-    
-    console.log('Final furthest question:', _furthestQuestion?.prompt || 'None (complete)');
   }
   
   const getFurthestQuestion: getFurthestQuestionFunType = () => {
@@ -339,15 +368,6 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       isCorrect = question.optionObjects[0]?.id === selectedOption.id;
     }
     
-    // Debug logging
-    console.log('Question:', question.prompt);
-    console.log('Selected option:', selectedText);
-    console.log('Selected option index:', question.optionObjects.findIndex(opt => opt.id === selectedOption.id));
-    console.log('Correct answer indices:', question.correctAnswers);
-    console.log('Is correct:', isCorrect);
-    console.log('Next question ID:', selectedOptionData?.nextQuestionId);
-    console.log('Next question found:', nextQuestion?.prompt || 'None (quest complete)');
-    
     // Create a simple outcome
     const outcome: SimpleOutcome = {
       id: selectedOption.id,
@@ -373,18 +393,10 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       newXpAwardedQuestions.add(question.id);
       setXpAwardedQuestions(newXpAwardedQuestions);
       
-      console.log(`Question answered correctly! Awarded ${outcome.xpReward} XP for question ${question.id}`);
-      
-      // Save XP progress to Firestore
+      // Save XP progress to Firebase
       if (user) {
         try {
-          const userProgressRef = doc(db, 'users', user.uid, 'questProgress', questID);
-          const xpProgressRef = doc(collection(userProgressRef, 'xpProgress'), 'tracking');
-          await setDoc(xpProgressRef, {
-            awardedQuestions: Array.from(newXpAwardedQuestions),
-            questBonusAwarded: questXpAwarded,
-            lastUpdated: new Date().toISOString()
-          }, { merge: true });
+          await saveUserXpProgress(user.uid, questID, Array.from(newXpAwardedQuestions), questXpAwarded);
         } catch (error) {
           console.error('Error saving XP progress:', error);
         }
@@ -393,19 +405,12 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       console.log(`Question ${question.id} already awarded XP - skipping`);
     }
     
-    // Save answer to Firestore
+    // Save answer to Firebase
     if (user) {
       try {
-        const userProgressRef = doc(db, 'users', user.uid, 'questProgress', questID);
-        const answerRef = doc(collection(userProgressRef, 'answers'), question.id);
-        await setDoc(answerRef, {
-          questionId: question.id,
-          option: selectedOption,
-          outcome: outcome,
-          timestamp: new Date().toISOString()
-        });
+        await saveUserAnswer(user.uid, questID, question.id, newAnsweredQuestions[question.id]);
       } catch (error) {
-        console.error('Error saving answer to Firestore:', error);
+        console.error('Error saving answer to Firebase:', error);
       }
     }
     
@@ -472,7 +477,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       </View>
     );
   }
-
+  
   return (
     <QuestContext.Provider value={{ 
       isComplete, 
@@ -489,6 +494,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       getCorrectAnswerRatio,
       getTotalXPEarned,
       addXP,
+      addCoins,
       questXpAwarded,
     }}>
       {children}

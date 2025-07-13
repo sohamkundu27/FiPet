@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where } from '@firebase/firestore';
+import { doc, getDoc } from '@firebase/firestore';
 import { db } from '../config/firebase';
 import { Question } from '../types/quest';
 
@@ -30,41 +30,4 @@ export const getQuestionsByIds = async (questionIds: string[]): Promise<Question
   }
   
   return questions;
-};
-
-// Get all questions
-export const getAllQuestions = async (): Promise<Question[]> => {
-  const questionsRef = collection(db, QUESTION_COLLECTION);
-  const snapshot = await getDocs(questionsRef);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question));
-};
-
-// Get questions by type
-export const getQuestionsByType = async (type: Question['type']): Promise<Question[]> => {
-  const questionsRef = collection(db, QUESTION_COLLECTION);
-  const q = query(questionsRef, where('type', '==', type));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question));
-};
-
-// Create new question
-export const createQuestion = async (question: Omit<Question, 'id'>): Promise<Question> => {
-  const questionsRef = collection(db, QUESTION_COLLECTION);
-  const docRef = await addDoc(questionsRef, question);
-  return {
-    ...question,
-    id: docRef.id
-  } as Question;
-};
-
-// Update question
-export const updateQuestion = async (id: string, question: Partial<Question>): Promise<void> => {
-  const questionRef = doc(db, QUESTION_COLLECTION, id);
-  await updateDoc(questionRef, question);
-};
-
-// Delete question
-export const deleteQuestion = async (id: string): Promise<void> => {
-  const questionRef = doc(db, QUESTION_COLLECTION, id);
-  await deleteDoc(questionRef);
 }; 
