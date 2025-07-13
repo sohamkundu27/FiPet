@@ -49,24 +49,24 @@ export default function BattleScreen() {
           </View>
 
           <View style={styles.sectionContent}>
-            <View style={styles.startButton}>
-                <TouchableOpacity style={styles.startButtonInner}>
-                <Image source={require("@/src/assets/images/play.png")} style={styles.buttonIcon} /> {/* change this to be the plus icon */}
+            <TouchableOpacity style={styles.startButton}>
+              <View style={styles.startButtonInner}>
+                <Image source={require("@/src/assets/images/play.png")} style={styles.buttonIcon} />
                 <Text style={styles.startButtonText}>Start A Game</Text>
-                </TouchableOpacity>
-            </View>
-            
+              </View>
+            </TouchableOpacity>
 
-            <LinearGradient
-              colors={['#A855F7', '#3B82F6']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.findButton}>
-              <TouchableOpacity style={styles.findButtonInner}>
+            <TouchableOpacity style={styles.findButton}>
+              <LinearGradient
+                colors={['#A855F7', '#3B82F6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.findButtonInner}
+              >
                 <Image source={require("@/src/assets/images/play.png")} style={styles.buttonIcon} />
                 <Text style={styles.findButtonText}>Find A Game</Text>
-              </TouchableOpacity>
-            </LinearGradient>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -98,7 +98,7 @@ export default function BattleScreen() {
             ].map((user, index) => (
               <View key={index}>
                 <View style={styles.leaderboardRow}>
-                  <Text style={styles.rank}>{index + 4}th</Text>
+                  <Text style={styles.rank}>{`${index + 4}th`}</Text>
                   <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">
                     {user.name}
                   </Text>
@@ -115,9 +115,7 @@ export default function BattleScreen() {
               </View>
             ))}
 
-            {/* <View style={styles.dottedDivider} /> */}
-
-            <View style={styles.leaderboardRow}>
+            <View style={[styles.leaderboardRow]}>
               <Text style={[styles.rank, { fontFamily: 'PoppinsBold' }]}>3,042</Text>
               <Text style={[styles.username, { fontFamily: 'PoppinsBold' }]} numberOfLines={1} ellipsizeMode="tail">You</Text>
               <View style={styles.xpCell}>
@@ -135,7 +133,6 @@ export default function BattleScreen() {
     </View>
   )
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -280,13 +277,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
     marginVertical: 2,
   },
-  dottedDivider: {
-    height: 1,
-    borderStyle: 'dotted',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    marginVertical: 8,
-  },
   rank: {
     width: '18%',
     fontSize: 15,
@@ -337,4 +327,3 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
 })
-
