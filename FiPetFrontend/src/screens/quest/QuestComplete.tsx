@@ -6,14 +6,16 @@ import { StyleSheet, TouchableOpacity, View, Image, Text, Platform } from 'react
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuest } from '@/src/hooks/useQuest';
 import { useAuth } from '@/src/hooks/useAuth';
-import { doc, setDoc, collection } from '@firebase/firestore';
+import { doc, setDoc, collection, updateDoc } from '@firebase/firestore';
 import { db } from '@/src/config/firebase';
+import { markQuestCompleted } from '@/src/services/userQuestProgressService';
 
 export default function QuestComplete() {
   const router = useRouter();
-  const { quest, getCorrectAnswerRatio, getTotalXPEarned, isComplete, addXP, questXpAwarded } = useQuest();
+  const { quest, getCorrectAnswerRatio, getTotalXPEarned, isComplete, addXP, addCoins, questXpAwarded } = useQuest();
   const { user } = useAuth();
   const [questBonusAwarded, setQuestBonusAwarded] = useState(false);
+  const [hasMarkedCompleted, setHasMarkedCompleted] = useState(false);
   const correctRatio = getCorrectAnswerRatio();
   const mood = correctRatio > 0.8 ? 'Happy' : 'Sad';
   
@@ -23,39 +25,72 @@ export default function QuestComplete() {
   const questBonusXP = (mood === 'Sad' || questXpAwarded) ? 0 : (quest?.xpReward || 0);
   const xpEarned = questionXP + questBonusXP;
   
+  // Calculate coin rewards
+  const questCoinReward = (mood === 'Sad' || questXpAwarded) ? 0 : (quest?.coinReward || 0);
+  const coinEarned = questCoinReward;
+  
   const title = mood === 'Sad' ? 'So Close' : 'Well done!';
   const emoji = mood === 'Sad' ? '😢' : '🎉';
 
   useEffect(() => {
-    // Only award the quest completion bonus if not already awarded
-    if (isComplete() && !questBonusAwarded && questBonusXP > 0 && !questXpAwarded && user && quest) {
-      const awardQuestBonus = async () => {
-        try {
-          await addXP(questBonusXP);
-          setQuestBonusAwarded(true);
-          
-          // Save quest bonus award status to Firestore
-          const userProgressRef = doc(db, 'users', user.uid, 'questProgress', quest.id);
-          const xpProgressRef = doc(collection(userProgressRef, 'xpProgress'), 'tracking');
-          await setDoc(xpProgressRef, {
-            questBonusAwarded: true,
-            lastUpdated: new Date().toISOString()
-          }, { merge: true });
-          
-          console.log(`Quest completed! Awarded ${questBonusXP} completion bonus XP (${questionXP} was already awarded for questions)`);
-        } catch (error) {
-          console.error('Error awarding quest bonus:', error);
-        }
-      };
+    // Only run once when the component mounts and quest is complete
+    if (isComplete() && user && quest && !hasMarkedCompleted) {
+      setHasMarkedCompleted(true);
       
-      awardQuestBonus();
+      // Only award the quest completion bonus if not already awarded
+      if (!questBonusAwarded && (questBonusXP > 0 || questCoinReward > 0) && !questXpAwarded) {
+        const awardQuestBonus = async () => {
+          try {
+            // Award XP if available
+            if (questBonusXP > 0) {
+              await addXP(questBonusXP);
+            }
+            
+            // Award coins if available
+            if (questCoinReward > 0) {
+              await addCoins(questCoinReward);
+            }
+            
+            setQuestBonusAwarded(true);
+            
+            // Save quest bonus award status to Firestore
+            const userProgressRef = doc(db, 'users', user.uid, 'questProgress', quest.id);
+            const xpProgressRef = doc(collection(userProgressRef, 'xpProgress'), 'tracking');
+            await setDoc(xpProgressRef, {
+              questBonusAwarded: true,
+              lastUpdated: new Date().toISOString()
+            }, { merge: true });
+            
+            // Mark quest as completed
+            await markQuestCompleted(user.uid, quest.id);
+          } catch (error) {
+            console.error('Error awarding quest bonus:', error);
+          }
+        };
+        
+        awardQuestBonus();
+      } else {
+        // Even if no bonus rewards, still mark quest as completed
+        const markCompleted = async () => {
+          try {
+            await markQuestCompleted(user.uid, quest.id);
+          } catch (error) {
+            console.error('Error marking quest as completed:', error);
+          }
+        };
+        
+        markCompleted();
+      }
     }
-  }, [isComplete, questBonusXP, addXP, questBonusAwarded, questionXP, questXpAwarded, user, quest]);
+  }, [isComplete, questBonusXP, addXP, questBonusAwarded, questionXP, questXpAwarded, user, quest, hasMarkedCompleted]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}<Text style={styles.emoji}>{emoji}</Text></Text>
       <Text style={styles.xpText}>+{xpEarned} <Text style={styles.xpHighlight}>XP</Text></Text>
+      {coinEarned > 0 && (
+        <Text style={styles.coinText}>+{coinEarned} <Text style={styles.coinHighlight}>🪙</Text></Text>
+      )}
       <Text style={styles.moodText}>Mood: {mood}</Text>
       <View style={styles.foxContainer}>
         <Image
@@ -123,6 +158,19 @@ const styles = StyleSheet.create({
     color: '#3B82F6',
     fontWeight: 'bold',
     fontSize: 30,
+  },
+  coinText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#222',
+    position: 'absolute',
+    top: 174,
+    textAlign: 'center',
+  },
+  coinHighlight: {
+    color: '#FBBF24',
+    fontWeight: 'bold',
+    fontSize: 24,
   },
   moodText: {
     fontSize: 30,

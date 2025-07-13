@@ -1,113 +1,81 @@
-// import firestore from '@react-native-firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image } from 'react-native';
-import { useRouter } from 'expo-router';
-import { collection, getDocs, doc } from '@firebase/firestore';
-import { db } from '../../config/firebase';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image, RefreshControl } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polygon, Circle, Line, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { useAuth } from '@/src/hooks/useRequiresAuth';
 import TabHeader from '@/src/components/TabHeader';
 import { useGamificationStats } from '@/src/hooks/useGamificationStats';
-
-type Quest = {
-    id: string;
-    title: string;
-    xpReward: number;
-    duration?: string;
-    level?: number;
-    order?: number;
-    preQuest?: string;
-    topic?: string;
-    descriptions?: string[];
-    questionIds?: string[];
-    [key: string]: any;
-};
+import { getCurrentQuest, getNextAvailableQuest, QuestWithProgress } from '@/src/services/questsIndexService';
 
 export default function QuestScreen() {
 
     const {userProgress, streakProgress} = useGamificationStats();
     const router = useRouter();
-    const [quests, setQuests] = useState<Quest[]>([]);
+    const [currentQuest, setCurrentQuest] = useState<QuestWithProgress | null>(null);
+    const [nextQuest, setNextQuest] = useState<QuestWithProgress | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [lastFetchTime, setLastFetchTime] = useState<number>(0);
     const {user} = useAuth();
 
+
+
+        const fetchQuests = async (forceRefresh = false) => {
+        if (!user) return;
+        
+        // Check if we should skip fetching (cache for 30 seconds)
+        const now = Date.now();
+        const timeSinceLastFetch = now - lastFetchTime;
+        const shouldSkipFetch = !forceRefresh && timeSinceLastFetch < 30000 && (currentQuest || nextQuest);
+        
+        if (shouldSkipFetch) {
+            setLoading(false); // Ensure loading is false when using cache
+            return;
+        }
+        
+        try {
+            setLoading(true);
+            const current = await getCurrentQuest(user.uid);
+            const next = await getNextAvailableQuest(user.uid);
+            
+            setCurrentQuest(current);
+            setNextQuest(next);
+            setLastFetchTime(now);
+        } catch (error) {
+            console.error('Error fetching quests:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchQuests = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, 'quests'));
-                const questsData = querySnapshot.docs.map((doc) => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        title: data.title ?? 'Untitled Quest',
-                        xpReward: data.xpReward ?? 0,
-                        duration: data.duration ?? '30 min',
-                        level: data.level ?? 1,
-                        order: data.order ?? 1,
-                        preQuest: data.preQuest ?? '',
-                        topic: data.topic ?? '',
-                        descriptions: data.descriptions ?? [],
-                        questionIds: data.questionIds ?? [],
-                        ...data,
-                    };
-                });
-                setQuests(questsData);
-                console.log('Fetched quests:', questsData);
-            } catch (error) {
-                console.error('Error fetching quests:', error);
+        if (user) {
+            fetchQuests(true); // Force refresh on initial load
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
+
+    // Only refresh on focus if we don't have any quest data yet
+    useFocusEffect(
+        React.useCallback(() => {
+            if (!currentQuest && !nextQuest) {
+                fetchQuests(false);
             }
-        };
-        fetchQuests();
-    }, []);
+        }, [user, currentQuest, nextQuest])
+    );
 
     // Component to show correct answers for a quest
-    const CorrectAnswersCounter = ({ questId }: { questId: string }) => {
-        const [correctCount, setCorrectCount] = useState(0);
-        const [totalQuestions, setTotalQuestions] = useState(0);
-
-        useEffect(() => {
-            const getCorrectAnswers = async () => {
-                if (!user) return;
-                
-                try {
-                    // Get the quest data to find question IDs
-                    const questDoc = await getDocs(collection(db, 'quests'));
-                    const questData = questDoc.docs.find(doc => doc.id === questId);
-                    
-                    if (questData) {
-                        const questionIds = questData.data().questionIds || [];
-                        setTotalQuestions(questionIds.length);
-                        
-                        // Get user's progress for this quest
-                        const userProgressRef = doc(db, 'users', user.uid, 'questProgress', questId);
-                        const progressDoc = await getDocs(collection(userProgressRef, 'answers'));
-                        
-                        let correct = 0;
-                        progressDoc.forEach(doc => {
-                            const answerData = doc.data();
-                            if (answerData && answerData.outcome && answerData.outcome.isCorrectAnswer) {
-                                correct++;
-                            }
-                        });
-                        
-                        setCorrectCount(correct);
-                    }
-                } catch (error) {
-                    console.error('Error getting correct answers:', error);
-                }
-            };
-
-            getCorrectAnswers();
-        }, [questId]);
-
-        if (totalQuestions === 0) return null;
+    const CorrectAnswersCounter = ({ quest }: { quest: QuestWithProgress }) => {
+        if (quest.totalQuestions === 0) return null;
 
         return (
             <View style={styles.correctAnswersBadge}>
-                <Text style={styles.correctAnswersText}>{correctCount}/{totalQuestions}</Text>
+                <Text style={styles.correctAnswersText}>{quest.correctAnswers}/{quest.totalQuestions}</Text>
             </View>
         );
     };
+
 
     return (
         <View style={{ flex: 1}}>
@@ -121,24 +89,48 @@ export default function QuestScreen() {
               endColor: "#3B82F6",
             }}
           />
-            <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 20 }}>
-                {quests.map((q, idx) => (
+            <ScrollView 
+                contentContainerStyle={{ padding: 20, paddingTop: 20 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={loading}
+                        onRefresh={() => fetchQuests(true)}
+                        colors={['#A259FF', '#3B82F6']}
+                        tintColor="#A259FF"
+                    />
+                }
+            >
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <Text style={styles.loadingText}>Loading quest...</Text>
+                    </View>
+                ) : !currentQuest && !nextQuest ? (
+                    <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyText}>No quests available</Text>
+                    </View>
+                ) : (
+                    <>
+                        {/* Current Quest (if in progress) */}
+                        {currentQuest && (
                     <LinearGradient
-                        key={q.id}
-                        colors={idx % 2 === 0 ? ['#A259FF', '#3B82F6'] : ['#3B82F6', '#38BDF8']}
+                                colors={['#A259FF', '#3B82F6']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }} 
                         style={styles.questCard}
                     >
+
+                                
                         {/* Correct Answers Counter */}
-                        <CorrectAnswersCounter questId={q.id} />
+                                <CorrectAnswersCounter quest={currentQuest} />
+                                
+                                <Text style={styles.questCardTitle}>{currentQuest.quest.title}</Text>
+                                
                         
-                        <Text style={styles.questCardTitle}>{q.title}</Text>
                         
                         {/* Objectives (descriptions) */}
                         <View style={styles.objectivesContainer}>
-                            {q.descriptions && q.descriptions.length > 0 ? (
-                                q.descriptions.map((desc: string, i: number) => (
+                                    {currentQuest.quest.descriptions && currentQuest.quest.descriptions.length > 0 ? (
+                                        currentQuest.quest.descriptions.map((desc: string, i: number) => (
                                     <View style={styles.objectiveRow} key={i}>
                                         <Text style={styles.objectiveEmoji}>{getObjectiveEmoji(i)}</Text>
                                         <Text style={styles.objectiveText}>{desc}</Text>
@@ -147,7 +139,7 @@ export default function QuestScreen() {
                             ) : (
                                 <View style={styles.objectiveRow}>
                                     <Text style={styles.objectiveEmoji}>📊</Text>
-                                    <Text style={styles.objectiveText}>No objectives listed.</Text>
+                                            <Text style={styles.objectiveText}>{currentQuest.quest.description}</Text>
                                 </View>
                             )}
                         </View>
@@ -157,11 +149,11 @@ export default function QuestScreen() {
                             <View style={styles.questCardStatsRow}>
                                 <View style={styles.questCardStat}>
                                     <GoldCoinIcon />
-                                    <Text style={styles.questCardStatText}>{q.xpReward}</Text>
+                                            <Text style={styles.questCardStatText}>{currentQuest.quest.coinReward || 0}</Text>
                                 </View>
                                 <View style={styles.questCardStat}>
                                     <CustomClockIcon />
-                                    <Text style={styles.questCardStatText}>{q.duration || '30 min'}</Text>
+                                            <Text style={styles.questCardStatText}>{currentQuest.quest.duration || '30 min'}</Text>
                                 </View>
                             </View>
                             
@@ -169,10 +161,10 @@ export default function QuestScreen() {
                                 style={styles.playButton}
                                 activeOpacity={0.85}
                                 onPress={() => {
-                                    if (q.preQuest) {
-                                        router.push(`/quests/${q.id}/preQuestReading`);
+                                            if (currentQuest.quest.preQuest) {
+                                                router.push(`/quests/${currentQuest.quest.id}/preQuestReading`);
                                     } else {
-                                        router.push(`/quests/${q.id}`);
+                                                router.push(`/quests/${currentQuest.quest.id}`);
                                     }
                                 }}
                             >
@@ -183,24 +175,98 @@ export default function QuestScreen() {
                                     { color: '#A259FF' }
                                   ]}
                                 >
-                                  Play
+                                          Continue
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </LinearGradient>
+                        )}
+
+                        {/* Next Available Quest */}
+                        {nextQuest && !currentQuest && (
+                            <LinearGradient
+                                colors={['#3B82F6', '#38BDF8']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }} 
+                                style={styles.questCard}
+                            >
+
+                                
+                                <Text style={styles.questCardTitle}>{nextQuest.quest.title}</Text>
+                                
+
+                                
+                                {/* Objectives (descriptions) */}
+                                <View style={styles.objectivesContainer}>
+                                    {nextQuest.quest.descriptions && nextQuest.quest.descriptions.length > 0 ? (
+                                        nextQuest.quest.descriptions.map((desc: string, i: number) => (
+                                            <View style={styles.objectiveRow} key={i}>
+                                                <Text style={styles.objectiveEmoji}>{getObjectiveEmoji(i)}</Text>
+                                                <Text style={styles.objectiveText}>{desc}</Text>
+                                            </View>
+                                        ))
+                                    ) : (
+                                        <View style={styles.objectiveRow}>
+                                            <Text style={styles.objectiveEmoji}>📊</Text>
+                                            <Text style={styles.objectiveText}>{nextQuest.quest.description}</Text>
+                                        </View>
+                                    )}
+                                </View>
+
+                                {/* Bottom Row - Stats and Play Button */}
+                                <View style={styles.bottomRow}>
+                                    <View style={styles.questCardStatsRow}>
+                                        <View style={styles.questCardStat}>
+                                            <GoldCoinIcon />
+                                            <Text style={styles.questCardStatText}>{nextQuest.quest.coinReward || 0}</Text>
+                                        </View>
+                                        <View style={styles.questCardStat}>
+                                            <CustomClockIcon />
+                                            <Text style={styles.questCardStatText}>{nextQuest.quest.duration || '30 min'}</Text>
+                                        </View>
+                                    </View>
+                                    
+                                    <TouchableOpacity
+                                        style={styles.playButton}
+                                        activeOpacity={0.85}
+                                        onPress={() => {
+                                            
+                                            if (nextQuest.quest.preQuest) {
+                                                router.push(`/quests/${nextQuest.quest.id}/preQuestReading`);
+                                            } else {
+                                                router.push(`/quests/${nextQuest.quest.id}`);
+                                            }
+                                        }}
+                                    >
+                                        <GradientPlayIcon colors={['#3B82F6', '#38BDF8']} />
+                                        <Text
+                                          style={[
+                                            styles.playButtonText,
+                                            { color: '#3B82F6' }
+                                          ]}
+                                        >
+                                          Start
                                 </Text>
                             </TouchableOpacity>
                         </View>
                     </LinearGradient>
-                ))}
+                        )}
+                    </>
+                )}
             </ScrollView>
         </View>
     );
 }
 
 function getObjectiveEmoji(idx: number) {
-    const emojis = ['📊', '💰', '⏰', '🎯', '📈'];
+    const emojis = ['📊', '💰', '⏰'];
     return emojis[idx % emojis.length];
 }
 
+
+
 const GradientPlayIcon = ({ colors }: { colors: readonly [string, string, ...string[]] }) => (
-    <Svg width={24} height={24} viewBox="0 0 30 30}>">
+    <Svg width={24} height={24} viewBox="0 0 30 30">
         <Defs>
             <SvgLinearGradient id="play-gradient" x1="0" y1="0" x2="1" y2="1">
                 <Stop offset="0%" stopColor={colors[0]} />
@@ -266,9 +332,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#E9E9E9',
         borderRadius: 12,
-        paddingHorizontal: 6,
+        paddingHorizontal: 10,
         paddingVertical: 4,
-        marginRight: 8,
+        minWidth: 70,
         ...(Platform.OS === 'web'
             ? { boxShadow: '0 4px 16px rgba(255,255,255,0.1)' }
             : {
@@ -312,8 +378,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#E9E9E9',
         borderRadius: 15,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingHorizontal: 25,
+        paddingVertical: 10,
         ...(Platform.OS === 'web'
             ? { boxShadow: '0 6px 20px rgba(255,255,255,0.15)' }
             : {
@@ -349,6 +415,28 @@ const styles = StyleSheet.create({
         lineHeight: 12*1.5,
         fontWeight: 'bold',
         color: '#333',
+        fontFamily: 'Poppins',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 40,
+    },
+    loadingText: {
+        fontSize: 16,
+        color: '#666',
+        fontFamily: 'Poppins',
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 40,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#666',
         fontFamily: 'Poppins',
     },
 });
