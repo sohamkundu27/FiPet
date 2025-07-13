@@ -1,5 +1,3 @@
-export type QuestionType = "multiselect" | "trueFalse" | "regular"| "matching";
-
 export interface Question {
   id: string;
   options: string[];
@@ -43,6 +41,7 @@ export interface PreQuestReading {
 export interface Quest {
   id: string;
   description: string;
+  descriptions?: string[];
   duration: string;
   level: number;
   order: number;
@@ -50,20 +49,7 @@ export interface Quest {
   title: string;
   topic: string;
   xpReward: number;
-  preQuest?: string;
-}
-
-// Firestore document structure
-export interface QuestDocument {
-  id: string;
-  description: string;
-  duration: string;
-  level: number;
-  order: number;
-  questionIds: string[];
-  title: string;
-  topic: string;
-  xpReward: number;
+  coinReward?: number;
   preQuest?: string;
 }
 

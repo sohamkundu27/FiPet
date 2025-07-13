@@ -10,6 +10,7 @@ export default function PetHouse() {
   const {userProgress, streakProgress} = useGamificationStats();
   const router = useRouter();
   const [showInventory, setShowInventory] = useState(false);
+  const [showPassport, setShowPassport] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -424,86 +425,163 @@ export default function PetHouse() {
         )}
         
         {/* Inventory button - bottom left */}
-        <TouchableOpacity
-          onPress={() => setShowInventory(!showInventory)}
-          activeOpacity={0.7}
-          style={{
-            position: 'absolute',
-            bottom: 30,
-            left: 25,
-            width: 50,
-            height: 50,
-            borderRadius: 30,
-            backgroundColor: '#fff',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 4,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }}
-        >
-          <Text style={{ fontSize: 24, color: '#333', fontFamily: 'Poppins-Regular' }}>→</Text>
-        </TouchableOpacity>
-        <View style={{
-          position: 'absolute',
-          bottom: 5,
-          left: 20,
-          width: 60,
-          height: 20,
-          backgroundColor: '#E9E9E9',
-          borderRadius: 14,
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 4,
-        }}>
-          <Text style={{
-            fontSize: 10,
-            color: '#333',
-            fontFamily: 'Poppins-Regular',
-          }}>Inventory</Text>
-        </View>
+        {!showPassport && (
+          <>
+            <TouchableOpacity
+              onPress={() => setShowInventory(!showInventory)}
+              activeOpacity={0.7}
+              style={{
+                position: 'absolute',
+                bottom: 30,
+                left: 25,
+                width: 50,
+                height: 50,
+                borderRadius: 30,
+                backgroundColor: '#fff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 4,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5,
+              }}
+            >
+              <Text style={{ fontSize: 24, color: '#333', fontFamily: 'Poppins-Regular' }}>→</Text>
+            </TouchableOpacity>
+            <View style={{
+              position: 'absolute',
+              bottom: 5,
+              left: 20,
+              width: 60,
+              height: 20,
+              backgroundColor: '#E9E9E9',
+              borderRadius: 14,
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 4,
+            }}>
+              <Text style={{
+                fontSize: 10,
+                color: '#333',
+                fontFamily: 'Poppins-Regular',
+              }}>Inventory</Text>
+            </View>
+          </>
+        )}
         
         {/* Passport button - bottom right */}
-        <View style={{
-          position: 'absolute',
-          bottom: 30,
-          right: 25,
-          width: 50,
-          height: 50,
-          borderRadius: 30,
-          backgroundColor: '#fff',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 4,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 3.84,
-          elevation: 5,
-        }}>
-          <Text style={{ fontSize: 24, color: '#333' }}>🐾</Text>
-        </View>
-        <View style={{
-          position: 'absolute',
-          bottom: 5,
-          right: 20,
-          width: 60,
-          height: 20,
-          backgroundColor: '#E9E9E9',
-          borderRadius: 14,
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 4,
-        }}>
-          <Text style={{
-            fontSize: 10,
-            color: '#333',
-            fontFamily: 'Poppins-Regular',
-          }}>Passport</Text>
-        </View>
+        {!showPassport && (
+          <>
+            <TouchableOpacity
+              onPress={() => setShowPassport(true)}
+              activeOpacity={0.7}
+              style={{
+                position: 'absolute',
+                bottom: 30,
+                right: 25,
+                width: 50,
+                height: 50,
+                borderRadius: 30,
+                backgroundColor: '#fff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 4,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+                elevation: 5,
+              }}
+            >
+              <Text style={{ fontSize: 24, color: '#333' }}>🐾</Text>
+            </TouchableOpacity>
+            <View style={{
+              position: 'absolute',
+              bottom: 5,
+              right: 20,
+              width: 60,
+              height: 20,
+              backgroundColor: '#E9E9E9',
+              borderRadius: 14,
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 4,
+            }}>
+              <Text style={{
+                fontSize: 10,
+                color: '#333',
+                fontFamily: 'Poppins-Regular',
+              }}>Passport</Text>
+            </View>
+          </>
+        )}
+        
+        {/* Passport Modal */}
+        {showPassport && (
+          <View style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10,
+          }}>
+            <View style={{
+              width: '95%',
+              height: '80%',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: 20,
+              padding: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Text style={{
+                fontSize: 24,
+                color: '#333',
+                fontFamily: 'Poppins-Regular',
+                marginBottom: 20,
+              }}>
+                Pet Passport
+              </Text>
+              
+              {/* Close button */}
+              <TouchableOpacity
+                onPress={() => setShowPassport(false)}
+                style={{
+                  position: 'absolute',
+                  top: 15,
+                  right: 15,
+                  width: 30,
+                  height: 30,
+                  borderRadius: 15,
+                  backgroundColor: '#fff',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                  elevation: 5,
+                }}
+              >
+                <Text style={{ fontSize: 18, color: '#333', fontFamily: 'Poppins-Regular' }}>×</Text>
+              </TouchableOpacity>
+              
+              <Text style={{
+                fontSize: 16,
+                color: '#666',
+                fontFamily: 'Poppins-Regular',
+                textAlign: 'center',
+              }}>
+                Passport content will go here...
+              </Text>
+            </View>
+          </View>
+        )}
       </View>
     </View>
   );
