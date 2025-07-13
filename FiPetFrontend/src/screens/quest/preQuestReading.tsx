@@ -1,5 +1,3 @@
-import PreQuestReadingScreen from "@/src/screens/quest/preQuestReading";
-export default PreQuestReadingScreen;
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
@@ -18,16 +16,7 @@ export default function PreQuestReadingScreen() {
 
   useEffect(() => {
     const fetchPreQuest = async () => {
-      if (!quest?.preQuest) {
-        // If no prereading is specified, skip to the first question
-        const allQuestions = getAllQuestions();
-        if (allQuestions.length > 0) {
-          router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
-        } else {
-          router.replace(`/quests/${questID}`);
-        }
-        return;
-      }
+      if (!quest?.preQuest) return;
       setLoading(true);
       const data = await getPreQuestReadingById(quest.preQuest);
       setPreQuest(data);
@@ -39,26 +28,11 @@ export default function PreQuestReadingScreen() {
   const allQuestions = getAllQuestions();
   const currentIndex = page - 1;
 
-  if (loading) {
+  if (loading || !preQuest) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
         <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
-
-  // If no prereading data is available, skip to the first question
-  if (!preQuest) {
-    if (allQuestions.length > 0) {
-      router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
-    } else {
-      router.replace(`/quests/${questID}`);
-    }
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6C63FF" />
-        <Text style={styles.loadingText}>Redirecting...</Text>
       </View>
     );
   }
