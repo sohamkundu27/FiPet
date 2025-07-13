@@ -9,12 +9,12 @@ import { useRouter } from "expo-router"
 
 
 export default function LevelScreen() {
-  const { userProgress, streakProgress } = useGamificationStats()
+  const { level, coins, streak } = useGamificationStats()
   const screenWidth = Dimensions.get("window").width;
   const trophyWidth = screenWidth * 0.4;
-  let levels = new Array<number>();
-  levels.length = 20;
-  levels = levels.fill(0, 0, 20);
+  let levelDisplays = new Array<number>();
+  levelDisplays.length = 20;
+  levelDisplays = levelDisplays.fill(0, 0, 20);
 
   const router = useRouter();
 
@@ -127,9 +127,9 @@ export default function LevelScreen() {
   return (
     <View style={styles.container}>
       <TabHeader
-        xp={userProgress.currentXP}
-        coins={userProgress.coins}
-        streak={streakProgress.currentStreak}
+        xp={level.xp}
+        coins={coins.coins}
+        streak={streak.current}
         title="Level"
         gradient={{
           startColor: "#168FF9",
@@ -146,7 +146,7 @@ export default function LevelScreen() {
           />
         </TouchableOpacity>
         <View style={styles.trophyContainer}>
-          <TrophyProgress size={trophyWidth} progress={userProgress.levelProgress} />
+          <TrophyProgress size={trophyWidth} progress={level.progress} />
           <LinearGradient
             colors={["#f3f3f3", "#e9e9e9", "#e9e9e9", "#c7c7c7"]}
             locations={[0.05, 0.1, 0.9, 1.0]}
@@ -158,7 +158,7 @@ export default function LevelScreen() {
               width: trophyWidth,
             }}
           >
-            <Text style={styles.levelText}>Level {userProgress.level}</Text>
+            <Text style={styles.levelText}>Level {level.current}</Text>
           </LinearGradient>
         </View>
         <LinearGradient
@@ -167,7 +167,7 @@ export default function LevelScreen() {
           style={styles.divider}
         />
         <View style={styles.levelGrid}>
-          {levels.map((_, ind) => 
+          {levelDisplays.map((_, ind) => 
             <TrophyProgress
             key={ind}
             size={screenWidth * 0.13}
@@ -175,7 +175,7 @@ export default function LevelScreen() {
             style={{
               flexGrow: 0,
             }}
-            progress={userProgress.level > ind+1 ? 100 : (userProgress.level === ind+1 ? userProgress.levelProgress : 0)}/>
+            progress={level.current > ind+1 ? 100 : (level.current === ind+1 ? level.progress : 0)}/>
           )}
         </View>
       </ScrollView>

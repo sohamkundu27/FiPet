@@ -3,14 +3,14 @@ import { useGamificationStats } from '@/src/hooks/useGamificationStats';
 import TabHeader from '@/src/components/TabHeader';
 
 export default function Store() {
-  const {userProgress, streakProgress} = useGamificationStats();
+  const {level, coins, streak} = useGamificationStats();
 
   return (
     <View style={styles.container}>
       <TabHeader
-        xp={userProgress.currentXP}
-        coins={userProgress.coins}
-        streak={streakProgress.currentStreak}
+        xp={level.xp}
+        coins={coins.coins}
+        streak={streak.current}
         title="Store"
         gradient={{
           startColor: "#0AC617",
