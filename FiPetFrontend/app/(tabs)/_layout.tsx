@@ -162,7 +162,7 @@ export default function TabLayout() {
                   source={
                     focused
                       ? require('@/src/assets/images/settings.png')
-                      : require('@/src/assets/images/settings.png')
+                      : require('@/src/assets/images/settingsclear.png')
                   }
                   style={{ width: 40, height: 40 }}
                   resizeMode="contain"
