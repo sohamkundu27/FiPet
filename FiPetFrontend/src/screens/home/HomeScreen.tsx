@@ -37,15 +37,15 @@ export default function HomeScreen() {
 
   useEffect(() => {
     setRouteChanged(false);
-  }, [level, mood]); // animation dependencies
+  }, [level.progress, level.previousProgress, mood]); // animation dependencies
 
   useEffect(() => {
       moodProgress.current?.reAnimate(routeChanged ? 0 : mood.previous, mood.current, 1000);
-  }, [mood, routeChanged]);
+  }, [mood, routeChanged, segments]);
 
   useEffect(() => {
     levelProgress.current?.reAnimate(routeChanged ? 0 : level.previousProgress, level.progress, 1000);
-  }, [level.progress, level.previousProgress, routeChanged]);
+  }, [level.progress, level.previousProgress, routeChanged, segments]);
 
   if (!loaded) {
     return (

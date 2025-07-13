@@ -29,15 +29,15 @@ export default function PetHouse() {
 
   useEffect(() => {
     moodProgress.current?.reAnimate(routeChanged ? 0 : mood.previous, mood.current, 1000);
-  }, [mood, routeChanged]);
+  }, [mood, routeChanged, segments]);
 
   useEffect(() => {
     levelProgress.current?.reAnimate(routeChanged ? 0 : level.previousProgress, Math.round(level.progress), 1000);
-  }, [level.progress, level.previousProgress, routeChanged]);
+  }, [level.progress, level.previousProgress, routeChanged, segments]);
 
   useEffect(() => {
     streakProgress.current?.reAnimate(routeChanged ? 0 : streak.previousProgress, streak.progress, 1000);
-  }, [streak.progress, streak.previousProgress, routeChanged]);
+  }, [streak.progress, streak.previousProgress, routeChanged, segments]);
 
   function LevelIcon() {
     return (

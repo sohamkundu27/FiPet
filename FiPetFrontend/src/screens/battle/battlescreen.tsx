@@ -6,7 +6,7 @@ import { useGamificationStats } from "@/src/hooks/useGamificationStats"
 import { LinearGradient } from 'expo-linear-gradient'
 
 export default function BattleScreen() {
-  const { level, streak, coins } = useGamificationStats()
+  const { level, streak, coins } = useGamificationStats();
 
   const [loaded] = useFonts({
     PoppinsBold: require('@/src/assets/fonts/Poppins-Bold.ttf'),
