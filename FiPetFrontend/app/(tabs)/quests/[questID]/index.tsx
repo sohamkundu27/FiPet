@@ -34,6 +34,7 @@ export default function Page() {
   }
 
   // If the quest has a preQuest requirement, redirect to preQuest reading first
+  // Check if there's a prereading that needs to be shown first
   if (quest?.preQuest) {
     return (<Redirect href={`/quests/${questID}/preQuestReading`} />);
   }
