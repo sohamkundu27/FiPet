@@ -6,7 +6,7 @@ import { useGamificationStats } from "@/src/hooks/useGamificationStats"
 import { LinearGradient } from 'expo-linear-gradient'
 
 export default function BattleScreen() {
-  const { userProgress, streakProgress } = useGamificationStats()
+  const { level, streak, coins } = useGamificationStats();
 
   const [loaded] = useFonts({
     PoppinsBold: require('@/src/assets/fonts/Poppins-Bold.ttf'),
@@ -28,9 +28,9 @@ export default function BattleScreen() {
   return (
     <View style={styles.container}>
       <TabHeader
-        xp={userProgress.currentXP}
-        coins={userProgress.coins}
-        streak={streakProgress.currentStreak}
+        xp={level.xp}
+        coins={coins.coins}
+        streak={streak.current}
         title="Battle"
         gradient={{
           startColor: "#F97216",

@@ -1,22 +1,25 @@
 "use client"
-import { useState } from "react"
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, SafeAreaView } from "react-native"
+import { useEffect, useRef, useState } from "react"
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, SafeAreaView, Pressable } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { AnimatedCircularProgress } from 'react-native-circular-progress'
 import { useFonts } from 'expo-font';
 import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 
 export default function HomeScreen() {
 
-  const {userProgress, streakProgress} = useGamificationStats();
-  const [mood, setMood] = useState(25);
+  const {level, streak, mood, coins, addMood} = useGamificationStats();
+  const moodProgress = useRef<AnimatedCircularProgress>(null);
+  const levelProgress = useRef<AnimatedCircularProgress>(null);
 
   const router = useRouter();
+  const pathname = usePathname();
+  const oldPathName = useRef<string>("");
+  const currentPathName = useRef<string>(pathname);
 
-  const xpPercentage = userProgress.streakProgress;
-  const levelProgress = userProgress.levelProgress;
+  const streakProgress = streak.progress;
 
   const windowWidth = Dimensions.get("window").width
   const petCircleSize = windowWidth * 0.65
@@ -28,6 +31,23 @@ export default function HomeScreen() {
     PoppinsRegular: require('@/src/assets/fonts/Poppins-Regular.ttf'),
     PoppinsSemiBold: require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
   });
+
+  function didRouteChange(pathname: string) {
+    return pathname !== oldPathName.current;
+  }
+
+  useEffect(() => {
+    oldPathName.current = currentPathName.current;
+    currentPathName.current = pathname;
+  }, [pathname, mood, level, streak]);
+
+  useEffect(() => {
+      moodProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : mood.previous, mood.current, 1000);
+  }, [mood, pathname]);
+
+  useEffect(() => {
+    levelProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : level.previousProgress, level.progress, 1000);
+  }, [level.progress, level.previousProgress, pathname]);
 
   if (!loaded) {
     return (
@@ -42,9 +62,9 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <TabHeader
-        xp={userProgress.currentXP}
-        coins={userProgress.coins}
-        streak={streakProgress.currentStreak}
+        xp={level.xp}
+        coins={coins.coins}
+        streak={streak.current}
         title="Home"
         gradient={{
           startColor: "#F97216",
@@ -57,9 +77,10 @@ export default function HomeScreen() {
             <Text style={styles.levelText}>Level</Text>
             <View style={styles.petContainer}>
               <AnimatedCircularProgress
+                ref={moodProgress}
                 size={progressSize}
                 width={14}
-                fill={mood}
+                fill={0}
                 tintColor="#FBBF24"
                 backgroundColor="#E5E7EB"
                 rotation={227}
@@ -69,9 +90,10 @@ export default function HomeScreen() {
               />
 
               <AnimatedCircularProgress
+                ref={levelProgress}
                 size={progressSize}
                 width={14}
-                fill={levelProgress}
+                fill={0}
                 tintColor="#3B82F6"
                 backgroundColor="#E5E7EB"
                 rotation={227}
@@ -80,8 +102,20 @@ export default function HomeScreen() {
                 style={styles.progressArc}
               />
               <View style={styles.petCircle}>
-                <Image source={require("@/src/assets/images/sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain" }} />
-                <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, resizeMode: 'contain' }} />
+                <Pressable
+                onPress={() => {
+                  addMood(5);
+                }}
+                >
+                  { mood.moodClassification === "Happy" ? 
+                      <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain" }} /> :
+                    mood.moodClassification === "Bored" ?
+                      <Image source={require("@/src/assets/images/fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain" }} /> :
+
+                      <Image source={require("@/src/assets/images/sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain" }} />
+                  }
+                  <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, resizeMode: 'contain' }} />
+                </Pressable>
               </View>
             </View>
             <Text style={styles.levelText}>Mood</Text>
@@ -89,7 +123,7 @@ export default function HomeScreen() {
 
           <View style={styles.levelIndicator}>
             <Image source={require("@/src/assets/images/trophy.png")} style={styles.icon} />
-            <Text style={{ fontSize: 16, lineHeight: 16*1.5, fontFamily: 'PoppinsRegular', color: "#374151" }}>Level {userProgress.level}</Text>
+            <Text style={{ fontSize: 16, lineHeight: 16*1.5, fontFamily: 'PoppinsRegular', color: "#374151" }}>Level {level.current}</Text>
           </View>
         </View>
 
@@ -111,7 +145,7 @@ export default function HomeScreen() {
           >
             <View style={{ justifyContent: "center" }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                {streakProgress.days.map((day, key) => (
+                {streak.days.map((day, key) => (
                   <View key={key} style={{ alignItems: "center" }}>
                     <Text style={styles.left}>{day.achieved ? (
                       <Image style={styles.streakProgressFire} source={require("@/src/assets/images/streak-fire-full.png")} />
@@ -131,7 +165,7 @@ export default function HomeScreen() {
                     colors={["#F97216", "#F9C116"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={[styles.progressBarFill, { width: `${xpPercentage}%` }]}
+                    style={[styles.progressBarFill, { width: `${streakProgress}%` }]}
                   />
                 </View>
               </View>

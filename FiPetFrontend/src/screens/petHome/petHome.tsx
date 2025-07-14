@@ -1,23 +1,138 @@
-import React, { useState } from 'react';
-import { useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter } from 'expo-router';
 import { View, Image, Dimensions, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGamificationStats } from '@/src/hooks/useGamificationStats';
 import TabHeader from '@/src/components/TabHeader';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 const windowHeight = Dimensions.get('window').height;
 
 export default function PetHouse() {
-  const {userProgress, streakProgress} = useGamificationStats();
+  const {level, coins, mood, streak} = useGamificationStats();
   const router = useRouter();
   const [showInventory, setShowInventory] = useState(false);
   const [showPassport, setShowPassport] = useState(false);
+  const moodProgress = useRef<AnimatedCircularProgress>(null);
+  const levelProgress = useRef<AnimatedCircularProgress>(null);
+  const streakProgress = useRef<AnimatedCircularProgress>(null);
+
+  const pathname = usePathname();
+  const oldPathName = useRef<string>("");
+  const currentPathName = useRef<string>(pathname);
+
+  function didRouteChange(pathname: string) {
+    return pathname !== oldPathName.current;
+  }
+
+  useEffect(() => {
+    oldPathName.current = currentPathName.current;
+    currentPathName.current = pathname;
+  }, [pathname, mood, level, streak]);
+
+  useEffect(() => {
+    moodProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : mood.previous, mood.current, 1000);
+  }, [mood, pathname]);
+
+  useEffect(() => {
+    levelProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : level.previousProgress, Math.round(level.progress), 1000);
+  }, [level.progress, level.previousProgress, pathname]);
+
+  useEffect(() => {
+    streakProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : streak.previousProgress, streak.progress, 1000);
+  }, [streak.progress, streak.previousProgress, pathname]);
+
+  function LevelIcon() {
+    return (
+      <View style={{
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#FFDD3C',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 3,
+      }}>
+        <View style={{
+          width: 50,
+          height: 50,
+          borderRadius: 25,
+          backgroundColor: '#fff',
+          justifyContent: 'center',
+          alignItems: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+        }}>
+          <Image
+            source={require('@/src/assets/images/trophy.png')}
+            style={{ width: 30, height: 30, resizeMode: 'contain' }}
+          />
+        </View>
+      </View>
+    );
+  }
+
+  function StreakIcon() {
+    return (
+      <View style={{
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#E43134',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 3,
+      }}>
+        <View style={{
+          width: 50,
+          height: 50,
+          borderRadius: 25,
+          backgroundColor: '#fff',
+          justifyContent: 'center',
+          alignItems: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+        }}>
+          <Image
+            source={require('@/src/assets/images/streak-fire-full.png')}
+            style={{ width: 30, height: 30, resizeMode: 'contain' }}
+          />
+        </View>
+      </View>
+    );
+  }
+
+  function MoodIcon() {
+    return (
+      <View style={{
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+      }}>
+        <Text style={{ fontSize: 20, color: '#333', fontFamily: 'Poppins-Regular' }}>❤️</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <TabHeader
-        xp={userProgress.currentXP}
-        coins={userProgress.coins}
-        streak={streakProgress.currentStreak}
+        xp={level.xp}
+        coins={coins.coins}
+        streak={streak.current}
         title="Pet"
         gradient={{
           startColor: "#168FF9",
@@ -51,34 +166,15 @@ export default function PetHouse() {
             right: 15,
           }}
         >
-          <View style={{
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            backgroundColor: '#FFDD3C',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 3,
-          }}>
-            <View style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-              backgroundColor: '#fff',
-              justifyContent: 'center',
-              alignItems: 'center',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 3.84,
-              elevation: 5,
-            }}>
-              <Image
-                source={require('@/src/assets/images/trophy.png')}
-                style={{ width: 30, height: 30, resizeMode: 'contain' }}
-              />
-            </View>
-          </View>
+        <AnimatedCircularProgress
+          ref={levelProgress}
+          size={60}
+          width={6}
+          fill={0}
+          backgroundColor="#bec0c0"
+          tintColor="#FFDD3C"
+          children={()=><LevelIcon/>}
+          />
         </TouchableOpacity>
         <View style={{
           position: 'absolute',
@@ -96,38 +192,25 @@ export default function PetHouse() {
             fontSize: 10,
             color: '#333',
             fontFamily: 'Poppins-Regular',
-          }}>Level {userProgress.level}</Text>
+          }}>Level {level.current}</Text>
         </View>
         
         {/* Progress circle 2 - Happiness */}
-        <View style={{
-          position: 'absolute',
-          top: 135,
-          right: 15,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: '#28B031',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 3,
-        }}>
-          <View style={{
-            width: 50,
-            height: 50,
-            borderRadius: 25,
-            backgroundColor: '#fff',
-            justifyContent: 'center',
-            alignItems: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }}>
-            <Text style={{ fontSize: 20, color: '#333', fontFamily: 'Poppins-Regular' }}>❤️</Text>
-          </View>
-        </View>
+        <AnimatedCircularProgress
+          style={{
+            position: 'absolute',
+            top: 135,
+            right: 15,
+            zIndex: 3,
+          }}
+          ref={moodProgress}
+          size={60}
+          width={6}
+          fill={0}
+          backgroundColor="#bec0c0"
+          tintColor="#28B031"
+          children={()=><MoodIcon/>}
+          />
         <View style={{
           position: 'absolute',
           top: 200,
@@ -144,41 +227,25 @@ export default function PetHouse() {
             fontSize: 10,
             color: '#333',
             fontFamily: 'Poppins-Regular',
-          }}>Happy</Text>
+          }}>{mood.moodClassification}</Text>
         </View>
         
         {/* Progress circle 3 - Streak */}
-        <View style={{
-          position: 'absolute',
-          top: 225,
-          right: 15,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: '#E43134',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 3,
-        }}>
-          <View style={{
-            width: 50,
-            height: 50,
-            borderRadius: 25,
-            backgroundColor: '#fff',
-            justifyContent: 'center',
-            alignItems: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }}>
-            <Image
-              source={require('@/src/assets/images/streak-fire-full.png')}
-              style={{ width: 30, height: 30, resizeMode: 'contain' }}
-            />
-          </View>
-        </View>
+        <AnimatedCircularProgress
+          style={{
+            position: 'absolute',
+            top: 225,
+            right: 15,
+            zIndex: 3,
+          }}
+          ref={streakProgress}
+          size={60}
+          width={6}
+          fill={0}
+          backgroundColor="#bec0c0"
+          tintColor="#E43134"
+          children={()=><StreakIcon/>}
+          />
         <View style={{
           position: 'absolute',
           top: 290,
@@ -195,7 +262,7 @@ export default function PetHouse() {
             fontSize: 10,
             color: '#333',
             fontFamily: 'Poppins-Regular',
-          }}>1/10 min</Text>
+          }}>{streak.minutesUsed}/{streak.minutesRequired} min</Text>
         </View>
         <View style={{ alignItems: 'center', marginBottom: 10, position: 'absolute', top: windowHeight * 0.19, left: 30 }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 16, width: 180, height: 60, justifyContent: 'center', alignItems: 'center' }}>

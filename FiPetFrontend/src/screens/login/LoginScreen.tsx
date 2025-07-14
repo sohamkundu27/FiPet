@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Text, Alert, Image } from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Text, Alert, Image, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
@@ -97,116 +97,122 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.push('/landing')}
-          disabled={isLoading}
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Ionicons name="arrow-back" size={28} color="#4A5568" />
-        </TouchableOpacity>
-        <View style={{ height: 120 }} />
-        <View style={styles.topSectionAbsolute}>
-          <View style={styles.topSection}>
-            <View style={{ position: 'relative', width: 160, height: 160 }}>
-              <Image
-                source={require('@/src/assets/images/fox.png')}
-                style={styles.foxImage}
-                resizeMode="contain"
-              />
-              <View style={styles.speechBubbleContainer}>
-                <View style={styles.speechBubble}>
-                  <Text style={styles.speechText}>It's good to see you again!</Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.push('/landing')}
+            disabled={isLoading}
+          >
+            <Ionicons name="arrow-back" size={28} color="#4A5568" />
+          </TouchableOpacity>
+          <View style={{ height: 120 }} />
+          <View style={styles.topSectionAbsolute}>
+            <View style={styles.topSection}>
+              <View style={{ position: 'relative', width: 160, height: 160 }}>
+                <Image
+                  source={require('@/src/assets/images/fox.png')}
+                  style={styles.foxImage}
+                  resizeMode="contain"
+                />
+                <View style={styles.speechBubbleContainer}>
+                  <View style={styles.speechBubble}>
+                    <Text style={styles.speechText}>It's good to see you again!</Text>
+                  </View>
                 </View>
               </View>
             </View>
+            <View style={styles.separator} />
           </View>
-          <View style={styles.separator} />
-        </View>
-        <View style={styles.flexGrowContainer}>
-          <View style={styles.content}>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={[styles.styledInput, emailError ? styles.inputError : null]}
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  validateEmail(text);
-                }}
-                placeholder="Email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                placeholderTextColor="#FFA500"
-                editable={!isLoading}
-              />
-              {emailError ? (
-                <Text style={styles.errorText}>{emailError}</Text>
-              ) : null}
-            </View>
-            <View style={{ height: 16 }} />
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={[styles.styledInput, passwordError ? styles.inputError : null]}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  validatePassword(text);
-                }}
-                placeholder="Password"
-                secureTextEntry
-                placeholderTextColor="#FFA500"
-                editable={!isLoading}
-              />
-              {passwordError ? (
-                <Text style={styles.errorText}>{passwordError}</Text>
-              ) : null}
-              <TouchableOpacity
-                style={styles.forgotPasswordButton}
-                onPress={() => router.navigate('/password-reset')}
-                disabled={isLoading}
-              >
-                <Text style={[
-                  styles.forgotPasswordText,
-                  isLoading && styles.forgotPasswordTextDisabled
-                ]}>
-                  Forgot Password?
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.gradientButton}
-                onPress={handleLogin}
-                disabled={!email || !password || isLoading}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={['#FF6B35', '#FFB74D']}
-                  style={styles.gradientButtonInner}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+          <View style={styles.flexGrowContainer}>
+            <View style={styles.content}>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[styles.styledInput, emailError ? styles.inputError : null]}
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    validateEmail(text);
+                  }}
+                  placeholder="Email"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  placeholderTextColor="#FFA500"
+                  editable={!isLoading}
+                />
+                {emailError ? (
+                  <Text style={styles.errorText}>{emailError}</Text>
+                ) : null}
+              </View>
+              <View style={{ height: 16 }} />
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[styles.styledInput, passwordError ? styles.inputError : null]}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    validatePassword(text);
+                  }}
+                  placeholder="Password"
+                  secureTextEntry
+                  placeholderTextColor="#FFA500"
+                  editable={!isLoading}
+                />
+                {passwordError ? (
+                  <Text style={styles.errorText}>{passwordError}</Text>
+                ) : null}
+                <TouchableOpacity
+                  style={styles.forgotPasswordButton}
+                  onPress={() => router.navigate('/password-reset')}
+                  disabled={isLoading}
                 >
-                  <Text style={styles.buttonText}>
-                    {isLoading ? '⏳ Loading...' : 'Sign In'}
+                  <Text style={[
+                    styles.forgotPasswordText,
+                    isLoading && styles.forgotPasswordTextDisabled
+                  ]}>
+                    Forgot Password?
                   </Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.gradientButton}
+                  onPress={handleLogin}
+                  disabled={!email || !password || isLoading}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={['#FF6B35', '#FFB74D']}
+                    style={styles.gradientButtonInner}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Text style={styles.buttonText}>
+                      {isLoading ? '\u23f3 Loading...' : 'Sign In'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.signUpContainer}>
+              <Text style={styles.signUpText}>
+                Don't have an account?{' '}
+                <Text style={styles.signUpLink} onPress={() => router.push('/welcome')}>
+                  Sign up
+                </Text>
+              </Text>
             </View>
           </View>
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>
-              Don't have an account?{' '}
-              <Text style={styles.signUpLink} onPress={() => router.push('/welcome')}>
-                Sign up
-              </Text>
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

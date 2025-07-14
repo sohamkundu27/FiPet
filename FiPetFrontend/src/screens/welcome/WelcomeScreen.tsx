@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image, Alert, Keyboard, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image, Alert, Keyboard, Platform, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { validateUsername } from '@/src/functions/validation';
@@ -169,8 +169,8 @@ export default function WelcomeScreen() {
       setPasswordError('');
       return false;
     }
-    if (password.length < 12) {
-      setPasswordError('Password must be at least 12 characters');
+    if (password.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
       return false;
     }
     setPasswordError('');
@@ -545,157 +545,183 @@ export default function WelcomeScreen() {
           );
         case 6:
           return (
-            <View style={styles.contentContainer}>
-              <View style={styles.foxSpeechContainer}>
-                <View style={styles.speechBubbleFox}>
-                  <Text style={styles.speechTextFox}>Woah! Hello there</Text>
+            <KeyboardAvoidingView
+              style={{ flex: 1 }}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={150}
+            >
+              <ScrollView
+                contentContainerStyle={styles.petNamingContainer}
+                keyboardShouldPersistTaps="handled"
+              >
+                <View style={styles.foxSpeechContainer}>
+                  <View style={styles.speechBubbleFox}>
+                    <Text style={styles.speechTextFox}>Woah! Hello there</Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.foxImageContainer}>
-                <Image
-                  source={require('../../assets/images/welcomeFox.png')}
-                  style={styles.foxImage}
-                  resizeMode="contain"
+                <View style={styles.foxImageContainer}>
+                  <Image
+                    source={require('../../assets/images/welcomeFox.png')}
+                    style={styles.foxImage}
+                    resizeMode="contain"
+                  />
+                </View>
+                <TextInput
+                  style={[styles.input, { borderColor: '#F97216CC', color: '#F97216CC' }, petNameError ? styles.inputError : null]}
+                  value={petName}
+                  onChangeText={handlePetNameChange}
+                  placeholder="Name your pet..."
+                  placeholderTextColor="#F97216CC"
                 />
-              </View>
-              <TextInput
-                style={[styles.input, { borderColor: '#F97216CC', color: '#F97216CC' }, petNameError ? styles.inputError : null]}
-                value={petName}
-                onChangeText={handlePetNameChange}
-                placeholder="Name your pet..."
-                placeholderTextColor="#F97216CC"
-              />
-              {petNameError ? (
-                <Text style={styles.errorText}>{petNameError}</Text>
-              ) : null}
-            </View>
+                {petNameError ? (
+                  <Text style={styles.errorText}>{petNameError}</Text>
+                ) : null}
+              </ScrollView>
+            </KeyboardAvoidingView>
           );
         case 7:
           return (
-            <View style={styles.contentContainer}>
-              <Text style={styles.accountHeading}>You're almost ready!</Text>
-              
-              <TouchableOpacity 
-                style={styles.alreadyHaveAccountButton}
-                onPress={() => router.push('/login')}
+            <KeyboardAvoidingView
+              style={{ flex: 1 }}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={150}
+            >
+              <ScrollView
+                contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingBottom: 100 }}
+                keyboardShouldPersistTaps="handled"
               >
-                <Text style={styles.alreadyHaveAccountText}>Already have an account?</Text>
-              </TouchableOpacity>
-              
-              <View style={styles.formSection}>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Enter your email</Text>
-                  <TextInput
-                    style={[styles.styledInput, emailError ? styles.inputError : null]}
-                    value={email}
-                    onChangeText={handleEmailChange}
-                    placeholder="Type here..."
-                    placeholderTextColor="#FFA500"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  {emailError ? (
-                    <Text style={styles.errorText}>{emailError}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Create a password</Text>
-                  <Text style={styles.passwordSubtext}>Must be at least 12 characters</Text>
-                  <TextInput
-                    style={[styles.styledInput, passwordError ? styles.inputError : null]}
-                    value={password}
-                    onChangeText={handlePasswordChange}
-                    placeholder="Type here..."
-                    placeholderTextColor="#FFA500"
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  {passwordError ? (
-                    <Text style={styles.errorText}>{passwordError}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Confirm your password</Text>
-                  <TextInput
-                    style={[styles.styledInput, confirmPasswordError ? styles.inputError : null]}
-                    value={confirmPassword}
-                    onChangeText={handleConfirmPasswordChange}
-                    placeholder="Type here..."
-                    placeholderTextColor="#FFA500"
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  {confirmPasswordError ? (
-                    <Text style={styles.errorText}>{confirmPasswordError}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.termsContainer}>
+                <View style={styles.contentContainer}>
+                  <Text style={styles.accountHeading}>You're almost ready!</Text>
                   <TouchableOpacity 
-                    style={styles.checkbox} 
-                    onPress={() => setTermsAccepted(!termsAccepted)}
+                    style={styles.alreadyHaveAccountButton}
+                    onPress={() => router.push('/login')}
                   >
-                    {termsAccepted && <Ionicons name="checkmark" size={16} color="#FF6B35" />}
+                    <Text style={styles.alreadyHaveAccountText}>Already have an account?</Text>
                   </TouchableOpacity>
-                  <Text style={styles.termsText}>
-                    By registering your details, you agree with our{' '}
-                    <Text style={styles.termsLink}>Terms & Conditions</Text>
-                  </Text>
+                  <View style={styles.formSection}>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Enter your email</Text>
+                      <TextInput
+                        style={[styles.styledInput, { width: '100%' }, emailError ? styles.inputError : null]}
+                        value={email}
+                        onChangeText={handleEmailChange}
+                        placeholder="Type here..."
+                        placeholderTextColor="#FFA500"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                      {emailError ? (
+                        <Text style={styles.errorText}>{emailError}</Text>
+                      ) : null}
+                    </View>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Create a password</Text>
+                      <Text style={styles.passwordSubtext}>Must be at least 8 characters</Text>
+                      <TextInput
+                        style={[styles.styledInput, { width: '100%' }, passwordError ? styles.inputError : null]}
+                        value={password}
+                        onChangeText={handlePasswordChange}
+                        placeholder="Type here..."
+                        placeholderTextColor="#FFA500"
+                        secureTextEntry
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        textContentType="oneTimeCode"
+                        autoComplete="off"
+                      />
+                      {passwordError ? (
+                        <Text style={styles.errorText}>{passwordError}</Text>
+                      ) : null}
+                    </View>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Confirm your password</Text>
+                      <TextInput
+                        style={[styles.styledInput, { width: '100%' }, confirmPasswordError ? styles.inputError : null]}
+                        value={confirmPassword}
+                        onChangeText={handleConfirmPasswordChange}
+                        placeholder="Type here..."
+                        placeholderTextColor="#FFA500"
+                        secureTextEntry
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                      {confirmPasswordError ? (
+                        <Text style={styles.errorText}>{confirmPasswordError}</Text>
+                      ) : null}
+                    </View>
+                    <View style={styles.termsContainer}>
+                      <TouchableOpacity 
+                        style={styles.checkbox} 
+                        onPress={() => setTermsAccepted(!termsAccepted)}
+                      >
+                        {termsAccepted && <Ionicons name="checkmark" size={16} color="#FF6B35" />}
+                      </TouchableOpacity>
+                      <Text style={styles.termsText}>
+                        By registering your details, you agree with our{' '}
+                        <Text style={styles.termsLink}>Terms & Conditions</Text>
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            </View>
+              </ScrollView>
+            </KeyboardAvoidingView>
           );
         case 8:
           return (
-            <View style={styles.contentContainer}>
-              <Text style={styles.accountHeading}>Finishing touches!</Text>
-              
-              <View style={styles.formSection}>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Create a username</Text>
-                  <Text style={styles.inputSubtext}>This username will be visible to other users</Text>
-                  <TextInput
-                    style={[styles.styledInput, usernameError ? styles.inputError : null]}
-                    value={username}
-                    onChangeText={handleUsernameChange}
-                    placeholder="Type here..."
-                    placeholderTextColor="#FFA500"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  <Text style={styles.hintText}>Username may only contain alphabet characters (A–Z)</Text>
-                  {usernameError ? (
-                    <Text style={styles.errorText}>{usernameError}</Text>
-                  ) : null}
+            <KeyboardAvoidingView
+              style={{ flex: 1 }}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={150}
+            >
+              <ScrollView
+                contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-start', paddingBottom: 100 }}
+                keyboardShouldPersistTaps="handled"
+              >
+                <View style={styles.contentContainer}>
+                  <Text style={styles.accountHeading}>Finishing touches!</Text>
+                  <View style={styles.formSection}>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Create a username</Text>
+                      <Text style={styles.inputSubtext}>This username will be visible to other users</Text>
+                      <TextInput
+                        style={[styles.styledInput, { width: '100%' }, usernameError ? styles.inputError : null]}
+                        value={username}
+                        onChangeText={handleUsernameChange}
+                        placeholder="Type here..."
+                        placeholderTextColor="#FFA500"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                      <Text style={styles.hintText}>Username may only contain alphabet characters (A–Z)</Text>
+                      {usernameError ? (
+                        <Text style={styles.errorText}>{usernameError}</Text>
+                      ) : null}
+                    </View>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Enter your age</Text>
+                      <Text style={styles.inputSubtext}>This number helps us give you a better experience</Text>
+                      <TextInput
+                        style={[styles.styledInput, { width: '100%' }, ageError ? styles.inputError : null]}
+                        value={age}
+                        onChangeText={handleAgeChange}
+                        placeholder="Type here..."
+                        placeholderTextColor="#FFA500"
+                        keyboardType="numeric"
+                        returnKeyType="done"
+                        onSubmitEditing={() => {
+                          Keyboard.dismiss();
+                        }}
+                        autoCorrect={false}
+                      />
+                      {ageError ? (
+                        <Text style={styles.errorText}>{ageError}</Text>
+                      ) : null}
+                    </View>
+                  </View>
                 </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Enter your age</Text>
-                  <Text style={styles.inputSubtext}>This number helps us give you a better experience</Text>
-                  <TextInput
-                    style={[styles.styledInput, ageError ? styles.inputError : null]}
-                    value={age}
-                    onChangeText={handleAgeChange}
-                    placeholder="Type here..."
-                    placeholderTextColor="#FFA500"
-                    keyboardType="numeric"
-                    returnKeyType="done"
-                    onSubmitEditing={() => {
-                      Keyboard.dismiss();
-                    }}
-                    autoCorrect={false}
-                  />
-                  {ageError ? (
-                    <Text style={styles.errorText}>{ageError}</Text>
-                  ) : null}
-                </View>
-              </View>
-            </View>
+              </ScrollView>
+            </KeyboardAvoidingView>
           );
         default:
           return null;
@@ -900,13 +926,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_500Medium',
   },
   input: {
-    width: '100%',
+    width: 332,
     height: 50,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 25,
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 5,
+    marginTop: 130,
     fontFamily: 'Poppins_400Regular',
   },
   inputError: {
@@ -915,7 +942,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#FF6B6B',
     fontSize: 14,
-    marginTop: 5,
+    marginTop: 10,
     textAlign: 'center',
     fontFamily: 'Poppins_400Regular',
   },
@@ -1161,12 +1188,12 @@ const styles = StyleSheet.create({
     flex: 0.6,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: -70,
   },
   foxImage: {
     width: 180,
     height: 180,
-    marginTop: 10,
+    marginTop: 60,
   },
   accountHeading: {
     fontSize: 28,
@@ -1334,7 +1361,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 14,
     paddingHorizontal: 28,
-    marginBottom: 0,
+    marginBottom: 50,
+    marginTop: 0,
     alignSelf: 'center',
     borderWidth: 2,
     borderColor: '#F97216',
@@ -1387,5 +1415,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Poppins_500Medium',
     textDecorationLine: 'underline',
+  },
+  petNamingContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 30,
   },
 }); 
