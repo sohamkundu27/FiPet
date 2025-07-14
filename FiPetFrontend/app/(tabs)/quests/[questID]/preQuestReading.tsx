@@ -1,5 +1,3 @@
-import PreQuestReadingScreen from "@/src/screens/quest/preQuestReading";
-export default PreQuestReadingScreen;
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';

@@ -10,7 +10,7 @@ import { getCurrentQuest, getNextAvailableQuest, QuestWithProgress } from '@/src
 
 export default function QuestScreen() {
 
-    const {userProgress, streakProgress} = useGamificationStats();
+    const {level, coins, streak} = useGamificationStats();
     const router = useRouter();
     const [currentQuest, setCurrentQuest] = useState<QuestWithProgress | null>(null);
     const [nextQuest, setNextQuest] = useState<QuestWithProgress | null>(null);
@@ -80,9 +80,9 @@ export default function QuestScreen() {
     return (
         <View style={{ flex: 1}}>
           <TabHeader
-            xp={userProgress.currentXP}
-            coins={userProgress.coins}
-            streak={streakProgress.currentStreak}
+            xp={level.xp}
+            coins={coins.coins}
+            streak={streak.current}
             title="Quests"
             gradient={{
               startColor: "#A259FF",

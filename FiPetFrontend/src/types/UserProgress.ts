@@ -1,12 +1,23 @@
-export type UserProgress = {
-  level: number,
-  currentXP: number,
-  earnedXP: number, // amount of xp earned today.
-  requiredLevelXP: number, // amount of XP before leveling up.
-  requiredStreakXP: number, // amount of XP before achieving streak.
-  levelProgress: number, // percent of xp required to reach next level
-  streakProgress: number, // percent of xp required to satisfy today's streak
+export type LevelInfo = {
+  current: number,
+  xp: number,
+  earnedXP: number,
+  requiredXP: number,
+  progress: number,
+  previousProgress: number,
+}
+
+export type CoinInfo = {
   coins: number,
+}
+
+export type StreakInfo = {
+  current: number,
+  minutesUsed: number,
+  minutesRequired: number,
+  progress: number,
+  previousProgress: number,
+  days: StreakDay[],
 }
 
 export const dayAbbreviations = {
@@ -28,5 +39,12 @@ export type StreakDay = {
 
 export type StreakProgress = {
   currentStreak: number,
-  days: StreakDay[]
+}
+
+export type MoodClassification = "Sad" | "Bored" | "Happy";
+
+export type MoodInfo = {
+  current: number,
+  previous: number,
+  moodClassification: MoodClassification,
 }
