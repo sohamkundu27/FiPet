@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useRouter, useSegments } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { View, Image, Dimensions, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGamificationStats } from '@/src/hooks/useGamificationStats';
 import TabHeader from '@/src/components/TabHeader';
@@ -12,32 +12,34 @@ export default function PetHouse() {
   const router = useRouter();
   const [showInventory, setShowInventory] = useState(false);
   const [showPassport, setShowPassport] = useState(false);
-  const [routeChanged, setRouteChanged] = useState(true);
   const moodProgress = useRef<AnimatedCircularProgress>(null);
   const levelProgress = useRef<AnimatedCircularProgress>(null);
   const streakProgress = useRef<AnimatedCircularProgress>(null);
 
-  const segments = useSegments();
+  const pathname = usePathname();
+  const oldPathName = useRef<string>("");
+  const currentPathName = useRef<string>(pathname);
+
+  function didRouteChange(pathname: string) {
+    return pathname !== oldPathName.current;
+  }
 
   useEffect(() => {
-    setRouteChanged(true);
-  }, [segments]);
+    oldPathName.current = currentPathName.current;
+    currentPathName.current = pathname;
+  }, [pathname, mood, level, streak]);
 
   useEffect(() => {
-    setRouteChanged(false);
-  }, [level, mood, streak]); // animation dependencies
+    moodProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : mood.previous, mood.current, 1000);
+  }, [mood, pathname]);
 
   useEffect(() => {
-    moodProgress.current?.reAnimate(routeChanged ? 0 : mood.previous, mood.current, 1000);
-  }, [mood, routeChanged, segments]);
+    levelProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : level.previousProgress, Math.round(level.progress), 1000);
+  }, [level.progress, level.previousProgress, pathname]);
 
   useEffect(() => {
-    levelProgress.current?.reAnimate(routeChanged ? 0 : level.previousProgress, Math.round(level.progress), 1000);
-  }, [level.progress, level.previousProgress, routeChanged, segments]);
-
-  useEffect(() => {
-    streakProgress.current?.reAnimate(routeChanged ? 0 : streak.previousProgress, streak.progress, 1000);
-  }, [streak.progress, streak.previousProgress, routeChanged, segments]);
+    streakProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : streak.previousProgress, streak.progress, 1000);
+  }, [streak.progress, streak.previousProgress, pathname]);
 
   function LevelIcon() {
     return (

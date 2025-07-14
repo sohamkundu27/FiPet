@@ -370,7 +370,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
     const userDocRef = doc( db, 'users', user.uid );
     let _mood = constrain(mood.current + percentage, 0, 100);
     updateDoc( userDocRef, {
-      current_mood: _mood,
+      pet_mood: _mood,
     });
   }
 

@@ -6,17 +6,18 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress'
 import { useFonts } from 'expo-font';
 import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
-import { useRouter, useSegments } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 
 export default function HomeScreen() {
 
   const {level, streak, mood, coins, addMood} = useGamificationStats();
   const moodProgress = useRef<AnimatedCircularProgress>(null);
   const levelProgress = useRef<AnimatedCircularProgress>(null);
-  const [routeChanged, setRouteChanged] = useState<boolean>(true);
 
   const router = useRouter();
-  const segments = useSegments();
+  const pathname = usePathname();
+  const oldPathName = useRef<string>("");
+  const currentPathName = useRef<string>(pathname);
 
   const streakProgress = streak.progress;
 
@@ -31,21 +32,22 @@ export default function HomeScreen() {
     PoppinsSemiBold: require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
   });
 
-  useEffect(() => {
-    setRouteChanged(true);
-  }, [segments]);
+  function didRouteChange(pathname: string) {
+    return pathname !== oldPathName.current;
+  }
 
   useEffect(() => {
-    setRouteChanged(false);
-  }, [level.progress, level.previousProgress, mood]); // animation dependencies
+    oldPathName.current = currentPathName.current;
+    currentPathName.current = pathname;
+  }, [pathname, mood, level, streak]);
 
   useEffect(() => {
-      moodProgress.current?.reAnimate(routeChanged ? 0 : mood.previous, mood.current, 1000);
-  }, [mood, routeChanged, segments]);
+      moodProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : mood.previous, mood.current, 1000);
+  }, [mood, pathname]);
 
   useEffect(() => {
-    levelProgress.current?.reAnimate(routeChanged ? 0 : level.previousProgress, level.progress, 1000);
-  }, [level.progress, level.previousProgress, routeChanged, segments]);
+    levelProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : level.previousProgress, level.progress, 1000);
+  }, [level.progress, level.previousProgress, pathname]);
 
   if (!loaded) {
     return (
