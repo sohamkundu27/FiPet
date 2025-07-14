@@ -52,8 +52,8 @@ function getMoodClassification(mood: number): MoodClassification {
 export type UserData = {
   current_level: number,
   current_xp: number,
-  current_mood: number,
-  coins: number,
+  pet_mood: number,
+  current_coins: number,
   minutes_logged_in: number,
   last_date_logged_in: Timestamp,
 }
@@ -82,10 +82,10 @@ export const GamificationProvider = ({ children }: { children: any }) => {
 
   const {user} = useAuth();
   const [userData, setUserData] = useState<UserData>({
-    coins: 0,
+    current_coins: 0,
     current_xp: 0,
     current_level: 0,
-    current_mood: 0,
+    pet_mood: 0,
     minutes_logged_in: 0,
     last_date_logged_in: new Timestamp(Date.now() / 1000, 0),
   });
@@ -148,7 +148,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
 
 
   //#### Coins ####
-  const coins = useMemo<CoinInfo>(() => {return {coins: userData.coins}}, [userData.coins]);
+  const coins = useMemo<CoinInfo>(() => {return {coins: userData.current_coins}}, [userData.current_coins]);
 
 
   //#### Levels/xp ####
@@ -179,7 +179,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
 
     let updateTime = startOfDay(userData.last_date_logged_in.toDate());
     let currentTime = startOfDay(new Date());
-    let _mood = userData.current_mood;
+    let _mood = userData.pet_mood;
 
     if (updateTime.valueOf() !== currentTime.valueOf()) {
       const userDocRef = doc( db, 'users', user.uid );
@@ -205,7 +205,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
       previous: previousMoodProgress,
       moodClassification: getMoodClassification(_mood),
     };
-  }, [userData.current_mood, userData.last_date_logged_in, user.uid]);
+  }, [userData.pet_mood, userData.last_date_logged_in, user.uid]);
 
 
   //#### Streaks ####
@@ -236,10 +236,10 @@ export const GamificationProvider = ({ children }: { children: any }) => {
       next: (snapshot) => {
         const _userData = snapshot.data();
         setUserData({
-          coins: _userData?.coins || 0,
+          current_coins: _userData?.current_coins || 0,
           current_level: _userData?.current_level || 0,
           current_xp: _userData?.current_xp || 0,
-          current_mood: _userData?.current_mood || 0,
+          pet_mood: _userData?.pet_mood || 0,
           minutes_logged_in: _userData?.minutes_logged_in || minutesLoggedInRef.current,
           last_date_logged_in: _userData?.last_date_logged_in || new Timestamp(Date.now()/1000, 0),
         });
