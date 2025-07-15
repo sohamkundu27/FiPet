@@ -36,47 +36,14 @@ export default function PreQuestReadingScreen() {
       console.log('fetchPreQuest called with quest:', quest);
       
       if (!quest?.preQuest) {
-        // If no prereading is specified, skip to the first question
-        const allQuestions = getAllQuestions();
-        if (allQuestions.length > 0) {
-          router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
-        } else {
-          router.replace(`/quests/${questID}`);
-        }
+        setLoading(false);
+        setPreQuest(null);
         return;
       }
-      
       setLoading(true);
-      try {
-        console.log('Fetching pre-quest reading with ID:', quest.preQuest);
-        const data = await getPreQuestReadingById(quest.preQuest);
-        console.log('Pre-quest data received:', data);
-        console.log('Available pages:', data ? Object.keys(data).filter(key => key.startsWith('p')) : 'No data');
-        
-        if (data) {
-          setPreQuest(data);
-        } else {
-          console.log('No preQuest data found, skipping to first question');
-          // If no data found, skip to first question
-          const allQuestions = getAllQuestions ? getAllQuestions() : [];
-          if (allQuestions && allQuestions.length > 0) {
-            router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
-          } else {
-            router.replace(`/quests/${questID}`);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching pre-quest reading:', error);
-        // If fetching fails, skip to first question
-        const allQuestions = getAllQuestions ? getAllQuestions() : [];
-        if (allQuestions && allQuestions.length > 0) {
-          router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
-        } else {
-          router.replace(`/quests/${questID}`);
-        }
-      } finally {
-        setLoading(false);
-      }
+      const data = await getPreQuestReadingById(quest.preQuest);
+      setPreQuest(data);
+      setLoading(false);
     };
     
     if (quest !== undefined) {
@@ -101,36 +68,33 @@ export default function PreQuestReadingScreen() {
     );
   }
 
-<<<<<<< HEAD
-=======
-  // If no prereading data is available, skip to the first question
+  // Handle missing preQuest document
   if (!preQuest) {
-    if (allQuestions.length > 0) {
-      router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
-    } else {
-      router.replace(`/quests/${questID}`);
-    }
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6C63FF" />
-        <Text style={styles.loadingText}>Redirecting...</Text>
+      <View style={[styles.loadingContainer, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }]}>
+        <Text style={[styles.loadingText, { textAlign: 'center', paddingHorizontal: 8 }]}>
+          Pre-quest reading not found. Please contact support or try another quest.
+        </Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            marginTop: 20,
+            paddingVertical: 12,
+            paddingHorizontal: 32,
+            backgroundColor: '#FF7A00', // App's orange
+            borderRadius: 24,
+          }}
+        >
+          <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
-  const pageData = preQuest?.[`p${page}` as keyof PreQuestReading] as PreQuestReadingPage | undefined;
-
-  // Check if current page exceeds available pages
-  if (preQuest && totalPages > 0 && page > totalPages) {
-    console.log(`Page ${page} exceeds total pages ${totalPages}, resetting to page 1`);
-    setPage(1);
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6C63FF" />
-        <Text style={styles.loadingText}>Loading page...</Text>
-      </View>
-    );
-  }
+  const pageData = preQuest[`p${page}`];
+  const totalPages = 4;
+  const isLastPage = page === totalPages;
+  const isFirstPage = page === 1;
 
   // Check if pageData exists
   if (!pageData) {
