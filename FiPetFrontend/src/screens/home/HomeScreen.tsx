@@ -212,13 +212,21 @@ export default function HomeScreen() {
             style={styles.quest}
           >
             <View>
-              <Text style={styles.questTitle}>{currentQuest?.quest.title || 'Spend It or Save It?'}</Text>
-              <Text style={styles.questSubtitle}>{currentQuest?.quest.descriptions?.[0] || 'Understand the difference between spending or saving.'}</Text>
+              <Text style={styles.questTitle}>
+                {currentQuest ? currentQuest.quest.title : 'Quest Completed!'}
+              </Text>
+              <Text style={styles.questSubtitle}>
+                {currentQuest ? (currentQuest.quest.descriptions?.[0] || '') : 'You’ve finished all available quests.'}
+              </Text>
             </View>
-            <TouchableOpacity style={styles.playButton}
+            <TouchableOpacity
+              style={styles.playButton}
               onPress={() => {
-                                router.push(`/quests/quest_001`);
-                            }}
+                if (currentQuest) {
+                  router.push(`/quests/${currentQuest.quest.id}`);
+                }
+              }}
+              disabled={!currentQuest}
             >
               <Image source={require("@/src/assets/images/play.png")} style={{ width: 60, height: 60 }} />
               <Text style={styles.playText}>Play</Text>
