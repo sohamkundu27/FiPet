@@ -1,5 +1,6 @@
 "use client"
 import React from 'react';
+import React from 'react';
 import { useEffect, useRef, useState } from "react"
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, SafeAreaView, Pressable } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
@@ -7,6 +8,9 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress'
 import { useFonts } from 'expo-font';
 import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
+import { useRouter, usePathname, useFocusEffect } from 'expo-router';
+import { useAuth } from '@/src/hooks/useAuth';
+import { getCurrentQuest, getNextAvailableQuest, QuestWithProgress } from '@/src/services/questsIndexService';
 import { useRouter, usePathname, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/src/hooks/useAuth';
 import { getCurrentQuest, getNextAvailableQuest, QuestWithProgress } from '@/src/services/questsIndexService';
@@ -34,6 +38,24 @@ export default function HomeScreen() {
     PoppinsRegular: require('@/src/assets/fonts/Poppins-Regular.ttf'),
     PoppinsSemiBold: require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
   });
+
+  const { user } = useAuth();
+  const [currentQuest, setCurrentQuest] = useState<QuestWithProgress | null>(null);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      async function fetchQuest() {
+        if (user) {
+          let quest = await getCurrentQuest(user.uid);
+          if (!quest) {
+            quest = await getNextAvailableQuest(user.uid);
+          }
+          setCurrentQuest(quest);
+        }
+      }
+      fetchQuest();
+    }, [user])
+  );
 
   const { user } = useAuth();
   const [currentQuest, setCurrentQuest] = useState<QuestWithProgress | null>(null);
@@ -212,12 +234,8 @@ export default function HomeScreen() {
             style={styles.quest}
           >
             <View>
-              <Text style={styles.questTitle}>
-                {currentQuest ? currentQuest.quest.title : 'Quest Completed!'}
-              </Text>
-              <Text style={styles.questSubtitle}>
-                {currentQuest ? (currentQuest.quest.descriptions?.[0] || '') : 'You’ve finished all available quests.'}
-              </Text>
+              <Text style={styles.questTitle}>{currentQuest?.quest.title || 'Spend It or Save It?'}</Text>
+              <Text style={styles.questSubtitle}>{currentQuest?.quest.descriptions?.[0] || 'Understand the difference between spending or saving.'}</Text>
             </View>
             <TouchableOpacity
               style={styles.playButton}
