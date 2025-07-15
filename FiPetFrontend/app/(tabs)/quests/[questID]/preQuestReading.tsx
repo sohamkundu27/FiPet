@@ -17,13 +17,8 @@ export default function PreQuestReadingScreen() {
   useEffect(() => {
     const fetchPreQuest = async () => {
       if (!quest?.preQuest) {
-        // If no prereading is specified, skip to the first question
-        const allQuestions = getAllQuestions();
-        if (allQuestions.length > 0) {
-          router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
-        } else {
-          router.replace(`/quests/${questID}`);
-        }
+        setLoading(false);
+        setPreQuest(null);
         return;
       }
       setLoading(true);
@@ -46,17 +41,25 @@ export default function PreQuestReadingScreen() {
     );
   }
 
-  // If no prereading data is available, skip to the first question
+  // Handle missing preQuest document
   if (!preQuest) {
-    if (allQuestions.length > 0) {
-      router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
-    } else {
-      router.replace(`/quests/${questID}`);
-    }
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6C63FF" />
-        <Text style={styles.loadingText}>Redirecting...</Text>
+      <View style={[styles.loadingContainer, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }]}>
+        <Text style={[styles.loadingText, { textAlign: 'center', paddingHorizontal: 8 }]}>
+          Pre-quest reading not found. Please contact support or try another quest.
+        </Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            marginTop: 20,
+            paddingVertical: 12,
+            paddingHorizontal: 32,
+            backgroundColor: '#FF7A00', // App's orange
+            borderRadius: 24,
+          }}
+        >
+          <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
