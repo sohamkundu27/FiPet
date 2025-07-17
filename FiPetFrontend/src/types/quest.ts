@@ -32,10 +32,10 @@ export interface PreQuestReadingPage {
 
 export interface PreQuestReading {
   id: string;
-  page1: PreQuestReadingPage;
-  page2: PreQuestReadingPage;
-  page3: PreQuestReadingPage;
-  page4: PreQuestReadingPage;
+  p1?: PreQuestReadingPage;
+  p2?: PreQuestReadingPage;
+  p3?: PreQuestReadingPage;
+  p4?: PreQuestReadingPage;
 }
 
 export interface Quest {
