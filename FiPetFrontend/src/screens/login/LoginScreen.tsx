@@ -83,6 +83,10 @@ export default function LoginScreen() {
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
     if (isEmailValid && isPasswordValid) {
+      if (!auth) {
+        Alert.alert('Login Error', 'Authentication service not available.');
+        return;
+      }
       setIsLoading(true);
       try {
         await signInWithEmailAndPassword(auth, email, password);

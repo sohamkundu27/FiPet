@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 50,
-    position: 'relative',
+    // position: 'relative', // Removed duplicate property
     width: 267.01,
     height: 250,
     position: 'absolute',

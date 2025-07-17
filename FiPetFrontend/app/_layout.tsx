@@ -7,9 +7,6 @@ import { AuthProvider } from '@/src/components/providers/AuthProvider';
 export default function RootLayout() {
   return (
     <>
-    <div>
-      <h2>Hi</h2>
-    </div>
       <AuthProvider>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />

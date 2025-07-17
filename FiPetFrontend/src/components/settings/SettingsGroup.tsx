@@ -36,7 +36,7 @@ export default function SettingsGroup({ groupName, settings }: SettingsGroupProp
               </View>
             )}
             <View style={{width: TITLE_WIDTH, display: "flex", flexDirection: "column", gap: 2}}>
-              {item.color ? (
+              {item.color && typeof item.color === "string" ? (
                 <ThemedText lightColor={item.color} darkColor={item.color}>{item.title}</ThemedText>
               ) : (
                 <ThemedText style={item.subtitle && {marginBottom: 0, lineHeight: 18}} lightColor="#000" darkColor="#FFF">{item.title}</ThemedText>

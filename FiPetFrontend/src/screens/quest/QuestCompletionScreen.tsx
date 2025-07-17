@@ -6,6 +6,7 @@ import {
   View,
   Image,
   Text,
+  Platform,
 } from 'react-native';
 
 export default function QuestCompletionScreen() {

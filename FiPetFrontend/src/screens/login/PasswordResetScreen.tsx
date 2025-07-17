@@ -50,6 +50,10 @@ export default function PasswordResetScreen() {
     const isEmailValid = validateEmail(email);
 
     if (isEmailValid) {
+      if (!auth) {
+        Alert.alert('Password Reset Error', 'Authentication service is not available.');
+        return;
+      }
       setIsLoading(true);
       try {
         await sendPasswordResetEmail(auth, email);
