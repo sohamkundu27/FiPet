@@ -8,7 +8,7 @@ import { useThemeColor } from '@/src/hooks/useThemeColor';
 export default function TabLayout() {
   const headerBG = useThemeColor({light: Colors.primary.default, dark: Colors.primary.darker}, 'background')
   const headerText = useThemeColor({light: "#000", dark: "#FFF"}, 'background')
-  const segments = useSegments();
+  const segments = useSegments() as string[];
   const hiddenTabBarRoutes  = [['[questID]'], ['petHome', 'level']];
   let shouldHideTabBar = false;
   for (let route of hiddenTabBarRoutes) {
@@ -62,7 +62,7 @@ export default function TabLayout() {
               title: 'Home',
               headerShown: false,
               tabBarShowLabel: false,
-              tabBarIcon: ({ focused }) => (
+              tabBarIcon: ({ focused }: { focused: boolean }) => (
                 <Image
                   source={
                     focused
@@ -81,7 +81,7 @@ export default function TabLayout() {
               title: 'Quests',
               headerShown: false,
               tabBarShowLabel: false,
-              tabBarIcon: ({ focused }) => (
+              tabBarIcon: ({ focused }: { focused: boolean }) => (
                 <Image
                   source={
                     focused
@@ -100,7 +100,7 @@ export default function TabLayout() {
               title: 'Pet House',
               headerShown: false,
               tabBarShowLabel: false,
-              tabBarIcon: ({ focused }) => (
+              tabBarIcon: ({ focused }: { focused: boolean }) => (
                 <Image
                   source={
                     focused
@@ -119,7 +119,7 @@ export default function TabLayout() {
               title: 'Battle',
               headerShown: false,
               tabBarShowLabel: false,
-              tabBarIcon: ({ focused }) => (
+              tabBarIcon: ({ focused }: { focused: boolean }) => (
                 <Image
                   source={
                     focused
@@ -138,7 +138,7 @@ export default function TabLayout() {
               title: 'store',
               headerShown: false,
               tabBarShowLabel: false,
-              tabBarIcon: ({ focused }) => (
+              tabBarIcon: ({ focused }: { focused: boolean }) => (
                 <Image
                   source={
                     focused
@@ -157,7 +157,7 @@ export default function TabLayout() {
               title: 'Settings',
               ...settingsOptions,
               tabBarShowLabel: false,
-              tabBarIcon: ({ focused }) => (
+              tabBarIcon: ({ focused }: { focused: boolean }) => (
                 <Image
                   source={
                     focused
