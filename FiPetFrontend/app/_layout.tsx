@@ -8,7 +8,7 @@ export default function RootLayout() {
   return (
     <>
     <div>
-      <h1>Hello</h1>
+      <h1>Hi</h1>
     </div>
       <AuthProvider>
         <Stack>
