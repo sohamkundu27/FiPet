@@ -33,20 +33,21 @@ export default function PreQuestReadingScreen() {
 
   useEffect(() => {
     const fetchPreQuest = async () => {
-<<<<<<< HEAD
-      if (!quest?.preQuest) return;
-=======
+      console.log('fetchPreQuest called with quest:', quest);
+      
       if (!quest?.preQuest) {
+        console.log('No preQuest field found in quest, skipping to first question');
+        setLoading(false);
         // If no prereading is specified, skip to the first question
-        const allQuestions = getAllQuestions();
-        if (allQuestions.length > 0) {
+        const allQuestions = getAllQuestions ? getAllQuestions() : [];
+        if (allQuestions && allQuestions.length > 0) {
           router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
         } else {
           router.replace(`/quests/${questID}`);
         }
         return;
       }
->>>>>>> bfe0a5f (if prereading does not exist, the prequest goes straight to the quest)
+      
       setLoading(true);
       try {
         console.log('Fetching pre-quest reading with ID:', quest.preQuest);
@@ -92,9 +93,6 @@ export default function PreQuestReadingScreen() {
   const isLastPage = page === totalPages;
   const isFirstPage = page === 1;
 
-<<<<<<< HEAD
-  if (loading || !preQuest) {
-=======
   if (loading) {
 >>>>>>> bfe0a5f (if prereading does not exist, the prequest goes straight to the quest)
     return (
@@ -108,8 +106,9 @@ export default function PreQuestReadingScreen() {
 <<<<<<< HEAD
 =======
   // If no prereading data is available, skip to the first question
-  if (!preQuest) {
-    if (allQuestions.length > 0) {
+  if (!preQuest && !loading) {
+    console.log('No preQuest data available, redirecting to first question');
+    if (allQuestions && allQuestions.length > 0) {
       router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
     } else {
       router.replace(`/quests/${questID}`);
@@ -117,16 +116,24 @@ export default function PreQuestReadingScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
-        <Text style={styles.loadingText}>Redirecting...</Text>
+        <Text style={styles.loadingText}>Redirecting to questions...</Text>
       </View>
     );
   }
 
->>>>>>> bfe0a5f (if prereading does not exist, the prequest goes straight to the quest)
-  const pageData = preQuest[`p${page}`];
-  const totalPages = 4;
-  const isLastPage = page === totalPages;
-  const isFirstPage = page === 1;
+  const pageData = preQuest?.[`p${page}` as keyof PreQuestReading] as PreQuestReadingPage | undefined;
+
+  // Check if current page exceeds available pages
+  if (preQuest && totalPages > 0 && page > totalPages) {
+    console.log(`Page ${page} exceeds total pages ${totalPages}, resetting to page 1`);
+    setPage(1);
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6C63FF" />
+        <Text style={styles.loadingText}>Loading page...</Text>
+      </View>
+    );
+  }
 
   // Check if pageData exists
   if (!pageData) {
