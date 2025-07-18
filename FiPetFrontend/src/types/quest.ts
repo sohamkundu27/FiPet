@@ -22,83 +22,25 @@ export type OptionId = {
   [K in QuestionType]: string;
 };
 
-export type Reward = {
-  xp: number,
-  coins: number,
-  itemIds: ItemId[]
+export interface PracticeQuestion {
+  id: string;
+  options: string[];
+  correctAnswers: string[];
+  type: string;
+  prompt: string;
+  feedback: {
+    correct: string;
+    incorrect: string;
+  };
+  incorrectResponse?: string;
 }
 
-export type DBQuest = {
-  id: QuestId,
-  title: string,
-  description: string,
-  duration: number, // in minutes
-  topics: QuestTopic[],
-  reward: Reward,
-  deleted: boolean,
-};
-
-export type DBPreQuestReading = {
-  id: PreQuestReadingId,
-  questId: QuestId,
-  order: number,
-  topText: string,
-  bottomText: string,
-  image: string|null,
+export interface PreQuestReadingPage {
+  top: string;
+  bottom: string;
 }
 
-type DBQuestionShapes = {
-  singleSelect: {
-    prompt: string,
-  },
-}
-
-type DBQuestionBase<T extends QuestionType> = {
-  id: QuestionId,
-  type: T,
-  prompt: string,
-  reward: Reward|null,
-}
-
-export type DBNormalQuestion<T extends QuestionType> = DBQuestionBase<T> & DBQuestionShapes[T] & {
-  isPractice: false,
-  practiceFor: null|string,
-  questId: QuestId|null,
-  order: number, // Whole number.
-};
-export type DBPracticeQuestion<T extends QuestionType> = DBQuestionBase<T> & DBQuestionShapes[T] & {
-  isPractice: true,
-  practiceFor: null,
-  questId: null,
-  order: number, // Floating point. Whole part comes from 'practiceFor'.
-};
-export type DBQuestion<T extends QuestionType> = DBNormalQuestion<T> | DBPracticeQuestion<T>;
-
-
-type DBOptionMap = {
-  singleSelect: {
-    text: string,
-  }
-};
-
-type DBOptionShape<T extends QuestionTypeWithOptions> = DBOptionMap[T];
-
-export type DBOption<T extends QuestionType> = {
-  id: OptionId[T],
-  questionId: QuestionId|null,
-  type: T,
-  feedback: string,
-  correct: boolean,
-} & DBOptionShape<T>;
-
-export type DBQuestCompletion = {
-  id: QuestId,
-  questId: QuestId,
-  completedAt: Timestamp,
-  reward: Reward,
-};
-
-export type DBQuestAnswer<T extends QuestionType> = {
+export interface PreQuestReading {
   id: string,
   [key: `page${number}`]: PreQuestReadingPage,
   [key: `p${number}`]: PreQuestReadingPage,
