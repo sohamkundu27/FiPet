@@ -1,6 +1,7 @@
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient"
-import { StyleSheet, Text, View, Image, ColorValue } from "react-native";
+import { StyleSheet, Text, View, Image, ColorValue, Dimensions } from "react-native";
+import { getFontSize } from '@/src/hooks/useFont';
 
 type TabHeaderProps = {
   xp: number,
@@ -46,8 +47,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerText: {
-    fontSize: 24,
-    lineHeight: 24 * 1.5,
+    fontSize: getFontSize(24),
+    lineHeight: getFontSize(24) * 1.5,
     fontFamily: "PoppinsBold",
     color: "#fff",
   },
@@ -58,16 +59,16 @@ const styles = StyleSheet.create({
   statItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 10,
+    marginLeft: Dimensions.get("window").width * .02,
     backgroundColor: "#E9E9E9",
-    borderRadius: 20,
+    borderRadius: 100,
     padding: 0,
-    height: 29,
-    paddingHorizontal: 15,
+    height: Dimensions.get("window").width * .07,
+    paddingHorizontal: Dimensions.get("window").width * .03,
   },
   icon: {
-    width: 20,
-    height: 20,
+    width: Dimensions.get("window").width * .05,
+    height: Dimensions.get("window").width * .05,
     margin: 0,
     marginRight: 5,
     resizeMode: 'contain'
@@ -75,9 +76,9 @@ const styles = StyleSheet.create({
   statText: {
     color: "black",
     fontFamily: 'PoppinsRegular',
-    fontSize: 15,
+    fontSize: getFontSize(15),
     margin: 0,
-    lineHeight: 15 * 1.5,
+    lineHeight: getFontSize(15) * 1.5,
     position: "relative",
     top: 1,
   },
