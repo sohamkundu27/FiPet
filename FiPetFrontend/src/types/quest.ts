@@ -31,11 +31,10 @@ export interface PreQuestReadingPage {
 }
 
 export interface PreQuestReading {
-  id: string;
-  page1: PreQuestReadingPage;
-  page2: PreQuestReadingPage;
-  page3: PreQuestReadingPage;
-  page4: PreQuestReadingPage;
+  id: string,
+  [key: `page${number}`]: PreQuestReadingPage,
+  [key: `p${number}`]: PreQuestReadingPage,
+  pages: PreQuestReadingPage[]
 }
 
 export interface Quest {

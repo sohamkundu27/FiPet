@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, Scr
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { getPreQuestReadingById } from '@/src/services/preQuestReadingService';
 import { useQuest } from '@/src/hooks/useQuest';
+import QuestProgressBar from '@/src/components/QuestProgressBar';
+import { PreQuestReading } from '@/src/types/quest';
 
 const foxImage = require('@/src/assets/images/fox.png');
 
@@ -10,7 +12,7 @@ export default function PreQuestReadingScreen() {
   const { questID } = useLocalSearchParams<{ questID?: string }>();
   const { quest, getAllQuestions } = useQuest();
   const router = useRouter();
-  const [preQuest, setPreQuest] = useState<any>(null);
+  const [preQuest, setPreQuest] = useState<PreQuestReading|null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
@@ -30,7 +32,6 @@ export default function PreQuestReadingScreen() {
   }, [quest?.preQuest]);
 
   const allQuestions = getAllQuestions();
-  const currentIndex = page - 1;
 
   if (loading) {
     return (
@@ -64,8 +65,8 @@ export default function PreQuestReadingScreen() {
     );
   }
 
-  const pageData = preQuest[`p${page}`];
-  const totalPages = 4;
+  const pageData = preQuest.pages[page];
+  const totalPages = preQuest.pages.length;
   const isLastPage = page === totalPages;
   const isFirstPage = page === 1;
 
@@ -104,18 +105,7 @@ export default function PreQuestReadingScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
             <Image source={require('@/src/assets/images/arrow.png')} style={styles.backArrow} />
           </TouchableOpacity>
-          <View style={styles.progressBarContainer}>
-            {Array.from({ length: totalPages }, (_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.progressBar,
-                  index === 0 ? styles.progressBarLong : styles.progressBarShort,
-                  index < page ? styles.progressBarActive : styles.progressBarInactive,
-                ]}
-              />
-            ))}
-          </View>
+          <QuestProgressBar numSteps={totalPages} currentStep={page}/>
         </View>
         
         {/* Scrollable content */}
@@ -156,29 +146,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
     backgroundColor: '#f5f5f5',
-  },
-  progressBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginLeft: 12,
-    gap: 8,
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-  },
-  progressBarLong: {
-    flex: 3,
-  },
-  progressBarShort: {
-    flex: 1,
-  },
-  progressBarActive: {
-    backgroundColor: '#6C63FF',
-  },
-  progressBarInactive: {
-    backgroundColor: '#E0E0E0',
   },
   backArrowContainer: {
     padding: 8,

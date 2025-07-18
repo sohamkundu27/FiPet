@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { getPracticeQuestionById } from '@/src/services/practiceQuestionService';
 import { PracticeQuestion } from '@/src/types/quest';
 import { useQuest } from '@/src/hooks/useQuest';
+import QuestProgressBar from '@/src/components/QuestProgressBar';
 
 // Option type for internal use
 interface QuestionOption {
@@ -19,6 +20,10 @@ export default function PracticeExplanationScreen() {
     originalQuestionID?: string;
   }>();
   const router = useRouter();
+
+  if (originalQuestionID === undefined) {
+    throw new Error("Original Question ID is undefined!");
+  }
   
   const [practiceQuestion, setPracticeQuestion] = useState<PracticeQuestion | null>(null);
   const [selectedOption, setSelectedOption] = useState<QuestionOption | null>(null);
@@ -135,18 +140,7 @@ export default function PracticeExplanationScreen() {
               resizeMode="contain"
             />
           </TouchableOpacity>
-          <View style={[styles.progressBarSteps, { flex: 1 }]}>
-            {allQuestions.map((_, step) => (
-              <View
-                key={step}
-                style={[
-                  styles.progressStep,
-                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                  step <= originalQuestionIndex ? styles.progressStepActive : styles.progressStepInactive,
-                ]}
-              />
-            ))}
-          </View>
+          <QuestProgressBar questions={allQuestions} questionID={originalQuestionID} />
         </View>
         {/* Scrollable content below */}
         <ScrollView contentContainerStyle={styles.container}>
@@ -321,30 +315,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 1,
-  },
-  progressBarSteps: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  progressStep: {
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
-  progressStepFirst: {
-    flex: 3,
-    height: 10,
-    backgroundColor: '#6C63FF',
-  },
-  progressStepSmall: {
-    flex: 1,
-    height: 6,
-  },
-  progressStepInactive: {
-    backgroundColor: '#eee',
-  },
-  progressStepActive: {
-    backgroundColor: '#6C63FF',
   },
   backArrowContainer: {
     padding: 8,

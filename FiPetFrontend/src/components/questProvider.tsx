@@ -29,7 +29,7 @@ import { db } from '../config/firebase';
 import { useAuth } from '../hooks/useAuth';
 
 // Extended Question type for internal use with option objects
-interface ExtendedQuestion extends Question {
+export interface ExtendedQuestion extends Question {
   optionObjects: Array<{
     id: string;
     text: string;

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'rea
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuest } from '@/src/hooks/useQuest';
 import { Stack } from 'expo-router';
+import QuestProgressBar from '@/src/components/QuestProgressBar';
 
 export default function QuestionExplanationScreen() {
   const { questID, questionID } = useLocalSearchParams<{
@@ -73,18 +74,7 @@ export default function QuestionExplanationScreen() {
               resizeMode="contain"
             />
           </TouchableOpacity>
-          <View style={[styles.progressBarSteps, { flex: 1 }]}>
-            {allQuestions.map((_, step) => (
-              <View
-                key={step}
-                style={[
-                  styles.progressStep,
-                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                  step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
-                ]}
-              />
-            ))}
-          </View>
+          <QuestProgressBar questions={allQuestions} questionID={questionID}/>
         </View>
         {/* Scrollable content below */}
         <ScrollView 
@@ -147,29 +137,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 24,
     paddingBottom: 50,
-  },
-  progressBarSteps: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  progressStep: {
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
-  progressStepFirst: {
-    flex: 3,
-    height: 10,
-  },
-  progressStepSmall: {
-    flex: 1,
-    height: 6,
-  },
-  progressStepActive: {
-    backgroundColor: '#6C63FF',
-  },
-  progressStepInactive: {
-    backgroundColor: '#eee',
   },
   backArrowContainer: {
     padding: 8,

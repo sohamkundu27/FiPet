@@ -6,6 +6,7 @@ import { QuestAnswer } from "@/src/components/questProvider";
 import { useState, useEffect } from "react";
 import { ThemedView } from "@/src/components/ThemedView";
 import QuestionRenderer from "@/src/components/questions/QuestionRenderer";
+import QuestProgressBar from "@/src/components/QuestProgressBar";
 
 // Option type for internal use
 interface QuestionOption {
@@ -144,18 +145,7 @@ export default function QuestQuestion() {
               resizeMode="contain"
             />
           </TouchableOpacity>
-          <View style={styles.progressBarSteps}>
-            {allQuestions.map((_, step) => (
-              <View
-                key={step}
-                style={[
-                  styles.progressStep,
-                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                  step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
-                ]}
-              />
-            ))}
-          </View>
+          <QuestProgressBar questions={allQuestions} questionID={questionID} />
         </View>
 
         {/* Question Number */}
@@ -285,29 +275,6 @@ const styles = StyleSheet.create({
   backArrow: {
     width: 32,
     height: 24,
-  },
-  progressBarSteps: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  progressStep: {
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
-  progressStepFirst: {
-    flex: 3,
-    height: 10,
-  },
-  progressStepSmall: {
-    flex: 1,
-    height: 6,
-  },
-  progressStepActive: {
-    backgroundColor: '#6C63FF',
-  },
-  progressStepInactive: {
-    backgroundColor: '#ccc',
   },
   questionNumber: {
     fontSize: 16,
