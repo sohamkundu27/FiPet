@@ -9,10 +9,12 @@ import { useAuth } from '@/src/hooks/useAuth';
 import { doc, setDoc, collection, updateDoc } from '@firebase/firestore';
 import { db } from '@/src/config/firebase';
 import { markQuestCompleted } from '@/src/services/userQuestProgressService';
+import { useGamificationStats } from '@/src/hooks/useGamificationStats';
 
 export default function QuestComplete() {
   const router = useRouter();
-  const { quest, getCorrectAnswerRatio, getTotalXPEarned, isComplete, addXP, addCoins, questXpAwarded } = useQuest();
+  const { quest, getCorrectAnswerRatio, getTotalXPEarned, isComplete, questXpAwarded } = useQuest();
+  const { addXP, addCoins } = useGamificationStats();
   const { user } = useAuth();
   const [questBonusAwarded, setQuestBonusAwarded] = useState(false);
   const [hasMarkedCompleted, setHasMarkedCompleted] = useState(false);
@@ -82,7 +84,7 @@ export default function QuestComplete() {
         markCompleted();
       }
     }
-  }, [isComplete, questBonusXP, addXP, questBonusAwarded, questionXP, questXpAwarded, user, quest, hasMarkedCompleted]);
+  }, [isComplete, questBonusXP, questBonusAwarded, questionXP, questXpAwarded, user, quest, hasMarkedCompleted]);
 
   return (
     <View style={styles.container}>
