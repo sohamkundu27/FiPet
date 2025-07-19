@@ -45,12 +45,12 @@ export default function QuestComplete() {
           try {
             // Award XP if available
             if (questBonusXP > 0) {
-              await addXP(questBonusXP);
+              addXP(questBonusXP);
             }
             
             // Award coins if available
             if (questCoinReward > 0) {
-              await addCoins(questCoinReward);
+              addCoins(questCoinReward);
             }
             
             setQuestBonusAwarded(true);
