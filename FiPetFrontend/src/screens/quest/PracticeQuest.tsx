@@ -5,6 +5,8 @@ import { Stack } from 'expo-router';
 import { getPracticeQuestionById } from '@/src/services/practiceQuestionService';
 import { PracticeQuestion } from '@/src/types/quest';
 import { useQuest } from '@/src/hooks/useQuest';
+import IncorrectModal from '@/src/components/modals/incorrectModal';
+import CorrectModal from '@/src/components/modals/correctModal';
 
 // Option type for internal use
 interface QuestionOption {
@@ -26,6 +28,7 @@ export default function PracticeQuestionScreen() {
   const [isCorrect, setIsCorrect] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
+  const [showIncorrectModal, setShowIncorrectModal] = useState(false);
 
   // Get quest context for progress bar
   const { getAllQuestions } = useQuest();
@@ -62,16 +65,6 @@ export default function PracticeQuestionScreen() {
     loadPracticeQuestion();
   }, [practiceID]);
 
-  useEffect(() => {
-    if (showCorrectModal && checked && isCorrect) {
-      const timer = setTimeout(() => {
-        setShowCorrectModal(false);
-        handleContinue();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [showCorrectModal, checked, isCorrect]);
-
   const handleOptionSelect = (option: QuestionOption) => {
     if (checked) return;
     setSelectedOption(option);
@@ -96,8 +89,7 @@ export default function PracticeQuestionScreen() {
     if (correct) {
       setShowCorrectModal(true);
     } else {
-      // If incorrect, navigate to incorrect screen
-      router.push(`/quests/${questID}/practice/${practiceID}/incorrect?originalQuestionID=${originalQuestionID}`);
+      setShowIncorrectModal(true);
     }
   };
 
@@ -208,30 +200,27 @@ export default function PracticeQuestionScreen() {
         )}
 
         {/* Correct Modal */}
-        <Modal
-          visible={showCorrectModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowCorrectModal(false)}
-        >
-          <View style={styles.correctModalOverlay}>
-            <View style={styles.correctModalContent}>
-              <Text style={styles.correctTitle}>🎉 Correct</Text>
-              <View style={styles.foxContainer}>
-                <Image
-                  source={require('@/src/assets/images/happy-fox.png')}
-                  style={styles.foxImage}
-                  resizeMode="contain"
-                />
-                <Image
-                  source={require('@/src/assets/images/green-Vector.png')}
-                  style={styles.foxShadow}
-                  resizeMode="contain"
-                />
-              </View>
-            </View>
-          </View>
-        </Modal>
+        <CorrectModal
+          isVisible={showCorrectModal}
+          onClose={() => setShowCorrectModal(false)}
+          onContinue={() => {
+            setShowCorrectModal(false);
+            handleContinue();
+          }}
+        />
+        {showIncorrectModal && (
+          <IncorrectModal
+            isVisible={showIncorrectModal}
+            onClose={() => setShowIncorrectModal(false)}
+            onConfirm={() => {
+              setShowIncorrectModal(false);
+              router.push(`/quests/${questID}/practice/${practiceID}/explanation?originalQuestionID=${originalQuestionID}`);
+            }}
+            onCancel={() => setShowIncorrectModal(false)}
+            title="Not Quite"
+            text=""
+          />
+        )}
         </View>
       </View>
     </>
@@ -366,52 +355,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 1,
-  },
-  correctModalOverlay: {
-    flex: 1,
-    backgroundColor: '#7CF97C',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  correctModalContent: {
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  correctTitle: {
-    fontSize: 35,
-    position: 'absolute',
-    fontWeight: 'bold',
-    color: '#fff',
-    top: 137,
-    alignItems: 'center',
-  },
-  foxContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-    position: 'relative',
-    width: 267.01,
-    height: 250,
-  },
-  foxImage: {
-    width: 267.01,
-    height: 250,
-    marginBottom: 30,
-    position: 'relative',
-    zIndex: 2,
-  },
-  foxShadow: {
-    width: 219,
-    height: 25,
-    position: 'absolute',
-    bottom: -100,
-    left: '50%',
-    marginLeft: -109.5,
-    zIndex: 1,
-    opacity: 1,
   },
   continueButton: {
     backgroundColor: '#6C63FF',

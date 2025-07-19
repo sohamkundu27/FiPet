@@ -6,6 +6,9 @@ import { QuestAnswer } from "@/src/components/questProvider";
 import { useState, useEffect } from "react";
 import { ThemedView } from "@/src/components/ThemedView";
 import QuestionRenderer from "@/src/components/questions/QuestionRenderer";
+import IncorrectModal from '@/src/components/modals/incorrectModal';
+import CorrectModal from '@/src/components/modals/correctModal';
+import { Stack } from 'expo-router';
 
 // Option type for internal use
 interface QuestionOption {
@@ -31,6 +34,7 @@ export default function QuestQuestion() {
   const [checked, setChecked] = useState(false);
   let [answer, setAnswer] = useState<QuestAnswer | null>(null);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
+  const [showIncorrectModal, setShowIncorrectModal] = useState(false);
   const router = useRouter();
 
   if (questionID === undefined) {
@@ -65,14 +69,14 @@ export default function QuestQuestion() {
       setAnswer(result);
       setChecked(true);
       if (!result.outcome.isCorrectAnswer) {
-        router.push(`/quests/${questID}/questions/${questionID}/incorrect`);
+        setShowIncorrectModal(true);
       } else setShowCorrectModal(true);
     } else if (selectedOptions.length > 0) {
       const result = await selectOption(question.id, selectedOptions[0].id);
       setAnswer(result);
       setChecked(true);
       if (!result.outcome.isCorrectAnswer) {
-        router.push(`/quests/${questID}/questions/${questionID}/incorrect`);
+        setShowIncorrectModal(true);
       } else setShowCorrectModal(true);
     }
   }
@@ -114,138 +118,129 @@ export default function QuestQuestion() {
       ? selectedOptions.length > 0 ? selectedOptions[0] : null
       : selectedOptions.length > 0 ? selectedOptions[0] : null;
 
-  useEffect(() => {
-    if (showCorrectModal && checked && answer && answer.outcome.isCorrectAnswer) {
-      const timer = setTimeout(() => {
-        setShowCorrectModal(false);
-        if (answer.nextQuestion === null) {
-          router.replace(`/quests/${questID}`);
-        } else {
-          router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
-        }
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [showCorrectModal, checked, answer, questID, router]);
-
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Progress Bar Header */}
-        <View style={styles.progressHeader}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
-            <Image
-              source={require('@/src/assets/images/arrow.png')}
-              style={styles.backArrow}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          <View style={styles.progressBarSteps}>
-            {allQuestions.map((_, step) => (
-              <View
-                key={step}
-                style={[
-                  styles.progressStep,
-                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                  step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
-                ]}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* Question Number */}
-        <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
-
-        {/* Question Text */}
-        <Text style={styles.questionText}>{question.prompt}</Text>
-
-        {/* Options */}
-        <View style={styles.optionsContainer}>
-          {options.map((option) => {
-            const isSelected =
-              question.type === "multiselect"
-                ? selectedOptions.some((o) => o.id === option.id)
-                : selectedOptionProp?.id === option.id;
-
-            return (
-              <TouchableOpacity
-                key={option.id}
-                style={[
-                  styles.optionButton,
-                  isSelected && styles.selectedOptionButton,
-                  checked && styles.disabledOptionButton,
-                ]}
-                onPress={() => handleOptionSelect(option)}
-                disabled={checked}
-              >
-                <Text style={styles.optionText}>{option.text}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Feedback */}
-        <OutcomeDisplay />
-
-        {/* Continue/Next Button */}
-        <View style={styles.continueContainer}>
-          <ContinueButton />
-        </View>
-      </ScrollView>
-
-      {/* Check Answer Button - Fixed at bottom */}
-      {!checked && (
-        <View style={styles.checkAnswerContainer}>
-          <TouchableOpacity
-            style={[
-              styles.checkAnswerButton,
-              (question.type === "multiselect" && selectedOptions.length === 0) ||
-              (!selectedOptionProp)
-                ? styles.disabledCheckAnswerButton
-                : null,
-            ]}
-            onPress={checkAnswer}
-            disabled={
-              (question.type === "multiselect" && selectedOptions.length === 0) ||
-              !selectedOptionProp
-            }
-          >
-            <Text style={styles.checkAnswerText}>CHECK ANSWER</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Correct Modal */}
-      <Modal
-        visible={showCorrectModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCorrectModal(false)}
-      >
-        <View style={styles.correctModalOverlay}>
-          <View style={styles.correctModalContent}>
-            <Text style={styles.correctTitle}>🎉 Correct</Text>
-            <View style={styles.foxContainer}>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ThemedView style={styles.container}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Progress Bar Header */}
+          <View style={styles.progressHeader}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
               <Image
-                source={require('@/src/assets/images/happy-fox.png')}
-                style={styles.foxImage}
+                source={require('@/src/assets/images/arrow.png')}
+                style={styles.backArrow}
                 resizeMode="contain"
               />
-              <Image
-                source={require('@/src/assets/images/green-Vector.png')}
-                style={styles.foxShadow}
-                resizeMode="contain"
-              />
+            </TouchableOpacity>
+            <View style={styles.progressBarSteps}>
+              {allQuestions.map((_, step) => (
+                <View
+                  key={step}
+                  style={[
+                    styles.progressStep,
+                    step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
+                    step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
+                  ]}
+                />
+              ))}
             </View>
           </View>
-        </View>
-      </Modal>
-    </ThemedView>
+
+          {/* Question Number */}
+          <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
+
+          {/* Question Text */}
+          <Text style={styles.questionText}>{question.prompt}</Text>
+
+          {/* Options */}
+          <View style={styles.optionsContainer}>
+            {options.map((option) => {
+              const isSelected =
+                question.type === "multiselect"
+                  ? selectedOptions.some((o) => o.id === option.id)
+                  : selectedOptionProp?.id === option.id;
+
+              return (
+                <TouchableOpacity
+                  key={option.id}
+                  style={[
+                    styles.optionButton,
+                    isSelected && styles.selectedOptionButton,
+                    checked && styles.disabledOptionButton,
+                  ]}
+                  onPress={() => handleOptionSelect(option)}
+                  disabled={checked}
+                >
+                  <Text style={styles.optionText}>{option.text}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Feedback */}
+          <OutcomeDisplay />
+
+          {/* Continue/Next Button */}
+          <View style={styles.continueContainer}>
+            <ContinueButton />
+          </View>
+        </ScrollView>
+
+        {/* Check Answer Button - Fixed at bottom */}
+        {!checked && (
+          <View style={styles.checkAnswerContainer}>
+            <TouchableOpacity
+              style={[
+                styles.checkAnswerButton,
+                (question.type === "multiselect" && selectedOptions.length === 0) ||
+                (!selectedOptionProp)
+                  ? styles.disabledCheckAnswerButton
+                  : null,
+              ]}
+              onPress={checkAnswer}
+              disabled={
+                (question.type === "multiselect" && selectedOptions.length === 0) ||
+                !selectedOptionProp
+              }
+            >
+              <Text style={styles.checkAnswerText}>CHECK ANSWER</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Correct Modal */}
+        <CorrectModal
+          isVisible={showCorrectModal}
+          onClose={() => setShowCorrectModal(false)}
+          onContinue={() => {
+            setShowCorrectModal(false);
+            if (answer && answer.nextQuestion === null) {
+              router.replace(`/quests/${questID}`);
+            } else if (answer && answer.nextQuestion) {
+              router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
+            }
+          }}
+        />
+
+        {showIncorrectModal && (
+          <IncorrectModal
+            isVisible={showIncorrectModal}
+            onClose={() => setShowIncorrectModal(false)}
+            onConfirm={() => {
+              setShowIncorrectModal(false);
+              router.push(`/quests/${questID}/questions/${questionID}/explanation`);
+            }}
+            onCancel={() => setShowIncorrectModal(false)}
+            title="Not Quite"
+            text=""
+          />
+        )}
+      </ThemedView>
+    </>
   );
 }
 

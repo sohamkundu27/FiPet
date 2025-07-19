@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "expo": "^53.0.20",
     "firebase": "^11.8.1",
     "react-native-confetti-cannon": "^1.5.2"
   }
