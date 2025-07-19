@@ -1,2 +1,1 @@
-import QuestQuestion from "@/src/screens/quest/QuestQuestion";
-export default QuestQuestion;
+export { default } from '@/src/screens/quest/QuestionScreen';
