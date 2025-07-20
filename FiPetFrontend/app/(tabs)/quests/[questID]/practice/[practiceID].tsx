@@ -1,2 +1,1 @@
-import PracticeQuestionScreen from "@/src/screens/quest/PracticeQuest";
-export default PracticeQuestionScreen;
+export { default } from '@/src/screens/quest/QuestionScreen';
