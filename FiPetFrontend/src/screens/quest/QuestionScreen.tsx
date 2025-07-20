@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity, Text, Image, Modal, ScrollView } from "react-native";
+import { StyleSheet, View, TouchableOpacity, Text, Image, Modal, ScrollView, ActivityIndicator } from "react-native";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuest } from "@/src/hooks/useQuest";
 import { ThemedText } from "@/src/components/ThemedText";
@@ -6,6 +6,9 @@ import { QuestAnswer } from "@/src/components/questProvider";
 import { useState, useEffect } from "react";
 import { ThemedView } from "@/src/components/ThemedView";
 import QuestionRenderer from "@/src/components/questions/QuestionRenderer";
+import CorrectModal from '@/src/components/modals/correctModal';
+import IncorrectModal from '@/src/components/modals/incorrectModal';
+import { getPracticeQuestionById } from '@/src/services/practiceQuestionService';
 
 // Option type for internal use
 interface QuestionOption {
@@ -13,38 +16,60 @@ interface QuestionOption {
   text: string;
 }
 
-// Simple outcome type
-interface SimpleOutcome {
-  id: string;
-  text: string;
-  xpReward: number;
-  isCorrectAnswer: boolean;
-}
-
-export default function QuestQuestion() {
-  const { questionID, questID } = useLocalSearchParams<{
+export default function QuestionScreen() {
+  const { questionID, questID, practiceID, originalQuestionID } = useLocalSearchParams<{
     questID?: string;
     questionID?: string;
+    practiceID?: string;
+    originalQuestionID?: string;
   }>();
+  const router = useRouter();
   const { getOptions, getAnswer, hasAnswer, getQuestion, selectOption, getAllQuestions } = useQuest();
+
+  // State for both types
   const [selectedOptions, setSelectedOptions] = useState<QuestionOption[]>([]);
   const [checked, setChecked] = useState(false);
-  let [answer, setAnswer] = useState<QuestAnswer | null>(null);
+  const [answer, setAnswer] = useState<QuestAnswer | null>(null);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
-  const router = useRouter();
+  const [showIncorrectModal, setShowIncorrectModal] = useState(false);
+  const [practiceQuestion, setPracticeQuestion] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-  if (questionID === undefined) {
-    throw new Error("Question ID is undefined!");
+  // Detect if this is a practice question
+  const isPractice = !!practiceID;
+
+  // For practice questions, load the question
+  useEffect(() => {
+    if (isPractice && practiceID) {
+      setLoading(true);
+      getPracticeQuestionById(practiceID)
+        .then(q => setPracticeQuestion(q))
+        .finally(() => setLoading(false));
+    }
+  }, [isPractice, practiceID]);
+
+  // Get question and options
+  let question: any = null;
+  let options: QuestionOption[] = [];
+  let allQuestions: any[] = [];
+  let currentIndex = 0;
+  if (isPractice) {
+    question = practiceQuestion;
+    options = practiceQuestion ? practiceQuestion.options.map((option: string, index: number) => ({ id: `option_${index}`, text: option })) : [];
+    // For progress bar, use all quest questions
+    allQuestions = getAllQuestions();
+    currentIndex = originalQuestionID ? allQuestions.findIndex(q => q.id === originalQuestionID) : 0;
+  } else {
+    question = questionID ? getQuestion(questionID) : null;
+    options = question ? getOptions(question) : [];
+    allQuestions = getAllQuestions();
+    currentIndex = questionID ? allQuestions.findIndex((q) => q.id === questionID) : 0;
   }
 
-  const question = getQuestion(questionID);
-  const allQuestions = getAllQuestions();
-  const currentIndex = allQuestions.findIndex((q) => q.id === questionID);
-  const progress = (currentIndex + 1) / allQuestions.length;
-
+  // Option selection logic
   function handleOptionSelect(option: QuestionOption) {
     if (checked) return;
-    if (question.type === "multiselect") {
+    if (question && question.type === "multiselect") {
       setSelectedOptions((prev) => {
         const exists = prev.some((o) => o.id === option.id);
         if (exists) {
@@ -58,79 +83,105 @@ export default function QuestQuestion() {
     }
   }
 
+  // Check answer logic
   async function checkAnswer() {
     if (checked) return;
-    if (question.type === "multiselect" && selectedOptions.length > 0) {
-      const result = await selectOption(question.id, selectedOptions[0].id);
-      setAnswer(result);
+    if (!question) return;
+    if (isPractice) {
+      if (!practiceQuestion || selectedOptions.length === 0) return;
+      // Find the selected option index
+      const selectedOptionIndex = practiceQuestion.options.findIndex((opt: string) => opt === selectedOptions[0].text);
+      // Check if the selected option is correct
+      const correct = practiceQuestion.correctAnswers.some((correctAnswer: string) => {
+        const correctIndex = Number(correctAnswer);
+        return correctIndex === selectedOptionIndex;
+      });
       setChecked(true);
-      if (!result.outcome.isCorrectAnswer) {
-        router.push(`/quests/${questID}/questions/${questionID}/incorrect`);
-      } else setShowCorrectModal(true);
-    } else if (selectedOptions.length > 0) {
-      const result = await selectOption(question.id, selectedOptions[0].id);
-      setAnswer(result);
-      setChecked(true);
-      if (!result.outcome.isCorrectAnswer) {
-        router.push(`/quests/${questID}/questions/${questionID}/incorrect`);
-      } else setShowCorrectModal(true);
-    }
-  }
-
-  function OutcomeDisplay() {
-    if (checked && answer && answer.outcome.isCorrectAnswer) {
-      return (
-        <View style={styles.feedbackBox}>
-          <Text style={styles.feedbackText}>✅ Correct!</Text>
-          <Text style={styles.xpText}>{answer.outcome.text}{"\n"}🎉 {Math.abs(answer.outcome.xpReward)} XP</Text>
-        </View>
-      );
-    }
-    return null;
-  }
-
-  function ContinueButton() {
-    if (checked && answer && answer.outcome.isCorrectAnswer) {
-      if (answer.nextQuestion === null) {
-        return (
-          <Link style={styles.continueLink} href={`/quests/${questID}`}>
-            Finish
-          </Link>
-        );
+      setAnswer({
+        option: selectedOptions[0],
+        outcome: {
+          id: selectedOptions[0].id,
+          text: selectedOptions[0].text,
+          xpReward: correct ? 10 : 0,
+          isCorrectAnswer: correct,
+        },
+        nextQuestion: null,
+      });
+      if (correct) {
+        setShowCorrectModal(true);
       } else {
-        return (
-          <Link style={styles.continueLink} href={`/quests/${questID}/questions/${answer.nextQuestion.id}`}>
-            Continue
-          </Link>
-        );
+        setShowIncorrectModal(true);
+      }
+    } else {
+      if (question.type === "multiselect" && selectedOptions.length > 0) {
+        const result = await selectOption(question.id, selectedOptions[0].id);
+        setAnswer(result);
+        setChecked(true);
+        if (!result.outcome.isCorrectAnswer) {
+          setShowIncorrectModal(true);
+        } else setShowCorrectModal(true);
+      } else if (selectedOptions.length > 0) {
+        const result = await selectOption(question.id, selectedOptions[0].id);
+        setAnswer(result);
+        setChecked(true);
+        if (!result.outcome.isCorrectAnswer) {
+          setShowIncorrectModal(true);
+        } else setShowCorrectModal(true);
       }
     }
-    return null;
   }
 
-  const options = getOptions(question);
+  // Navigation for continue/correct
+  function handleContinue() {
+    if (isPractice) {
+      // For practice, go back to quest
+      router.replace(`/quests/${questID}`);
+    } else if (answer && answer.nextQuestion) {
+      router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
+    } else {
+      router.replace(`/quests/${questID}`);
+    }
+  }
+
+  // Navigation for explanation/incorrect
+  function handleSeeExplanation() {
+    // Use unified explanation route with appropriate params
+    const params = new URLSearchParams();
+    if (isPractice) {
+      params.append('practiceID', practiceID!);
+      params.append('originalQuestionID', originalQuestionID || '');
+    } else {
+      params.append('questionID', questionID!);
+    }
+    
+    router.push(`/quests/${questID}/explanation?${params.toString()}`);
+  }
+
+  // UI rendering
+  if (loading || (isPractice && !practiceQuestion)) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#6C63FF" />
+        <Text style={{ marginTop: 10, fontSize: 16 }}>Loading question...</Text>
+      </View>
+    );
+  }
+  if (!question) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 16, color: 'red' }}>Question not found</Text>
+      </View>
+    );
+  }
+
   const selectedOptionProp =
     question.type === "multiselect"
       ? selectedOptions.length > 0 ? selectedOptions[0] : null
       : selectedOptions.length > 0 ? selectedOptions[0] : null;
 
-  useEffect(() => {
-    if (showCorrectModal && checked && answer && answer.outcome.isCorrectAnswer) {
-      const timer = setTimeout(() => {
-        setShowCorrectModal(false);
-        if (answer.nextQuestion === null) {
-          router.replace(`/quests/${questID}`);
-        } else {
-          router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
-        }
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [showCorrectModal, checked, answer, questID, router]);
-
   return (
     <ThemedView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -159,8 +210,12 @@ export default function QuestQuestion() {
         </View>
 
         {/* Question Number */}
-        <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
-
+        {isPractice && (
+          <Text style={styles.questionNumber}>Practice Question {currentIndex + 1}</Text>
+        )}
+        {!isPractice && (
+          <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
+        )}
         {/* Question Text */}
         <Text style={styles.questionText}>{question.prompt}</Text>
 
@@ -190,11 +245,25 @@ export default function QuestQuestion() {
         </View>
 
         {/* Feedback */}
-        <OutcomeDisplay />
+        {checked && answer && answer.outcome.isCorrectAnswer && (
+          <View style={styles.feedbackBox}>
+            <Text style={styles.feedbackText}>✅ Correct!</Text>
+            <Text style={styles.xpText}>{answer.outcome.text}{"\n"}🎉 {Math.abs(answer.outcome.xpReward)} XP</Text>
+          </View>
+        )}
 
         {/* Continue/Next Button */}
         <View style={styles.continueContainer}>
-          <ContinueButton />
+          {checked && answer && answer.outcome.isCorrectAnswer && (
+            <TouchableOpacity
+              style={styles.continueLink}
+              onPress={handleContinue}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>
+                {isPractice || (answer && !answer.nextQuestion) ? 'Finish' : 'Continue'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
 
@@ -221,30 +290,26 @@ export default function QuestQuestion() {
       )}
 
       {/* Correct Modal */}
-      <Modal
-        visible={showCorrectModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCorrectModal(false)}
-      >
-        <View style={styles.correctModalOverlay}>
-          <View style={styles.correctModalContent}>
-            <Text style={styles.correctTitle}>🎉 Correct</Text>
-            <View style={styles.foxContainer}>
-              <Image
-                source={require('@/src/assets/images/happy-fox.png')}
-                style={styles.foxImage}
-                resizeMode="contain"
-              />
-              <Image
-                source={require('@/src/assets/images/green-Vector.png')}
-                style={styles.foxShadow}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <CorrectModal
+        isVisible={showCorrectModal}
+        onClose={() => setShowCorrectModal(false)}
+        onContinue={() => {
+          setShowCorrectModal(false);
+          handleContinue();
+        }}
+      />
+      {/* Incorrect Modal */}
+      <IncorrectModal
+        isVisible={showIncorrectModal}
+        onClose={() => setShowIncorrectModal(false)}
+        onConfirm={() => {
+          setShowIncorrectModal(false);
+          handleSeeExplanation();
+        }}
+        onCancel={() => setShowIncorrectModal(false)}
+        title="Not Quite"
+        text=""
+      />
     </ThemedView>
   );
 }
@@ -440,4 +505,4 @@ const styles = StyleSheet.create({
     top: 137,
     alignItems: 'center',
   },
-});
+}); 

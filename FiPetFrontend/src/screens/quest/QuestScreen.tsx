@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     },
     questCardStatsRow: {
         flexDirection: 'row',
-        gap: 8,
+        gap: 5,
     },
     questCardStat: {
         flexDirection: 'row',
@@ -378,8 +378,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#E9E9E9',
         borderRadius: 15,
-        paddingHorizontal: 25,
+        paddingHorizontal: 20,
         paddingVertical: 10,
+        left: 5,
         ...(Platform.OS === 'web'
             ? { boxShadow: '0 6px 20px rgba(255,255,255,0.15)' }
             : {
