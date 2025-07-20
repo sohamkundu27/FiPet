@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useQuest } from '@/src/hooks/useQuest';
 import { Stack } from 'expo-router';
 import { getPracticeQuestionById } from '@/src/services/practiceQuestionService';
 import { PracticeQuestion } from '@/src/types/quest';
-import { useQuest } from '@/src/hooks/useQuest';
 
 // Option type for internal use
 interface QuestionOption {
@@ -12,105 +12,100 @@ interface QuestionOption {
   text: string;
 }
 
-export default function PracticeExplanationScreen() {
-  const { questID, practiceID, originalQuestionID } = useLocalSearchParams<{
+export default function ExplanationScreen() {
+  const { questID, questionID, practiceID, originalQuestionID } = useLocalSearchParams<{
     questID?: string;
+    questionID?: string;
     practiceID?: string;
     originalQuestionID?: string;
   }>();
   const router = useRouter();
-  
+  const { getQuestion, getAnswer, getOptions, getAllQuestions } = useQuest();
+
+  // State for practice questions
   const [practiceQuestion, setPracticeQuestion] = useState<PracticeQuestion | null>(null);
   const [selectedOption, setSelectedOption] = useState<QuestionOption | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Get quest context for progress bar
-  const { getAllQuestions } = useQuest();
-  const allQuestions = getAllQuestions();
-  const originalQuestionIndex = originalQuestionID ? allQuestions.findIndex(q => q.id === originalQuestionID) : 0;
+  // Detect if this is a practice explanation
+  const isPractice = !!practiceID;
 
+  // Load practice question if needed
   useEffect(() => {
-    const loadPracticeQuestion = async () => {
-      if (!practiceID) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        setLoading(true);
-        const question = await getPracticeQuestionById(practiceID);
-        setPracticeQuestion(question);
-        
-        // For now, we'll assume the first option was selected (you might want to pass this as a parameter)
-        if (question) {
-          setSelectedOption({ id: 'option_0', text: question.options[0] });
-        }
-      } catch (error) {
-        console.error('Error loading practice question:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (isPractice && practiceID) {
+      setLoading(true);
+      getPracticeQuestionById(practiceID)
+        .then(q => {
+          setPracticeQuestion(q);
+          // For now, assume the first option was selected (you might want to pass this as a parameter)
+          if (q) {
+            setSelectedOption({ id: 'option_0', text: q.options[0] });
+          }
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [isPractice, practiceID]);
 
-    loadPracticeQuestion();
-  }, [practiceID]);
+  // Get question data based on type
+  let question: any = null;
+  let answer: any = null;
+  let options: QuestionOption[] = [];
+  let allQuestions: any[] = [];
+  let currentIndex = 0;
 
+  if (isPractice) {
+    question = practiceQuestion;
+    allQuestions = getAllQuestions();
+    currentIndex = originalQuestionID ? allQuestions.findIndex(q => q.id === originalQuestionID) : 0;
+    options = practiceQuestion ? practiceQuestion.options.map((option: string, index: number) => ({ id: `option_${index}`, text: option })) : [];
+  } else {
+    if (!questionID) {
+      return null;
+    }
+    question = getQuestion(questionID);
+    answer = getAnswer(question);
+    options = getOptions(question);
+    allQuestions = getAllQuestions();
+    currentIndex = allQuestions.findIndex((q) => q.id === questionID);
+  }
+
+  // Find the selected option index
+  const selectedOptionIndex = isPractice 
+    ? options.findIndex(opt => opt.id === selectedOption?.id)
+    : options.findIndex(opt => opt.id === answer?.option.id);
+  
+  // Find correct answer indices
+  const correctIndices = question?.correctAnswers?.map((ca: string) => Number(ca)) || [];
+
+  // Navigation handlers
   const handleContinue = () => {
-    // Navigate to the next question after the original question
-    if (originalQuestionID) {
-      // Find the original question and get the next question
-      const originalQuestion = allQuestions.find(q => q.id === originalQuestionID);
-      const originalIndex = allQuestions.findIndex(q => q.id === originalQuestionID);
-      const nextQuestion = allQuestions[originalIndex + 1];
-      
-      if (nextQuestion) {
-        // Go to the next question
-        router.replace(`/quests/${questID}/questions/${nextQuestion.id}`);
+    if (isPractice) {
+      // For practice, navigate to the next question after the original question
+      if (originalQuestionID) {
+        const originalIndex = allQuestions.findIndex(q => q.id === originalQuestionID);
+        const nextQuestion = allQuestions[originalIndex + 1];
+        
+        if (nextQuestion) {
+          router.replace(`/quests/${questID}/questions/${nextQuestion.id}`);
+        } else {
+          router.replace(`/quests/${questID}`);
+        }
       } else {
-        // No next question, go to quest completion
         router.replace(`/quests/${questID}`);
       }
     } else {
-      // Fallback to quest index if no original question ID
-      router.replace(`/quests/${questID}`);
+      // For quest questions, check if there's a practice question available
+      if (question.practiceId) {
+        router.push(`/quests/${questID}/practice/${question.practiceId}?originalQuestionID=${questionID}`);
+      } else {
+        if (answer.nextQuestion === null) {
+          router.replace(`/quests/${questID}`);
+        } else {
+          router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
+        }
+      }
     }
   };
-
-  if (loading) {
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </>
-    );
-  }
-
-  if (!practiceQuestion) {
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Practice question not found</Text>
-          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-            <Text style={styles.continueButtonText}>BACK TO QUEST</Text>
-          </TouchableOpacity>
-        </View>
-      </>
-    );
-  }
-
-  const options = practiceQuestion.options.map((option, index) => ({
-    id: `option_${index}`,
-    text: option
-  }));
-
-  // Find the selected option index
-  const selectedOptionIndex = options.findIndex(opt => opt.id === selectedOption?.id);
-  
-  // Find correct answer indices
-  const correctIndices = practiceQuestion.correctAnswers?.map(ca => Number(ca)) || [];
 
   const getOptionStyle = (index: number) => {
     if (correctIndices.includes(index)) {
@@ -121,11 +116,40 @@ export default function PracticeExplanationScreen() {
     return styles.optionButton;
   };
 
+  const buttonText = isPractice ? 'CONTINUE' : (question?.practiceId ? 'PRACTICE MORE' : 'CONTINUE');
+
+  // Loading state
+  if (loading || (isPractice && !practiceQuestion)) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6C63FF" />
+          <Text style={styles.loadingText}>Loading explanation...</Text>
+        </View>
+      </>
+    );
+  }
+
+  // Error state
+  if (!question) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Question not found</Text>
+          <TouchableOpacity style={styles.continueButton} onPress={() => router.back()}>
+            <Text style={styles.continueButtonText}>BACK TO QUEST</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  }
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={styles.screenContainer}>
-        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
         {/* Fixed progress bar and back arrow at the top */}
         <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingTop: 87, paddingHorizontal: 16, marginBottom: 16 }}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
@@ -142,18 +166,27 @@ export default function PracticeExplanationScreen() {
                 style={[
                   styles.progressStep,
                   step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                  step <= originalQuestionIndex ? styles.progressStepActive : styles.progressStepInactive,
+                  step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
                 ]}
               />
             ))}
           </View>
         </View>
         {/* Scrollable content below */}
-        <ScrollView contentContainerStyle={styles.container}>
-          {/* Practice Question Title */}
-          <Text style={styles.headerTitle}>Practice Question</Text>
+        <ScrollView 
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Question Number/Title */}
+          {isPractice ? (
+            <Text style={styles.questionNumber}>Practice Question {currentIndex + 1}</Text>
+          ) : (
+            <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
+          )}
+
           {/* Question Text */}
-          <Text style={styles.questionText}>{practiceQuestion.prompt}</Text>
+          <Text style={styles.questionText}>{question.prompt}</Text>
 
           {/* Options */}
           <View style={styles.optionsContainer}>
@@ -177,35 +210,33 @@ export default function PracticeExplanationScreen() {
           </View>
 
           {/* Explanation */}
-          {practiceQuestion.incorrectResponse && (
+          {question.incorrectResponse && (
             <View style={styles.explanationContainer}>
               <Text style={styles.explanationTitle}>Explanation:</Text>
-              <Text style={styles.explanationText}>{practiceQuestion.incorrectResponse}</Text>
+              <Text style={styles.explanationText}>{question.incorrectResponse}</Text>
             </View>
           )}
 
           {/* Continue Button */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-              <Text style={styles.continueButtonText}>CONTINUE</Text>
+              <Text style={styles.continueButtonText}>
+                {buttonText}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
-        </View>
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  screenContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#fff',
     padding: 24,
+    paddingBottom: 50,
   },
   loadingContainer: {
     flex: 1,
@@ -216,6 +247,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#666',
+    marginTop: 10,
   },
   errorContainer: {
     flex: 1,
@@ -230,10 +262,36 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: 'center',
   },
-  header: {
+  progressBarSteps: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 48,
-    marginBottom: 32,
+    flex: 1,
+  },
+  progressStep: {
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  progressStepFirst: {
+    flex: 3,
+    height: 10,
+  },
+  progressStepSmall: {
+    flex: 1,
+    height: 6,
+  },
+  progressStepActive: {
+    backgroundColor: '#6C63FF',
+  },
+  progressStepInactive: {
+    backgroundColor: '#eee',
+  },
+  backArrowContainer: {
+    padding: 8,
+    marginRight: 8,
+  },
+  backArrow: {
+    width: 32,
+    height: 24,
   },
   headerTitle: {
     fontSize: 24,
@@ -241,6 +299,12 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
     marginBottom: 16,
+  },
+  questionNumber: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   questionText: {
     fontSize: 20,
@@ -306,13 +370,12 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     alignItems: 'center',
-    marginBottom: 32,
   },
   continueButton: {
     backgroundColor: '#6C63FF',
-    borderRadius: 32,
-    paddingVertical: 16,
     paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 32,
     minWidth: 200,
     alignItems: 'center',
   },
@@ -322,36 +385,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 1,
   },
-  progressBarSteps: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  progressStep: {
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
-  progressStepFirst: {
-    flex: 3,
-    height: 10,
-    backgroundColor: '#6C63FF',
-  },
-  progressStepSmall: {
-    flex: 1,
-    height: 6,
-  },
-  progressStepInactive: {
-    backgroundColor: '#eee',
-  },
-  progressStepActive: {
-    backgroundColor: '#6C63FF',
-  },
-  backArrowContainer: {
-    padding: 8,
-    marginRight: 8,
-  },
-  backArrow: {
-    width: 32,
-    height: 24,
-  },
-});
+}); 

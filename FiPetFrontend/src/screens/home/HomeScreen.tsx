@@ -7,13 +7,14 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress'
 import { useFonts } from 'expo-font';
 import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
+import { getFontSize } from '@/src/hooks/useFont';
 import { useRouter, usePathname, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/src/hooks/useAuth';
 import { getCurrentQuest, getNextAvailableQuest, QuestWithProgress } from '@/src/services/questsIndexService';
 
 export default function HomeScreen() {
 
-  const {level, streak, mood, coins, addMood} = useGamificationStats();
+  const { level, streak, mood, coins, addMood } = useGamificationStats();
   const moodProgress = useRef<AnimatedCircularProgress>(null);
   const levelProgress = useRef<AnimatedCircularProgress>(null);
 
@@ -63,7 +64,7 @@ export default function HomeScreen() {
   }, [pathname, mood, level, streak]);
 
   useEffect(() => {
-      moodProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : mood.previous, mood.current, 1000);
+    moodProgress.current?.reAnimate(didRouteChange(pathname) ? 0 : mood.previous, mood.current, 1000);
   }, [mood, pathname]);
 
   useEffect(() => {
@@ -124,18 +125,25 @@ export default function HomeScreen() {
               />
               <View style={styles.petCircle}>
                 <Pressable
-                onPress={() => {
-                  addMood(5);
-                }}
+                  onPress={() => {
+                    addMood(5);
+                  }}
                 >
-                  { mood.moodClassification === "Happy" ? 
-                      <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain" }} /> :
-                    mood.moodClassification === "Bored" ?
-                      <Image source={require("@/src/assets/images/fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain" }} /> :
+                  <View style={{ alignItems: 'center' }}>
+                    {mood.moodClassification === "Happy" ?
+                      <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
+                      mood.moodClassification === "Bored" ?
+                        <Image source={require("@/src/assets/images/fox_no_shadow.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", marginTop: ((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 8, zIndex: 1, marginLeft: petCircleSize * .88 * 0.095454 }} /> :
 
-                      <Image source={require("@/src/assets/images/sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain" }} />
-                  }
-                  <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, resizeMode: 'contain' }} />
+                        <Image source={require("@/src/assets/images/sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} />
+                    }
+                    {mood.moodClassification === "Bored" ?
+                      <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, height: petCircleSize * .09, resizeMode: 'contain', position: 'absolute', bottom: -((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 18 }} /> :
+
+                      <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, height: petCircleSize * .09, resizeMode: 'contain', position: 'absolute', bottom: -((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 8 }} />
+
+                    }
+                  </View>
                 </Pressable>
               </View>
             </View>
@@ -144,7 +152,7 @@ export default function HomeScreen() {
 
           <View style={styles.levelIndicator}>
             <Image source={require("@/src/assets/images/trophy.png")} style={styles.icon} />
-            <Text style={{ fontSize: 16, lineHeight: 16*1.5, fontFamily: 'PoppinsRegular', color: "#374151" }}>Level {level.current}</Text>
+            <Text style={{ fontSize: getFontSize(16), lineHeight: getFontSize(16) * 1.3, fontFamily: 'PoppinsRegular', color: "#374151" }}>Level {level.current}</Text>
           </View>
         </View>
 
@@ -152,7 +160,7 @@ export default function HomeScreen() {
 
         <View style={styles.section}>
           <View style={{ flexDirection: 'row', }}>
-            <Image source={require("@/src/assets/images/daily-streak.png")} style={{ width: 50, height: 50, marginRight: 5 }} />
+            <Image source={require("@/src/assets/images/daily-streak.png")} style={{ width: Dimensions.get("window").width * .15, height: Dimensions.get("window").width * .15, resizeMode: 'contain', marginRight: 5 }} />
             <View>
               <Text style={styles.sectionTitle}>Daily Streak</Text>
               <Text style={styles.sectionSubtitle}>Earn XP to add to your daily streak</Text>
@@ -199,7 +207,7 @@ export default function HomeScreen() {
 
         <View style={styles.section}>
           <View style={{ flexDirection: 'row' }}>
-            <Image source={require("@/src/assets/images/quest-selected.png")} style={{ width: 50, height: 50, }} />
+            <Image source={require("@/src/assets/images/quest-selected.png")} style={{ width: Dimensions.get("window").width * .15, height: Dimensions.get("window").width * .15, resizeMode: 'contain' }} />
             <View>
               <Text style={styles.sectionTitle}>Quests</Text>
               <Text style={styles.sectionSubtitle}>Complete quests to earn extra XP</Text>
@@ -211,7 +219,7 @@ export default function HomeScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.quest}
           >
-            <View>
+            <View style={styles.questContent}>
               <Text style={styles.questTitle}>
                 {currentQuest ? currentQuest.quest.title : 'Quest Completed!'}
               </Text>
@@ -228,7 +236,7 @@ export default function HomeScreen() {
               }}
               disabled={!currentQuest}
             >
-              <Image source={require("@/src/assets/images/play.png")} style={{ width: 60, height: 60 }} />
+              <Image source={require("@/src/assets/images/play.png")} style={{ width: Dimensions.get("window").width / 6.8, height: Dimensions.get("window").width / 6.8 }} />
               <Text style={styles.playText}>Play</Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -252,8 +260,8 @@ const styles = StyleSheet.create({
     paddingTop: 100,
   },
   loadingText: {
-    fontSize: 18,
-    lineHeight: 18*1.5,
+    fontSize: getFontSize(18),
+    lineHeight: getFontSize(18) * 1.5,
     color: '#4A5568',
     fontFamily: 'PoppinsRegular',
   },
@@ -261,7 +269,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 25,
     marginBottom: 10,
-    borderColor: 'black',
   },
   petContainer: {
     position: "relative",
@@ -270,7 +277,7 @@ const styles = StyleSheet.create({
   petCircle: {
     width: Dimensions.get("window").width * .65,
     height: Dimensions.get("window").width * .65,
-    borderRadius: 500,
+    //borderRadius: 500,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -284,16 +291,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 24,
-    lineHeight: 25*1.5,
+    fontSize: getFontSize(24),
+    lineHeight: getFontSize(24) * 1.5,
     fontFamily: 'PoppinsBold',
     color: "#222",
   },
   sectionSubtitle: {
     color: "#666",
     marginBottom: 10,
-    fontSize: 14,
-    lineHeight: 14*1.5,
+    fontSize: getFontSize(14),
+    lineHeight: getFontSize(14) * 1.5,
     fontFamily: 'PoppinsRegular'
   },
   progressCard: {
@@ -310,14 +317,14 @@ const styles = StyleSheet.create({
   },
   left: {
     color: "#fff",
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: getFontSize(15),
+    lineHeight: getFontSize(15) * 1.5,
     fontFamily: 'PoppinsSemiBold'
   },
   left2: {
     color: "#fff",
-    fontSize: 13,
-    lineHeight: 22,
+    fontSize: getFontSize(13),
+    lineHeight: getFontSize(13) * 1.5,
     fontFamily: 'PoppinsRegular'
   },
   right: {
@@ -329,8 +336,8 @@ const styles = StyleSheet.create({
   cardButton: {
     color: "#2D8EFF",
     fontFamily: 'PoppinsRegular',
-    fontSize: 13,
-    lineHeight: 13*1.5,
+    fontSize: getFontSize(13),
+    lineHeight: getFontSize(13) * 1.5,
   },
   quest: {
     borderRadius: 20,
@@ -339,36 +346,39 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 25,
     shadowRadius: 4,
     elevation: 3,
   },
+  questContent: {
+    flex: 1,
+    marginRight: 12,
+  },
   questTitle: {
     color: "#fff",
     fontFamily: 'PoppinsSemiBold',
-    fontSize: 20,
-    lineHeight: 20*1.5,
+    fontSize: getFontSize(20),
+    lineHeight: getFontSize(20) * 1.5,
   },
   questSubtitle: {
     color: "#fff",
-    fontSize: 13,
-    lineHeight: 13*1.5,
+    fontSize: getFontSize(13),
+    lineHeight: getFontSize(13) * 1.5,
     marginTop: 2,
-    maxWidth: 200,
+    maxWidth: Dimensions.get("window").width * .6,
     fontFamily: 'PoppinsRegular'
   },
   playButton: {
     paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    //paddingHorizontal: 14,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   playText: {
     color: "white",
-    fontSize: 15,
-    lineHeight: 15*1.5,
+    fontSize: getFontSize(15),
+    lineHeight: getFontSize(15) * 1.5,
     fontFamily: 'PoppinsMedium'
   },
   progressBarContainer: {
@@ -377,14 +387,14 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   progressBarBackground: {
-    height: 8,
+    height: Dimensions.get("window").width * .02,
     width: "100%",
     backgroundColor: "rgba(255, 255, 255, 0.3)",
-    borderRadius: 4,
+    borderRadius: 100,
     overflow: "hidden",
   },
   progressBarFill: {
-    height: 8,
+    height: Dimensions.get("window").width * .02,
     backgroundColor: "black",
     borderRadius: 4,
   },
@@ -403,8 +413,8 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   progressLabel: {
-    fontSize: 12,
-    lineHeight: 12*1.5,
+    fontSize: getFontSize(12),
+    lineHeight: getFontSize(12) * 1.5,
     color: "#6B7280",
     fontWeight: "600",
     marginBottom: 8,
@@ -440,8 +450,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   levelText: {
-    fontSize: 16,
-    lineHeight: 16*1.5,
+    fontSize: getFontSize(16),
+    lineHeight: getFontSize(16) * 1.5,
     fontFamily: 'PoppinsRegular',
     color: "#374151",
     marginHorizontal: ((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 6,
@@ -458,16 +468,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   streakProgressFire: {
-    width: 17,
-    height: 24,
+    width: Dimensions.get("window").width * .05,
+    height: Dimensions.get("window").width * .06,
     resizeMode: "contain",
   },
   icon: {
-    width: 20,
-    height: 20,
+    width: Dimensions.get("window").width * .05,
+    height: Dimensions.get("window").width * .05,
     margin: 0,
     marginRight: 5,
     resizeMode: 'contain'
   },
 })
-
