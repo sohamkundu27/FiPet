@@ -46,9 +46,11 @@ export default function PetHouse() {
         setTextBottomPosition(windowHeight * 0.055 + windowWidth * 0.065 + (windowWidth * .85 - calculatedOverlap) + 20);
         setHasAdjustedSize(true);
       }
+
+      setLoading(false);
     }
   }, [shelfLayout, shelfLayout2]);
-  
+
   function didRouteChange(pathname: string) {
     return pathname !== oldPathName.current;
   }
