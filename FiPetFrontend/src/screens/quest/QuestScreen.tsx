@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image, RefreshControl, Dimensions } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polygon, Circle, Line, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
@@ -9,6 +9,9 @@ import { useGamificationStats } from '@/src/hooks/useGamificationStats';
 import { getCurrentQuest, getNextAvailableQuest, QuestWithProgress } from '@/src/services/questsIndexService';
 
 export default function QuestScreen() {
+    const { width, height } = Dimensions.get('window');
+    const isTablet = width >= 768;
+    const isLargeTablet = width >= 1024;
 
     const {level, coins, streak} = useGamificationStats();
     const router = useRouter();
@@ -70,8 +73,16 @@ export default function QuestScreen() {
         if (quest.totalQuestions === 0) return null;
 
         return (
-            <View style={styles.correctAnswersBadge}>
-                <Text style={styles.correctAnswersText}>{quest.correctAnswers}/{quest.totalQuestions}</Text>
+            <View style={[
+                styles.correctAnswersBadge,
+                isTablet && styles.correctAnswersBadgeTablet,
+                isLargeTablet && styles.correctAnswersBadgeLargeTablet
+            ]}>
+                <Text style={[
+                    styles.correctAnswersText,
+                    isTablet && styles.correctAnswersTextTablet,
+                    isLargeTablet && styles.correctAnswersTextLargeTablet
+                ]}>{quest.correctAnswers}/{quest.totalQuestions}</Text>
             </View>
         );
     };
@@ -90,7 +101,11 @@ export default function QuestScreen() {
             }}
           />
             <ScrollView 
-                contentContainerStyle={{ padding: 20, paddingTop: 20 }}
+                contentContainerStyle={[
+                    styles.scrollContent,
+                    isTablet && styles.scrollContentTablet,
+                    isLargeTablet && styles.scrollContentLargeTablet
+                ]}
                 refreshControl={
                     <RefreshControl
                         refreshing={loading}
@@ -102,11 +117,19 @@ export default function QuestScreen() {
             >
                 {loading ? (
                     <View style={styles.loadingContainer}>
-                        <Text style={styles.loadingText}>Loading quest...</Text>
+                        <Text style={[
+                            styles.loadingText,
+                            isTablet && styles.loadingTextTablet,
+                            isLargeTablet && styles.loadingTextLargeTablet
+                        ]}>Loading quest...</Text>
                     </View>
                 ) : !currentQuest && !nextQuest ? (
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>No quests available</Text>
+                        <Text style={[
+                            styles.emptyText,
+                            isTablet && styles.emptyTextTablet,
+                            isLargeTablet && styles.emptyTextLargeTablet
+                        ]}>No quests available</Text>
                     </View>
                 ) : (
                     <>
@@ -116,14 +139,22 @@ export default function QuestScreen() {
                                 colors={['#A259FF', '#3B82F6']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }} 
-                        style={styles.questCard}
+                        style={[
+                            styles.questCard,
+                            isTablet && styles.questCardTablet,
+                            isLargeTablet && styles.questCardLargeTablet
+                        ]}
                     >
 
                                 
                         {/* Correct Answers Counter */}
                                 <CorrectAnswersCounter quest={currentQuest} />
                                 
-                                <Text style={styles.questCardTitle}>{currentQuest.quest.title}</Text>
+                                <Text style={[
+                                    styles.questCardTitle,
+                                    isTablet && styles.questCardTitleTablet,
+                                    isLargeTablet && styles.questCardTitleLargeTablet
+                                ]}>{currentQuest.quest.title}</Text>
                                 
                         
                         
@@ -132,33 +163,73 @@ export default function QuestScreen() {
                                     {currentQuest.quest.descriptions && currentQuest.quest.descriptions.length > 0 ? (
                                         currentQuest.quest.descriptions.map((desc: string, i: number) => (
                                     <View style={styles.objectiveRow} key={i}>
-                                        <Text style={styles.objectiveEmoji}>{getObjectiveEmoji(i)}</Text>
-                                        <Text style={styles.objectiveText}>{desc}</Text>
+                                        <Text style={[
+                                            styles.objectiveEmoji,
+                                            isTablet && styles.objectiveEmojiTablet,
+                                            isLargeTablet && styles.objectiveEmojiLargeTablet
+                                        ]}>{getObjectiveEmoji(i)}</Text>
+                                        <Text style={[
+                                            styles.objectiveText,
+                                            isTablet && styles.objectiveTextTablet,
+                                            isLargeTablet && styles.objectiveTextLargeTablet
+                                        ]}>{desc}</Text>
                                     </View>
                                 ))
                             ) : (
                                 <View style={styles.objectiveRow}>
-                                    <Text style={styles.objectiveEmoji}>📊</Text>
-                                            <Text style={styles.objectiveText}>{currentQuest.quest.description}</Text>
+                                    <Text style={[
+                                        styles.objectiveEmoji,
+                                        isTablet && styles.objectiveEmojiTablet,
+                                        isLargeTablet && styles.objectiveEmojiLargeTablet
+                                    ]}>📊</Text>
+                                            <Text style={[
+                                                styles.objectiveText,
+                                                isTablet && styles.objectiveTextTablet,
+                                                isLargeTablet && styles.objectiveTextLargeTablet
+                                            ]}>{currentQuest.quest.description}</Text>
                                 </View>
                             )}
                         </View>
 
                         {/* Bottom Row - Stats and Play Button */}
                         <View style={styles.bottomRow}>
-                            <View style={styles.questCardStatsRow}>
-                                <View style={styles.questCardStat}>
-                                    <GoldCoinIcon />
-                                            <Text style={styles.questCardStatText}>{currentQuest.quest.coinReward || 0}</Text>
+                            <View style={[
+                                styles.questCardStatsRow,
+                                isTablet && styles.questCardStatsRowTablet,
+                                isLargeTablet && styles.questCardStatsRowLargeTablet
+                            ]}>
+                                <View style={[
+                                    styles.questCardStat,
+                                    isTablet && styles.questCardStatTablet,
+                                    isLargeTablet && styles.questCardStatLargeTablet
+                                ]}>
+                                    <GoldCoinIcon size={isLargeTablet ? 28 : isTablet ? 24 : 20} />
+                                            <Text style={[
+                                                styles.questCardStatText,
+                                                isTablet && styles.questCardStatTextTablet,
+                                                isLargeTablet && styles.questCardStatTextLargeTablet
+                                            ]}>{currentQuest.quest.coinReward || 0}</Text>
                                 </View>
-                                <View style={styles.questCardStat}>
-                                    <CustomClockIcon />
-                                            <Text style={styles.questCardStatText}>{currentQuest.quest.duration || '30 min'}</Text>
+                                <View style={[
+                                    styles.questCardStat,
+                                    isTablet && styles.questCardStatTablet,
+                                    isLargeTablet && styles.questCardStatLargeTablet
+                                ]}>
+                                    <CustomClockIcon size={isLargeTablet ? 28 : isTablet ? 24 : 22} />
+                                            <Text style={[
+                                                styles.questCardStatText,
+                                                isTablet && styles.questCardStatTextTablet,
+                                                isLargeTablet && styles.questCardStatTextLargeTablet
+                                            ]}>{currentQuest.quest.duration || '30 min'}</Text>
                                 </View>
                             </View>
                             
                             <TouchableOpacity
-                                style={styles.playButton}
+                                style={[
+                                    styles.playButton,
+                                    isTablet && styles.playButtonTablet,
+                                    isLargeTablet && styles.playButtonLargeTablet
+                                ]}
                                 activeOpacity={0.85}
                                 onPress={() => {
                                             if (currentQuest.quest.preQuest) {
@@ -168,10 +239,12 @@ export default function QuestScreen() {
                                     }
                                 }}
                             >
-                                <GradientPlayIcon colors={['#A259FF', '#3B82F6']} />
+                                        <GradientPlayIcon colors={['#A259FF', '#3B82F6']} size={isLargeTablet ? 32 : isTablet ? 28 : 24} />
                                 <Text
                                   style={[
                                     styles.playButtonText,
+                                    isTablet && styles.playButtonTextTablet,
+                                    isLargeTablet && styles.playButtonTextLargeTablet,
                                     { color: '#A259FF' }
                                   ]}
                                 >
@@ -188,11 +261,19 @@ export default function QuestScreen() {
                                 colors={['#3B82F6', '#38BDF8']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }} 
-                                style={styles.questCard}
+                                style={[
+                                    styles.questCard,
+                                    isTablet && styles.questCardTablet,
+                                    isLargeTablet && styles.questCardLargeTablet
+                                ]}
                             >
 
                                 
-                                <Text style={styles.questCardTitle}>{nextQuest.quest.title}</Text>
+                                <Text style={[
+                                    styles.questCardTitle,
+                                    isTablet && styles.questCardTitleTablet,
+                                    isLargeTablet && styles.questCardTitleLargeTablet
+                                ]}>{nextQuest.quest.title}</Text>
                                 
 
                                 
@@ -201,33 +282,73 @@ export default function QuestScreen() {
                                     {nextQuest.quest.descriptions && nextQuest.quest.descriptions.length > 0 ? (
                                         nextQuest.quest.descriptions.map((desc: string, i: number) => (
                                             <View style={styles.objectiveRow} key={i}>
-                                                <Text style={styles.objectiveEmoji}>{getObjectiveEmoji(i)}</Text>
-                                                <Text style={styles.objectiveText}>{desc}</Text>
+                                                <Text style={[
+                                                    styles.objectiveEmoji,
+                                                    isTablet && styles.objectiveEmojiTablet,
+                                                    isLargeTablet && styles.objectiveEmojiLargeTablet
+                                                ]}>{getObjectiveEmoji(i)}</Text>
+                                                <Text style={[
+                                                    styles.objectiveText,
+                                                    isTablet && styles.objectiveTextTablet,
+                                                    isLargeTablet && styles.objectiveTextLargeTablet
+                                                ]}>{desc}</Text>
                                             </View>
                                         ))
                                     ) : (
                                         <View style={styles.objectiveRow}>
-                                            <Text style={styles.objectiveEmoji}>📊</Text>
-                                            <Text style={styles.objectiveText}>{nextQuest.quest.description}</Text>
+                                            <Text style={[
+                                                styles.objectiveEmoji,
+                                                isTablet && styles.objectiveEmojiTablet,
+                                                isLargeTablet && styles.objectiveEmojiLargeTablet
+                                            ]}>📊</Text>
+                                            <Text style={[
+                                                styles.objectiveText,
+                                                isTablet && styles.objectiveTextTablet,
+                                                isLargeTablet && styles.objectiveTextLargeTablet
+                                            ]}>{nextQuest.quest.description}</Text>
                                         </View>
                                     )}
                                 </View>
 
                                 {/* Bottom Row - Stats and Play Button */}
                                 <View style={styles.bottomRow}>
-                                    <View style={styles.questCardStatsRow}>
-                                        <View style={styles.questCardStat}>
-                                            <GoldCoinIcon />
-                                            <Text style={styles.questCardStatText}>{nextQuest.quest.coinReward || 0}</Text>
+                                    <View style={[
+                                        styles.questCardStatsRow,
+                                        isTablet && styles.questCardStatsRowTablet,
+                                        isLargeTablet && styles.questCardStatsRowLargeTablet
+                                    ]}>
+                                        <View style={[
+                                            styles.questCardStat,
+                                            isTablet && styles.questCardStatTablet,
+                                            isLargeTablet && styles.questCardStatLargeTablet
+                                        ]}>
+                                            <GoldCoinIcon size={isLargeTablet ? 28 : isTablet ? 24 : 20} />
+                                            <Text style={[
+                                                styles.questCardStatText,
+                                                isTablet && styles.questCardStatTextTablet,
+                                                isLargeTablet && styles.questCardStatTextLargeTablet
+                                            ]}>{nextQuest.quest.coinReward || 0}</Text>
                                         </View>
-                                        <View style={styles.questCardStat}>
-                                            <CustomClockIcon />
-                                            <Text style={styles.questCardStatText}>{nextQuest.quest.duration || '30 min'}</Text>
+                                        <View style={[
+                                            styles.questCardStat,
+                                            isTablet && styles.questCardStatTablet,
+                                            isLargeTablet && styles.questCardStatLargeTablet
+                                        ]}>
+                                            <CustomClockIcon size={isLargeTablet ? 28 : isTablet ? 24 : 22} />
+                                            <Text style={[
+                                                styles.questCardStatText,
+                                                isTablet && styles.questCardStatTextTablet,
+                                                isLargeTablet && styles.questCardStatTextLargeTablet
+                                            ]}>{nextQuest.quest.duration || '30 min'}</Text>
                                         </View>
                                     </View>
                                     
                                     <TouchableOpacity
-                                        style={styles.playButton}
+                                        style={[
+                                            styles.playButton,
+                                            isTablet && styles.playButtonTablet,
+                                            isLargeTablet && styles.playButtonLargeTablet
+                                        ]}
                                         activeOpacity={0.85}
                                         onPress={() => {
                                             
@@ -238,10 +359,12 @@ export default function QuestScreen() {
                                             }
                                         }}
                                     >
-                                        <GradientPlayIcon colors={['#3B82F6', '#38BDF8']} />
+                                        <GradientPlayIcon colors={['#3B82F6', '#38BDF8']} size={isLargeTablet ? 32 : isTablet ? 28 : 24} />
                                         <Text
                                           style={[
                                             styles.playButtonText,
+                                            isTablet && styles.playButtonTextTablet,
+                                            isLargeTablet && styles.playButtonTextLargeTablet,
                                             { color: '#3B82F6' }
                                           ]}
                                         >
@@ -265,8 +388,8 @@ function getObjectiveEmoji(idx: number) {
 
 
 
-const GradientPlayIcon = ({ colors }: { colors: readonly [string, string, ...string[]] }) => (
-    <Svg width={24} height={24} viewBox="0 0 30 30">
+const GradientPlayIcon = ({ colors, size = 24 }: { colors: readonly [string, string, ...string[]], size?: number }) => (
+    <Svg width={size} height={size} viewBox="0 0 30 30">
         <Defs>
             <SvgLinearGradient id="play-gradient" x1="0" y1="0" x2="1" y2="1">
                 <Stop offset="0%" stopColor={colors[0]} />
@@ -277,19 +400,35 @@ const GradientPlayIcon = ({ colors }: { colors: readonly [string, string, ...str
     </Svg>
 );
 
-const CustomClockIcon = () => (
-  <Svg width={22} height={22} viewBox="0 0 22 22">
+const CustomClockIcon = ({ size = 22 }: { size?: number }) => (
+  <Svg width={size} height={size} viewBox="0 0 22 22">
     <Circle cx="11" cy="11" r="10" stroke="#3B82F6" strokeWidth="2.5" fill="#fff" />
     <Line x1="11" y1="11" x2="11" y2="6.2" stroke="#FBBF24" strokeWidth="2.2" strokeLinecap="round" />
     <Line x1="11" y1="11" x2="15.2" y2="13.5" stroke="#FBBF24" strokeWidth="2.2" strokeLinecap="round" />
   </Svg>
 );
 
-const GoldCoinIcon = () => (
-  <Image style={{width: 20, height: 20, resizeMode: "contain"}} source={require("@/src/assets/images/coin.png")}/>
+const GoldCoinIcon = ({ size = 20 }: { size?: number }) => (
+  <Image style={{width: size, height: size, resizeMode: "contain"}} source={require("@/src/assets/images/coin.png")}/>
 );
 
 const styles = StyleSheet.create({
+    scrollContent: {
+        padding: 20,
+        paddingTop: 20,
+    },
+    scrollContentTablet: {
+        paddingHorizontal: 40,
+        paddingTop: 30,
+        maxWidth: 800,
+        alignSelf: 'center',
+        width: '100%',
+    },
+    scrollContentLargeTablet: {
+        paddingHorizontal: 60,
+        paddingTop: 40,
+        maxWidth: 1000,
+    },
     questCard: {
         borderRadius: 24,
         padding: 24,
@@ -305,6 +444,18 @@ const styles = StyleSheet.create({
                     elevation: 8,
               }),
     },
+    questCardTablet: {
+        borderRadius: 32,
+        padding: 32,
+        marginBottom: 24,
+        marginHorizontal: 8,
+    },
+    questCardLargeTablet: {
+        borderRadius: 40,
+        padding: 40,
+        marginBottom: 32,
+        marginHorizontal: 16,
+    },
     questCardTitle: {
         fontSize: 26,
         lineHeight: 28*1.2,
@@ -313,6 +464,18 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         letterSpacing: -0.5,
         fontFamily: 'Poppins', 
+    },
+    questCardTitleTablet: {
+        fontSize: 32,
+        lineHeight: 32*1.2,
+        marginBottom: 28,
+        letterSpacing: -0.7,
+    },
+    questCardTitleLargeTablet: {
+        fontSize: 38,
+        lineHeight: 38*1.2,
+        marginBottom: 36,
+        letterSpacing: -0.9,
     },
     objectivesContainer: {
         flex: 1,
@@ -326,6 +489,12 @@ const styles = StyleSheet.create({
     questCardStatsRow: {
         flexDirection: 'row',
         gap: 5,
+    },
+    questCardStatsRowTablet: {
+        gap: 8,
+    },
+    questCardStatsRowLargeTablet: {
+        gap: 12,
     },
     questCardStat: {
         flexDirection: 'row',
@@ -344,6 +513,18 @@ const styles = StyleSheet.create({
                     shadowOffset: { width: 0, height: 4 },
               }),
     },
+    questCardStatTablet: {
+        borderRadius: 16,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        minWidth: 90,
+    },
+    questCardStatLargeTablet: {
+        borderRadius: 20,
+        paddingHorizontal: 18,
+        paddingVertical: 8,
+        minWidth: 110,
+    },
     questCardStatText: {
         color: '#334155',
         fontSize: 12,
@@ -351,6 +532,16 @@ const styles = StyleSheet.create({
         marginLeft: 8,
        
         fontFamily: 'Poppins', 
+    },
+    questCardStatTextTablet: {
+        fontSize: 14,
+        lineHeight: 14*1.3,
+        marginLeft: 10,
+    },
+    questCardStatTextLargeTablet: {
+        fontSize: 16,
+        lineHeight: 16*1.3,
+        marginLeft: 12,
     },
     objectiveRow: {
         flexDirection: 'row',
@@ -364,6 +555,18 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins', 
         width: 24,
     },
+    objectiveEmojiTablet: {
+        fontSize: 22,
+        lineHeight: 22*1.5,
+        marginRight: 16,
+        width: 28,
+    },
+    objectiveEmojiLargeTablet: {
+        fontSize: 26,
+        lineHeight: 26*1.5,
+        marginRight: 20,
+        width: 32,
+    },
     objectiveText: {
         color: '#fff',
         fontSize: 16,
@@ -372,6 +575,14 @@ const styles = StyleSheet.create({
         flex: 1,
         fontFamily: 'Poppins', 
         opacity: 0.95,
+    },
+    objectiveTextTablet: {
+        fontSize: 18,
+        lineHeight: 18*1.4,
+    },
+    objectiveTextLargeTablet: {
+        fontSize: 20,
+        lineHeight: 20*1.4,
     },
     playButton: {
         flexDirection: 'row',
@@ -390,12 +601,32 @@ const styles = StyleSheet.create({
                 shadowOffset: { width: 0, height: 6 },
             }),
     },
+    playButtonTablet: {
+        borderRadius: 20,
+        paddingHorizontal: 28,
+        paddingVertical: 14,
+    },
+    playButtonLargeTablet: {
+        borderRadius: 24,
+        paddingHorizontal: 36,
+        paddingVertical: 18,
+    },
     playButtonText: {
         fontSize: 16,
         lineHeight: 16*1.3,
         fontWeight: '600',
         marginLeft: 6,
         fontFamily: 'Poppins', 
+    },
+    playButtonTextTablet: {
+        fontSize: 18,
+        lineHeight: 18*1.3,
+        marginLeft: 8,
+    },
+    playButtonTextLargeTablet: {
+        fontSize: 20,
+        lineHeight: 20*1.3,
+        marginLeft: 10,
     },
     correctAnswersBadge: {
         position: 'absolute',
@@ -411,12 +642,34 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
+    correctAnswersBadgeTablet: {
+        top: 14,
+        right: 14,
+        borderRadius: 16,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    correctAnswersBadgeLargeTablet: {
+        top: 18,
+        right: 18,
+        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
     correctAnswersText: {
         fontSize: 12,
         lineHeight: 12*1.5,
         fontWeight: 'bold',
         color: '#333',
         fontFamily: 'Poppins',
+    },
+    correctAnswersTextTablet: {
+        fontSize: 14,
+        lineHeight: 14*1.5,
+    },
+    correctAnswersTextLargeTablet: {
+        fontSize: 16,
+        lineHeight: 16*1.5,
     },
     loadingContainer: {
         flex: 1,
@@ -429,6 +682,12 @@ const styles = StyleSheet.create({
         color: '#666',
         fontFamily: 'Poppins',
     },
+    loadingTextTablet: {
+        fontSize: 18,
+    },
+    loadingTextLargeTablet: {
+        fontSize: 20,
+    },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -439,5 +698,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
         fontFamily: 'Poppins',
+    },
+    emptyTextTablet: {
+        fontSize: 18,
+    },
+    emptyTextLargeTablet: {
+        fontSize: 20,
     },
 });
