@@ -167,7 +167,7 @@ export default function PetHouse() {
           endColor: "#16D3F9",
         }}
       />
-      
+
       {loading && (
         <View style={{
           position: 'absolute',
@@ -247,6 +247,7 @@ export default function PetHouse() {
             ref={levelProgress}
             size={windowHeight * 0.06697}
             width={windowHeight * 0.0066964}
+            rotation={0}
             fill={0}
             backgroundColor="#bec0c0"
             tintColor="#FFDD3C"
@@ -284,6 +285,7 @@ export default function PetHouse() {
           ref={moodProgress}
           size={windowHeight * 0.06697}
           width={windowHeight * 0.0066964}
+          rotation={0}
           fill={0}
           backgroundColor="#bec0c0"
           tintColor="#28B031"
@@ -320,6 +322,7 @@ export default function PetHouse() {
           ref={streakProgress}
           size={windowHeight * 0.06697}
           width={windowHeight * 0.0066964}
+          rotation={0}
           fill={0}
           backgroundColor="#bec0c0"
           tintColor="#E43134"
