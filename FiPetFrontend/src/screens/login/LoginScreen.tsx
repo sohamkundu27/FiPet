@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Text, Alert, Image, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Text, Alert, Image, KeyboardAvoidingView, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +15,8 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const {auth} = useAuth();
+  const { height, width } = useWindowDimensions();
+  const isIpad = Math.min(width, height) >= 720;
 
   const [loaded] = useFonts({
     Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),
@@ -26,7 +28,7 @@ export default function LoginScreen() {
   if (!loaded) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
+        <View style={styles.centeredContent}>
           <Text>Loading...</Text>
         </View>
       </SafeAreaView>
@@ -116,20 +118,20 @@ export default function LoginScreen() {
             onPress={() => router.push('/landing')}
             disabled={isLoading}
           >
-            <Ionicons name="arrow-back" size={28} color="#4A5568" />
+            <Ionicons name="arrow-back" size={isIpad ? 42 : 28} color="#4A5568" />
           </TouchableOpacity>
-          <View style={{ height: 120 }} />
+          <View style={{ height: isIpad ? 100 : 40 }} />
           <View style={styles.topSectionAbsolute}>
             <View style={styles.topSection}>
-              <View style={{ position: 'relative', width: 160, height: 160 }}>
+              <View style={{ position: 'relative', width: isIpad ? 208 : 160, height: isIpad ? 208 : 160 }}>
                 <Image
                   source={require('@/src/assets/images/fox.png')}
-                  style={styles.foxImage}
+                  style={[styles.foxImage, isIpad && styles.foxImageLarge]}
                   resizeMode="contain"
                 />
-                <View style={styles.speechBubbleContainer}>
-                  <View style={styles.speechBubble}>
-                    <Text style={styles.speechText}>It's good to see you again!</Text>
+                <View style={[styles.speechBubbleContainer, isIpad && styles.speechBubbleContainerLarge]}>
+                  <View style={[styles.speechBubble, isIpad && styles.speechBubbleLarge]}>
+                    <Text style={[styles.speechText, isIpad && styles.speechTextLarge]}>It's good to see you again!</Text>
                   </View>
                 </View>
               </View>
@@ -137,10 +139,15 @@ export default function LoginScreen() {
             <View style={styles.separator} />
           </View>
           <View style={styles.flexGrowContainer}>
-            <View style={styles.content}>
+            <View style={[styles.centeredContent, isIpad && styles.centeredContentLarge]}>
+              <View style={{ height: 300 }} />
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={[styles.styledInput, emailError ? styles.inputError : null]}
+                  style={[
+                    styles.styledInput,
+                    isIpad && styles.styledInputLarge,
+                    emailError ? styles.inputError : null
+                  ]}
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
@@ -153,13 +160,17 @@ export default function LoginScreen() {
                   editable={!isLoading}
                 />
                 {emailError ? (
-                  <Text style={styles.errorText}>{emailError}</Text>
+                  <Text style={[styles.errorText, isIpad && styles.errorTextLarge]}>{emailError}</Text>
                 ) : null}
               </View>
-              <View style={{ height: 16 }} />
+              <View style={{ height: isIpad ? 24 : 16 }} />
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={[styles.styledInput, passwordError ? styles.inputError : null]}
+                  style={[
+                    styles.styledInput,
+                    isIpad && styles.styledInputLarge,
+                    passwordError ? styles.inputError : null
+                  ]}
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -171,15 +182,16 @@ export default function LoginScreen() {
                   editable={!isLoading}
                 />
                 {passwordError ? (
-                  <Text style={styles.errorText}>{passwordError}</Text>
+                  <Text style={[styles.errorText, isIpad && styles.errorTextLarge]}>{passwordError}</Text>
                 ) : null}
                 <TouchableOpacity
-                  style={styles.forgotPasswordButton}
+                  style={[styles.forgotPasswordButton, isIpad && styles.forgotPasswordButtonLarge]}
                   onPress={() => router.navigate('/password-reset')}
                   disabled={isLoading}
                 >
                   <Text style={[
                     styles.forgotPasswordText,
+                    isIpad && styles.forgotPasswordTextLarge,
                     isLoading && styles.forgotPasswordTextDisabled
                   ]}>
                     Forgot Password?
@@ -188,18 +200,18 @@ export default function LoginScreen() {
               </View>
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  style={styles.gradientButton}
+                  style={[styles.gradientButton, isIpad && styles.gradientButtonLarge]}
                   onPress={handleLogin}
                   disabled={!email || !password || isLoading}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
                     colors={['#FF6B35', '#FFB74D']}
-                    style={styles.gradientButtonInner}
+                    style={[styles.gradientButtonInner, isIpad && styles.gradientButtonInnerLarge]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                   >
-                    <Text style={styles.buttonText}>
+                    <Text style={[styles.buttonText, isIpad && styles.buttonTextLarge]}>
                       {isLoading ? '\u23f3 Loading...' : 'Sign In'}
                     </Text>
                   </LinearGradient>
@@ -207,9 +219,9 @@ export default function LoginScreen() {
               </View>
             </View>
             <View style={styles.signUpContainer}>
-              <Text style={styles.signUpText}>
+              <Text style={[styles.signUpText, isIpad && styles.signUpTextLarge]}>
                 Don't have an account?{' '}
-                <Text style={styles.signUpLink} onPress={() => router.push('/welcome')}>
+                <Text style={[styles.signUpLink, isIpad && styles.signUpLinkLarge]} onPress={() => router.push('/welcome')}>
                   Sign up
                 </Text>
               </Text>
@@ -233,6 +245,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 40,
     justifyContent: 'flex-start',
+    alignItems: 'center', // Center all content horizontally
   },
   topSection: {
     alignItems: 'center',
@@ -281,7 +294,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginVertical: 18,
   },
-  content: {
+  // Remove marginTop from content, and center it
+  centeredContent: {
     padding: 20,
     flex: 1,
     width: '100%',
@@ -290,10 +304,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     shadowColor: 'transparent',
     justifyContent: 'center',
-    marginTop: 270,
+    alignItems: 'center', // Center children horizontally
+    alignSelf: 'center', // Center the container itself
   },
   inputContainer: {
     marginBottom: 0,
+    width: '100%', // Make input fields take full width of the centeredContent
+    alignItems: 'center',
   },
   inputLabel: {
     fontSize: 20,
@@ -337,6 +354,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: '100%',
     marginTop: 0,
+    alignItems: 'center', // Center the button
   },
   gradientButton: {
     width: '100%',
@@ -379,6 +397,7 @@ const styles = StyleSheet.create({
   forgotPasswordButton: {
     alignItems: 'flex-end',
     marginTop: 8,
+    width: '100%',
   },
   forgotPasswordText: {
     color: '#4C1D95',
@@ -410,6 +429,8 @@ const styles = StyleSheet.create({
   flexGrowContainer: {
     flex: 1,
     justifyContent: 'flex-end',
+    alignItems: 'center', // Center the flexGrowContainer horizontally
+    width: '100%',
   },
   topSectionAbsolute: {
     position: 'absolute',
@@ -428,5 +449,62 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: 'rgba(255,255,255,0.7)',
     borderRadius: 20,
+  },
+  foxImageLarge: {
+    width: 208,
+    height: 208,
+    bottom: 8,
+  },
+  speechBubbleContainerLarge: {
+    bottom: 230,
+    left: 83,
+  },
+  speechBubbleLarge: {
+    borderRadius: 21,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 2,
+    fontSize: 21,
+  },
+  speechTextLarge: {
+    fontSize: 21,
+  },
+  centeredContentLarge: {
+    maxWidth: 520,
+    padding: 26,
+    borderRadius: 26,
+  },
+  styledInputLarge: {
+    height: 71,
+    fontSize: 21,
+    paddingHorizontal: 26,
+    borderRadius: 16,
+  },
+  errorTextLarge: {
+    fontSize: 18,
+    marginTop: 10,
+  },
+  forgotPasswordButtonLarge: {
+    marginTop: 10,
+  },
+  forgotPasswordTextLarge: {
+    fontSize: 18,
+  },
+  gradientButtonLarge: {
+    height: 78,
+    borderRadius: 26,
+    marginTop: 65,
+  },
+  gradientButtonInnerLarge: {
+    height: '100%',
+  },
+  buttonTextLarge: {
+    fontSize: 20,
+  },
+  signUpTextLarge: {
+    fontSize: 18,
+  },
+  signUpLinkLarge: {
+    fontSize: 18,
   },
 }); 
