@@ -10,19 +10,15 @@ export interface QuestionInterface {
   get prompt(): string;
   get reward(): Reward | null;
   get isPractice(): boolean;
-
-  hasPracticeQuestion(): boolean
-  getPracticeQuestion(): Question;
-}
-
-export interface UserQuestionInterface extends QuestionInterface {
   get isAnswered(): boolean;
 
-  // The following paragraph of the schema should only be used in admin scripts.
   // The following paragraph of the schema should only be used in admin scripts.
   setPrompt(prompt: string): Promise<void>;
   setReward(reward: Reward): Promise<void>
   setPracticeQuestion(question: Question|null): Promise<void>;
+
+  hasPracticeQuestion(): boolean
+  getPracticeQuestion(): Question;
 
   hasPracticeQuestion(): boolean
   getPracticeQuestion(): Question;
@@ -43,6 +39,7 @@ export interface QuestionWithOptionsInterface extends QuestionInterface {
   addOption(option: Option): void; // use in admin scripts only!
 }
 
+export class SingleSelectQuestion implements QuestionWithOptionsInterface {
 export class SingleSelectQuestion implements QuestionWithOptionsInterface {
 
   /**
