@@ -1,4 +1,4 @@
-import { addDoc, collection, CollectionReference, doc, FieldValue, Firestore, getDocs, limit, query, serverTimestamp, setDoc, Timestamp, updateDoc, where } from "@firebase/firestore";
+import { addDoc, collection, CollectionReference, doc, FieldValue, Firestore, getDocs, limit, query, serverTimestamp, Timestamp, updateDoc, where } from "@firebase/firestore";
 import { ItemId } from "@/src/types/item";
 import { ANSWER_COLLECTION, DBOption, DBPracticeQuestion, DBQuestAnswer, DBQuestion, OPTIONS_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, Reward } from "@/src/types/quest";
 import { Option, OptionFactory, SingleSelectOption } from "./Option";
@@ -10,29 +10,23 @@ export interface QuestionInterface {
   get prompt(): string;
   get reward(): Reward | null;
   get isPractice(): boolean;
-  get order(): number;
-
-  hasPracticeQuestion(): boolean
-  getPracticeQuestion(): Question;
-}
-
-export interface UserQuestionInterface extends QuestionInterface {
   get isAnswered(): boolean;
-}
 
-// The following should only be used in admin scripts.
-export interface AdminQuestionInterface extends QuestionInterface {
+  // The following paragraph of the schema should only be used in admin scripts.
   setPrompt(prompt: string): Promise<void>;
   setReward(reward: Reward): Promise<void>
   setPracticeQuestion(question: Question|null): Promise<void>;
+
+  hasPracticeQuestion(): boolean
+  getPracticeQuestion(): Question;
 }
 
 export interface QuestionWithOptionsInterface extends QuestionInterface {
   answer(
     option: Option,
     userId: string,
-    rewardHook?: (correct: boolean, reward: Reward|null) => Promise<Reward>,
-  ): Promise<{correct: boolean, reward: Reward|null}>;
+    handleReward: (correct: boolean, reward: Reward|null) => Promise<Reward>
+  ): Promise<boolean>;
   hasAnswer(): boolean;
   getAnswer(): Option;
   getCorrectOption(): Option;
@@ -42,7 +36,7 @@ export interface QuestionWithOptionsInterface extends QuestionInterface {
   addOption(option: Option): void; // use in admin scripts only!
 }
 
-export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestionInterface {
+export class SingleSelectQuestion implements QuestionWithOptionsInterface {
 
   /**
    * Practice question will be set up inside here (order, questId, practiceFor)
@@ -55,21 +49,19 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     practiceQuestion?: Question,
   ) {
     const questionsRef = collection(db, QUESTIONS_COLLECTION);
-    const questionRef = doc(questionsRef);
-    const questionData = {
-      id: questionRef.id,
+    const result = await addDoc(questionsRef, {
       ...data
-    } as DBQuestion<"singleSelect">;
-    await setDoc(questionRef, questionData);
+    });
+    const questionData = {...data, id: result.id} as DBQuestion<"singleSelect">;
 
     const options: SingleSelectOption[] = [];
     for (let optionDatum of optionData) {
       options.push(
-        await SingleSelectOption.create(db, {...optionDatum, questionId: questionData.id})
+        await SingleSelectOption.create(db, {...optionDatum, questionId: result.id})
       );
     }
     options.push(
-      await SingleSelectOption.create(db, {...correctOptionData, questionId: questionData.id})
+      await SingleSelectOption.create(db, {...correctOptionData, questionId: result.id})
     );
 
     const question = new SingleSelectQuestion(
@@ -90,7 +82,7 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
   private _db: Firestore;
   private _dbData: DBQuestion<"singleSelect">;
   private _completionData?: DBQuestAnswer<"singleSelect">;
-  private _options: SingleSelectOption[];// All options except for the correct one.
+  private _options: SingleSelectOption[];
   private _practiceQuestion?: Question;
   private _answer?: SingleSelectOption;
   private _correctOption: SingleSelectOption;
@@ -138,9 +130,6 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
   }
   get isAnswered() {
     return !!this._completionData;
-  }
-  get order() {
-    return this._dbData.order;
   }
 
 
@@ -249,7 +238,7 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
   async answer(
     option: Option,
     userId: string,
-    rewardHook?: (correct: boolean, reward: Reward|null) => Promise<Reward>,
+    handleReward: (correct: boolean, reward: Reward|null) => Promise<Reward>
   ) {
 
     if (this._completionData) {
@@ -257,14 +246,10 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     }
 
     const isCorrect = option.correct;
-    let reward = this._dbData.reward;
-    if (rewardHook) {
-      reward = await rewardHook(isCorrect, this._dbData.reward);
-    }
+    const reward = await handleReward(isCorrect, this._dbData.reward);
 
-    const answersRef = doc(this._db, 'users', userId, ANSWER_COLLECTION, this._dbData.id);
-    const completionData: Omit<DBQuestAnswer<"singleSelect">, "answeredAt"> & {answeredAt: FieldValue} = {
-      id: this._dbData.id,
+    const answersRef = collection(this._db, 'users', userId, ANSWER_COLLECTION);
+    const completionData: Omit<DBQuestAnswer<"singleSelect">, "id"|"answeredAt"> & {answeredAt: FieldValue} = {
       questId: this._dbData.questId,
       questionId: this._dbData.id,
       order: this._dbData.order,
@@ -274,17 +259,15 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
       reward: reward,
       answeredAt: serverTimestamp(),
     };
-    await setDoc(answersRef, completionData);
+    const result = await addDoc(answersRef, completionData);
     this._completionData = {
       ...completionData,
+      id: result.id,
       answeredAt: new Timestamp(Date.now() / 1000, 0)
     };
     this._answer = option;
 
-    return {
-      correct: isCorrect,
-      reward: reward,
-    };
+    return isCorrect;
   };
 
   hasAnswer() {
@@ -302,9 +285,6 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     return this._correctOption;
   };
 
-  /**
-   * All options except for the correct one.
-   */
   getOptions() {
     return this._options;
   };
@@ -410,18 +390,16 @@ export class QuestionFactory {
     data: DBQuestion<T>,
     completionData?: DBQuestAnswer<T>,
   ) {
-    const questionType = data.type as QuestionType;
-    switch (questionType) {
+    switch (data.type) {
 
       case "singleSelect":
         const optionsQuery = query(
           this.optionCollection,
           where("questionId", "==",data.id)
         );
-        let options = await this.optionFactory.fromFirebaseQuery<"singleSelect">(optionsQuery);
+        const options = await this.optionFactory.fromFirebaseQuery<"singleSelect">(optionsQuery);
 
         const correctOption = await this._findCorrectOption(data.id, options, completionData);
-        options = options.filter((option) => !option.correct);
         let answer;
         if (completionData) {
           answer = await this._findAnswer(options, completionData);
@@ -440,8 +418,7 @@ export class QuestionFactory {
 
 
       default:
-        const exhaustiveCheck: never = questionType;
-        throw new Error(`Unhandled question type: ${exhaustiveCheck}`);
+        throw new Error(`Unsupported question type: ${data.type}`);
     }
   }
 }
