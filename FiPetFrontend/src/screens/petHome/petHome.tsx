@@ -46,9 +46,11 @@ export default function PetHouse() {
         setTextBottomPosition(windowHeight * 0.055 + windowWidth * 0.065 + (windowWidth * .85 - calculatedOverlap) + 20);
         setHasAdjustedSize(true);
       }
+
+      setLoading(false);
     }
   }, [shelfLayout, shelfLayout2]);
-  
+
   function didRouteChange(pathname: string) {
     return pathname !== oldPathName.current;
   }
@@ -181,6 +183,30 @@ export default function PetHouse() {
           endColor: "#16D3F9",
         }}
       />
+      
+      {loading && (
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: '#8CDDD1',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 100,
+        }}>
+          <View style={{
+            width: 50,
+            height: 50,
+            borderRadius: 25,
+            borderWidth: 3,
+            borderColor: '#fff',
+            borderTopColor: 'transparent',
+          }} />
+        </View>
+      )}
+
       <View style={styles.content}>
         <Image
           source={require('@/src/assets/images/Shelf.png')}
