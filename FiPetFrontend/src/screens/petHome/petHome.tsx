@@ -46,11 +46,9 @@ export default function PetHouse() {
         setTextBottomPosition(windowHeight * 0.055 + windowWidth * 0.065 + (windowWidth * .85 - calculatedOverlap) + 20);
         setHasAdjustedSize(true);
       }
-
-      setLoading(false);
     }
   }, [shelfLayout, shelfLayout2]);
-
+  
   function didRouteChange(pathname: string) {
     return pathname !== oldPathName.current;
   }
@@ -820,8 +818,10 @@ export default function PetHouse() {
             </View>
 
 
+
           </>
         )}
+
 
 
         {/* Passport button - bottom right */}
@@ -916,6 +916,7 @@ export default function PetHouse() {
               </Text>
 
 
+
               {/* Close button */}
               <TouchableOpacity
                 onPress={() => setShowPassport(false)}
@@ -942,6 +943,7 @@ export default function PetHouse() {
                 <Text style={{ fontSize: getFontSize(18), lineHeight: getFontSize(18) * 1.5, color: '#333', fontFamily: 'Poppins-Regular' }}>×</Text>
                 <Text style={{ fontSize: getFontSize(18), lineHeight: getFontSize(18) * 1.5, color: '#333', fontFamily: 'Poppins-Regular' }}>×</Text>
               </TouchableOpacity>
+
 
 
               <Text style={{
