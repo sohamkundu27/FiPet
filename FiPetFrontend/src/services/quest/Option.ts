@@ -8,14 +8,10 @@ export interface OptionInterface {
   get type(): QuestionType;
   get feedback(): string;
   get correct(): boolean;
+  setFeedback(feedback: string): Promise<void>; // only us in admin scripts!
 }
 
-// Only to be used in admin scripts.
-export interface AdminOptionInterface extends OptionInterface{
-  setFeedback(feedback: string): Promise<void>;
-}
-
-export class SingleSelectOption implements OptionInterface, AdminOptionInterface {
+export class SingleSelectOption implements OptionInterface {
 
   /**
    * Use in admin scripts only!
@@ -81,13 +77,11 @@ export class OptionFactory {
   }
 
   fromFirebaseData<T extends QuestionType>(data: DBOption<T>) {
-    const questionType = data.type as QuestionType;
-    switch (questionType) {
+    switch (data.type) {
       case "singleSelect":
         return new SingleSelectOption(this._db, data);
       default:
-        const exhaustiveCheck: never = questionType;
-        throw new Error(`Unhandled question type: ${exhaustiveCheck}`);
+        throw new Error(`Unsupported question type: ${data.type}`);
     }
   }
 
