@@ -1,5 +1,5 @@
 import { DBPreQuestReading, PreQuestReadingId, QuestId, READING_COLLECTION } from "@/src/types/quest";
-import { collection, doc, Firestore, getDoc, setDoc, updateDoc } from "@firebase/firestore";
+import { addDoc, collection, doc, Firestore, getDoc, updateDoc } from "@firebase/firestore";
 
 export interface PreQuestReadingInterface {
   get id(): PreQuestReadingId;
@@ -8,16 +8,16 @@ export interface PreQuestReadingInterface {
   get bottomText(): string;
   get hasImage(): boolean;
   get image(): string|null;
-}
 
-// The following should only be used in admin scripts.
-export interface AdminPreQuestReadingInterface extends PreQuestReading {
+  // The following paragraph of the schema should only be used in admin scripts.
   setTopText(text: string): Promise<void>;
   setBottomText(text: string): Promise<void>;
   setImage(image: string|null): Promise<void>;
+  _setOrder(order: number): Promise<void>; // For package level use only.
+  _setQuestId(questId: QuestId|null): Promise<void>; // For package level use only.
 }
 
-export class PreQuestReading implements PreQuestReadingInterface, AdminPreQuestReadingInterface {
+export class PreQuestReading implements PreQuestReadingInterface {
 
 
   static async fromFirebaseId(db: Firestore, id: PreQuestReadingId) {
@@ -33,9 +33,9 @@ export class PreQuestReading implements PreQuestReadingInterface, AdminPreQuestR
   }
 
   static async create(db: Firestore, data: Omit<DBPreQuestReading, "id">) {
-    const readingRef = doc(collection(db, READING_COLLECTION));
-    const readingData = {...data, id: readingRef.id};
-    await setDoc(readingRef, readingData);
+    const readingRef = collection(db, READING_COLLECTION);
+    const result = await addDoc(readingRef, data);
+    const readingData = {...data, id: result.id} as DBPreQuestReading;
     return new PreQuestReading(db, readingData);
   }
 
