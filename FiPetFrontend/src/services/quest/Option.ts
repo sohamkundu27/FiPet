@@ -1,4 +1,4 @@
-import { collection, doc, Firestore, getDoc, getDocs, Query, setDoc, updateDoc } from "@firebase/firestore";
+import { addDoc, collection, doc, Firestore, getDoc, getDocs, Query, updateDoc } from "@firebase/firestore";
 import { DBOption, OptionId, OPTIONS_COLLECTION, QuestId, QuestionId, QuestionType } from "@/src/types/quest";
 
 
@@ -8,22 +8,18 @@ export interface OptionInterface {
   get type(): QuestionType;
   get feedback(): string;
   get correct(): boolean;
+  setFeedback(feedback: string): Promise<void>; // only us in admin scripts!
 }
 
-// Only to be used in admin scripts.
-export interface AdminOptionInterface extends OptionInterface{
-  setFeedback(feedback: string): Promise<void>;
-}
-
-export class SingleSelectOption implements OptionInterface, AdminOptionInterface {
+export class SingleSelectOption implements OptionInterface {
 
   /**
    * Use in admin scripts only!
    */
   static async create(db: Firestore, args: Omit<DBOption<"singleSelect">, "id">) {
-    const optionRef = doc(collection(db, OPTIONS_COLLECTION));
-    const optionData = {...args, id: optionRef.id};
-    await setDoc(optionRef, optionData);
+    const optionRef = collection(db, OPTIONS_COLLECTION);
+    const optionDoc = await addDoc(optionRef, args);
+    const optionData = {...args, id: optionDoc.id}
     return new SingleSelectOption(db, optionData);
   }
 
@@ -81,13 +77,11 @@ export class OptionFactory {
   }
 
   fromFirebaseData<T extends QuestionType>(data: DBOption<T>) {
-    const questionType = data.type as QuestionType;
-    switch (questionType) {
+    switch (data.type) {
       case "singleSelect":
         return new SingleSelectOption(this._db, data);
       default:
-        const exhaustiveCheck: never = questionType;
-        throw new Error(`Unhandled question type: ${exhaustiveCheck}`);
+        throw new Error(`Unsupported question type: ${data.type}`);
     }
   }
 
@@ -99,6 +93,7 @@ export class OptionFactory {
     }
     const optionData = {
       ...optionDoc.data({serverTimestamps: "estimate"}),
+      id: optionDoc.id,
       questionId: optionDoc.get("questionId") || null
     } as DBOption<T>;
     return this.fromFirebaseData(optionData);
@@ -110,6 +105,7 @@ export class OptionFactory {
     optionDocs.forEach((optionDoc) => {
       const optionData = {
         ...optionDoc.data({serverTimestamps: "estimate"}),
+        id: optionDoc.id,
         questionId: optionDoc.get("questionId") || null
       } as DBOption<T>;
       options.push(this.fromFirebaseData(optionData));

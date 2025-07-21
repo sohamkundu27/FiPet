@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { collection, doc, getDocs, query, where, orderBy, limit, Query, updateDoc, serverTimestamp, FieldValue, addDoc, Timestamp, Firestore, getDoc, setDoc } from '@firebase/firestore';
 import { ANSWER_COLLECTION, DB_JSON_PracticeQuestion, DB_JSON_Question, DB_JSON_Starter, DBNormalQuestion, DBOption, DBPracticeQuestion, DBPreQuestReading, DBQuest, DBQuestAnswer, DBQuestCompletion, DBQuestion, QUEST_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, QuestTopic, READING_COLLECTION, Reward } from '@/src/types/quest';
+=======
+import { collection, doc, getDocs, query, where, orderBy, limit, Query, updateDoc, serverTimestamp, FieldValue, addDoc, Timestamp, Firestore } from '@firebase/firestore';
+import { DB_JSON_PracticeQuestion, DB_JSON_Question, DB_JSON_Starter, DBNormalQuestion, DBOption, DBPracticeQuestion, DBPreQuestReading, DBQuest, DBQuestAnswer, DBQuestCompletion, DBQuestion, QUEST_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QUESTIONS_COLLECTION, QuestionType, QuestTopic, READING_COLLECTION, Reward } from '@/src/types/quest';
+>>>>>>> 0332845 (Schema change)
 import { Question, QuestionFactory, SingleSelectQuestion } from './Question';
 import { PreQuestReading } from './PreQuestReading';
 
@@ -8,16 +13,28 @@ import { PreQuestReading } from './PreQuestReading';
  */
 function binSearch<T, K>(array: T[], value: K, compare: (item: T, value: K) => number): T|false {
   let start = 0;
+<<<<<<< HEAD
   let end = array.length - 1;
   while (start <= end) {
     let middle = Math.floor(start + ((end - start) / 2));
+=======
+  let end = array.length;
+  while (start <= end) {
+    let middle = Math.round(start + ((end - start) / 2));
+>>>>>>> 0332845 (Schema change)
     let cmp = compare(array[middle], value);
     if (cmp === 0) {
       return array[middle];
     } else if (cmp < 0) {
+<<<<<<< HEAD
       start = middle + 1;
     } else {
       end = middle - 1;
+=======
+      end = middle;
+    } else {
+      start = middle;
+>>>>>>> 0332845 (Schema change)
     }
   }
   return false;
@@ -54,6 +71,7 @@ export interface QuestInterface {
   get duration(): number;
   get reward(): Reward;
   get topics(): QuestTopic[];
+<<<<<<< HEAD
   get isDeleted(): boolean;
 
   getQuestion(questionID: QuestionId): Question;
@@ -74,6 +92,21 @@ export interface UserQuestInterface extends QuestInterface {
 
 // For admin scripts only:
 export interface AdminQuestInterface extends QuestInterface{
+=======
+  get isComplete(): boolean;
+  get isDeleted(): boolean;
+
+  complete(
+    userId: string,
+    handleReward: (correctRatio: number, reward: Reward|null) => Promise<Reward>
+  ): Promise<void>;
+  getLatestQuestion(): Question|false;
+  getNextQuestion(currentQuestion: Question): Question|false;
+  getQuestions(): Question[];
+  getReadings(): PreQuestReading[];
+
+  // For admin scripts only:
+>>>>>>> 0332845 (Schema change)
   delete(): Promise<void>;
   setTitle(title: string): Promise<void>;
   setDescription(description: string): Promise<void>;
@@ -97,7 +130,11 @@ function deleteFields<T extends object, K extends keyof T>(
   return copy;
 }
 
+<<<<<<< HEAD
 export class Quest implements AdminQuestInterface, UserQuestInterface {
+=======
+export class Quest implements QuestInterface {
+>>>>>>> 0332845 (Schema change)
 
   /**
    * Helper to generate a query for a single quest.
@@ -113,7 +150,11 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
    *
    * Use @see generateSingleQuery or @see QUEST_COLLECTION to create your firebase queries.
    */
+<<<<<<< HEAD
   static async fromFirebaseQuery(
+=======
+  static async fromFirebase(
+>>>>>>> 0332845 (Schema change)
     db: Firestore,
     questQuery: Query,
     loadQuestions: boolean = true,
@@ -127,6 +168,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
       const questDocs = await getDocs(questQuery);
 
       questDocs.forEach(async (questDoc) => {
+<<<<<<< HEAD
         const questData = questDoc.data({serverTimestamps: "estimate"}) as DBQuest;
 
 
@@ -138,20 +180,38 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
           userData = {
             userId: userId,
           };
+=======
+        const questData = {...questDoc.data({serverTimestamps: "estimate"}), id: questDoc.id} as DBQuest;
+
+
+        let userData;
+        if (userId) {
+>>>>>>> 0332845 (Schema change)
           const completionRef = collection(db, 'users', userId, QUEST_COMPLETION_COLLECTION);
           const completionQuery = query(completionRef, where("questId", "==", questData.id), limit(1));
           const completionDocs = await getDocs(completionQuery);
           if (completionDocs.size === 1 ) {
             let completionData = completionDocs.docs[0].data(
               {serverTimestamps: "estimate"}) as DBQuestCompletion;
+<<<<<<< HEAD
             userData.completionData = completionData;
+=======
+            userData = {
+              completionData: completionData,
+              userId: userId,
+            };
+>>>>>>> 0332845 (Schema change)
           }
         }
 
         const quest = new Quest(db, questData, userData);
         if (loadQuestions) {
           let lastOrder;
+<<<<<<< HEAD
           if (userId) {
+=======
+          if (userData) {
+>>>>>>> 0332845 (Schema change)
             lastOrder = await quest._loadAnsweredQuestions();
           }
           await quest._loadQuestions(lastOrder);
@@ -170,6 +230,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     });
   }
 
+<<<<<<< HEAD
   /**
    * @param loadQuestions will cause all of the quest questions to be loaded from firebase (slower).
    *
@@ -223,6 +284,8 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     return quest;
   }
 
+=======
+>>>>>>> 0332845 (Schema change)
   static async _createQuestion<T extends QuestionType>(
     db: Firestore,
     questionData: Omit<DBQuestion<T>, "id">,
@@ -258,7 +321,11 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
         );
       default:
         const exhaustiveCheck: never = questionType;
+<<<<<<< HEAD
         throw new Error(`Unhandled question type: ${exhaustiveCheck}`);
+=======
+        throw new Error(`Unhandled color case: ${exhaustiveCheck}`);
+>>>>>>> 0332845 (Schema change)
     }
   }
 
@@ -312,7 +379,10 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
       baseFeedback: undefined,
 
       // set up rest of data.
+<<<<<<< HEAD
       reward: questionJSON.reward || null,
+=======
+>>>>>>> 0332845 (Schema change)
       questId: questId,
       order: order,
       type: questionJSON.type,
@@ -336,10 +406,15 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
 
   static async _createQuest(db: Firestore, index: number, json: DB_JSON_Starter): Promise<Quest> {
     const questCollection = collection(db, QUEST_COLLECTION);
+<<<<<<< HEAD
     const questRef = doc(questCollection);
     const questJSON = json.quests[index];
     const questData: DBQuest = {
       id: questRef.id,
+=======
+    const questJSON = json.quests[index];
+    const questData: Omit<DBQuest, "id"> = {
+>>>>>>> 0332845 (Schema change)
       reward: questJSON.reward,
       deleted: false,
       description: questJSON.description,
@@ -349,10 +424,17 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     };
 
     return new Promise<Quest>((resolve) => {
+<<<<<<< HEAD
       setDoc(questRef, questData).then(() => {
         const questId = questRef.id;
 
         const quest = new Quest(db, questData);
+=======
+      addDoc(questCollection, questData).then((res) => {
+        const questId = res.id;
+
+        const quest = new Quest(db, {...questData, id: questId});
+>>>>>>> 0332845 (Schema change)
         const numQuestions = questJSON.questions.length;
         let questionsLoaded = 0;
         const questions: (Question|null)[] = new Array().fill(null, numQuestions);
@@ -435,7 +517,11 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
   private _userId?: string;
   private _completionData?: DBQuestCompletion;
 
+<<<<<<< HEAD
   private constructor(db: Firestore, data: DBQuest, userData?: {completionData?: DBQuestCompletion, userId: string}) {
+=======
+  private constructor(db: Firestore, data: DBQuest, userData?: {completionData: DBQuestCompletion, userId: string}) {
+>>>>>>> 0332845 (Schema change)
     this._db = db;
     this._dbData = data;
     this._completionData = userData?.completionData;
@@ -468,7 +554,14 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
 
       questionsSnap.forEach(async (doc) => {
         const questionType = doc.get("type") as QuestionType; // @ts-ignore
+<<<<<<< HEAD
         const questionData = doc.data({serverTimestamps: "estimate"}) as DBQuestion<typeof questionType>;
+=======
+        const questionData = {
+          ...doc.data({serverTimestamps: "estimate"}),
+          id: doc.id,
+        } as DBQuestion<typeof questionType>;
+>>>>>>> 0332845 (Schema change)
         const question = await factory.fromFirebaseData(questionData);
         this._questions.push(question);
         if (this._questions.length >= questionsSnap.size) {
@@ -495,8 +588,16 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
       }
 
       readingsSnap.forEach(async (doc) => {
+<<<<<<< HEAD
         const readingData = doc.data({serverTimestamps: "estimate"}) as DBPreQuestReading;
         const reading = new PreQuestReading(this._db, readingData);
+=======
+        const readingData = {
+          ...doc.data({serverTimestamps: "estimate"}),
+          id: doc.id,
+        } as DBPreQuestReading;
+        const reading = await PreQuestReading.create(this._db, readingData);
+>>>>>>> 0332845 (Schema change)
         this._readings.push(reading);
         if (this._readings.length >= readingsSnap.size) {
           res();
@@ -519,19 +620,28 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     }
 
     const factory = new QuestionFactory(this._db);
+<<<<<<< HEAD
     let highestQuestionOrder = -1;
 
     const answersRef = collection(this._db, 'users', this._userId, ANSWER_COLLECTION);
+=======
+    let highestQuestionOrder = 0;
+
+    const answersRef = collection(this._db, 'users', this._userId, 'questAnswers');
+>>>>>>> 0332845 (Schema change)
     const answersQuery = query(
       answersRef,
       where("questId", "==", this._dbData.id),
       orderBy("order")
     );
     const answersSnapshot = await getDocs(answersQuery);
+<<<<<<< HEAD
     
     if (answersSnapshot.size === 0) {
       return new Promise((res)=>{res(-1);});
     }
+=======
+>>>>>>> 0332845 (Schema change)
 
     const questionsRef = collection(this._db, QUESTIONS_COLLECTION);
     const answeredQuestionsQuery = query(
@@ -552,7 +662,11 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
 
       function handleLoop(questionOrder?: number) {
         numCallbacks ++;
+<<<<<<< HEAD
         if (questionOrder !== undefined && questionOrder > highestQuestionOrder) {
+=======
+        if (questionOrder && questionOrder > highestQuestionOrder) {
+>>>>>>> 0332845 (Schema change)
           highestQuestionOrder = questionOrder;
         }
         if (numCallbacks >= totalCallbacks) {
@@ -573,7 +687,11 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
         } as DBQuestAnswer<typeof answerType>;
 
         const questionDoc = binSearch(answerQuestionsSnap.docs, answerData.questionId, (doc, value) => {
+<<<<<<< HEAD
           const docValue = doc.get("id");
+=======
+          const docValue = doc.get("questionId");
+>>>>>>> 0332845 (Schema change)
           if (docValue === value) {
             return 0;
           } else if (docValue < value) {
@@ -588,7 +706,14 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
           return;
         }
         const questionType = questionDoc.get("type") as QuestionType; // @ts-ignore
+<<<<<<< HEAD
         const questionData = questionDoc.data({serverTimestamps: "estimate"}) as DBQuestion<typeof questionType>;
+=======
+        const questionData = {
+          ...questionDoc.data({serverTimestamps: "estimate"}),
+          id: questionDoc.id
+        } as DBQuestion<typeof questionType>;
+>>>>>>> 0332845 (Schema change)
 
         factory.fromFirebaseData(questionData, answerData).then((question) => {
           questions[answerData.order] = question;
@@ -627,6 +752,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
 
   async complete(
     userId: string,
+<<<<<<< HEAD
     rewardHook?: (correctRatio: number, reward: Reward|null) => Promise<Reward>
   ) {
     let reward = this._dbData.reward;
@@ -636,16 +762,30 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     const completionRef = doc(this._db, 'users', userId, QUEST_COMPLETION_COLLECTION, this._dbData.id);
     const data: Omit<DBQuestCompletion, 'completedAt'> & {completedAt: FieldValue} = {
       id: this._dbData.id,
+=======
+    handleReward: (correctRatio: number, reward: Reward|null) => Promise<Reward>
+  ) {
+    let reward = await handleReward(1, this._dbData.reward);
+    const completionRef = collection(this._db, 'users', userId, QUEST_COMPLETION_COLLECTION);
+    const data: Omit<DBQuestCompletion, 'completedAt'> & {completedAt: FieldValue} = {
+>>>>>>> 0332845 (Schema change)
       reward: reward,
       completedAt: serverTimestamp(),
       questId: this._dbData.id
     }
+<<<<<<< HEAD
     await setDoc(completionRef, data);
+=======
+    await addDoc(completionRef, data);
+>>>>>>> 0332845 (Schema change)
     this._completionData = {
       ...data,
       completedAt: new Timestamp(Date.now()/1000, 0),
     }
+<<<<<<< HEAD
     return reward;
+=======
+>>>>>>> 0332845 (Schema change)
   };
 
   /**
@@ -659,7 +799,11 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     }
     let i = this._questions.length - 1;
     let latestQuestion = this._questions[i];
+<<<<<<< HEAD
     while (!latestQuestion.hasAnswer() && i > 0) {
+=======
+    while (!latestQuestion.hasAnswer() && i > 1) {
+>>>>>>> 0332845 (Schema change)
       i --;
       latestQuestion = this._questions[i];
     }
@@ -688,8 +832,12 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
       return q.id === currentQuestion.id ||
         (q.hasPracticeQuestion() && q.getPracticeQuestion().id === currentQuestion.id);
     });
+<<<<<<< HEAD
 
     if (index === -1) {
+=======
+    if (!index) {
+>>>>>>> 0332845 (Schema change)
       throw "Question does not exist in quest!";
     }
 
@@ -702,7 +850,11 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
         if (q.getAnswer().correct) {
           return index >= this._questions.length - 1 ? false : this._questions[index + 1];
         } else {
+<<<<<<< HEAD
           return q.hasPracticeQuestion() ? q.getPracticeQuestion() : (index >= this._questions.length - 1 ? false : this._questions[index + 1]);
+=======
+          return q.hasPracticeQuestion() ? q.getPracticeQuestion() : false;
+>>>>>>> 0332845 (Schema change)
         }
       }
     } else {
@@ -715,6 +867,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     }
   };
 
+<<<<<<< HEAD
   getQuestion(questionId: QuestionId) {
     let theQuestion = undefined;
     for (const question of this._questions) {
@@ -732,6 +885,8 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     return theQuestion;
   };
 
+=======
+>>>>>>> 0332845 (Schema change)
   getQuestions() {
     return this._questions;
   };
