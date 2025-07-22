@@ -132,8 +132,6 @@ type QuestContextType = {
   quest: Quest | null,
   getCorrectAnswerRatio: () => number,
   getTotalXPEarned: () => number,
-  addXP: (xp: number) => Promise<void>,
-  addCoins: (coins: number) => Promise<void>,
   questXpAwarded: boolean,
 };
 
@@ -148,40 +146,6 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-
-  // Function to add XP to the user's current XP total
-  const addXP = async (xp: number) => {
-    if (!user) {
-      console.error('No user logged in');
-      return;
-    }
-
-    try {
-      const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        current_xp: increment(xp)
-      });
-    } catch (error) {
-      console.error('Error adding XP:', error);
-    }
-  };
-
-  // Function to add coins to the user's current coin total
-  const addCoins = async (coins: number) => {
-    if (!user) {
-      console.error('No user logged in');
-      return;
-    }
-
-    try {
-      const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        coins: increment(coins)
-      });
-    } catch (error) {
-      console.error('Error adding coins:', error);
-    }
-  };
 
   // Function to load user's XP progress for this quest
   const loadXpProgress = async () => {
@@ -493,8 +457,6 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
       quest,
       getCorrectAnswerRatio,
       getTotalXPEarned,
-      addXP,
-      addCoins,
       questXpAwarded,
     }}>
       {children}
