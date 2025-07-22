@@ -71,7 +71,6 @@ export interface QuestInterface {
   get duration(): number;
   get reward(): Reward;
   get topics(): QuestTopic[];
-<<<<<<< HEAD
   get isDeleted(): boolean;
 
   complete(
@@ -85,21 +84,6 @@ export interface QuestInterface {
 
 // For admin scripts only:
 export interface AdminQuestInterface extends QuestInterface{
-=======
-  get isComplete(): boolean;
-  get isDeleted(): boolean;
-
-  complete(
-    userId: string,
-    handleReward: (correctRatio: number, reward: Reward|null) => Promise<Reward>
-  ): Promise<void>;
-  getLatestQuestion(): Question|false;
-  getNextQuestion(currentQuestion: Question): Question|false;
-  getQuestions(): Question[];
-  getReadings(): PreQuestReading[];
-
-  // For admin scripts only:
->>>>>>> 0332845 (Schema change)
   delete(): Promise<void>;
   setTitle(title: string): Promise<void>;
   setDescription(description: string): Promise<void>;
@@ -123,11 +107,7 @@ function deleteFields<T extends object, K extends keyof T>(
   return copy;
 }
 
-<<<<<<< HEAD
 export class Quest implements AdminQuestInterface, UserQuestInterface {
-=======
-export class Quest implements QuestInterface {
->>>>>>> 0332845 (Schema change)
 
   /**
    * Helper to generate a query for a single quest.
@@ -311,11 +291,7 @@ export class Quest implements QuestInterface {
         );
       default:
         const exhaustiveCheck: never = questionType;
-<<<<<<< HEAD
         throw new Error(`Unhandled question type: ${exhaustiveCheck}`);
-=======
-        throw new Error(`Unhandled color case: ${exhaustiveCheck}`);
->>>>>>> 0332845 (Schema change)
     }
   }
 

@@ -14,8 +14,6 @@ export interface QuestionInterface {
   get prompt(): string;
   get reward(): Reward | null;
   get isPractice(): boolean;
-<<<<<<< HEAD
-  get order(): number;
 
   hasPracticeQuestion(): boolean
   getPracticeQuestion(): Question;
@@ -28,17 +26,6 @@ export interface UserQuestionInterface extends QuestionInterface {
   setPrompt(prompt: string): Promise<void>;
   setReward(reward: Reward): Promise<void>
   setPracticeQuestion(question: Question|null): Promise<void>;
-=======
-  get isAnswered(): boolean;
-
-  // The following paragraph of the schema should only be used in admin scripts.
-  setPrompt(prompt: string): Promise<void>;
-  setReward(reward: Reward): Promise<void>
-  setPracticeQuestion(question: Question|null): Promise<void>;
-
-  hasPracticeQuestion(): boolean
-  getPracticeQuestion(): Question;
->>>>>>> 0332845 (Schema change)
 }
 
 export interface QuestionWithOptionsInterface extends QuestionInterface {
@@ -61,11 +48,7 @@ export interface QuestionWithOptionsInterface extends QuestionInterface {
   addOption(option: Option): void; // use in admin scripts only!
 }
 
-<<<<<<< HEAD
 export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestionInterface {
-=======
-export class SingleSelectQuestion implements QuestionWithOptionsInterface {
->>>>>>> 0332845 (Schema change)
 
   /**
    * Practice question will be set up inside here (order, questId, practiceFor)
@@ -480,12 +463,8 @@ export class QuestionFactory {
     data: DBQuestion<T>,
     completionData?: DBQuestAnswer<T>,
   ) {
-<<<<<<< HEAD
     const questionType = data.type as QuestionType;
     switch (questionType) {
-=======
-    switch (data.type) {
->>>>>>> 0332845 (Schema change)
 
       case "singleSelect":
         const optionsQuery = query(
@@ -520,12 +499,8 @@ export class QuestionFactory {
 
 
       default:
-<<<<<<< HEAD
         const exhaustiveCheck: never = questionType;
         throw new Error(`Unhandled question type: ${exhaustiveCheck}`);
-=======
-        throw new Error(`Unsupported question type: ${data.type}`);
->>>>>>> 0332845 (Schema change)
     }
   }
 }
