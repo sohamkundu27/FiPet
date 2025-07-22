@@ -1,18 +1,18 @@
 import { Timestamp } from "@firebase/firestore";
 import { ItemId } from "./item";
 
-export const QUEST_COLLECTION = 'quests';
-export const QUEST_COMPLETION_COLLECTION = 'questCompletion';
-export const QUESTIONS_COLLECTION = 'questions';
-export const ANSWER_COLLECTION = 'questAnswers';
-export const OPTIONS_COLLECTION = 'options';
-export const READING_COLLECTION = 'preQuestReadings';
+export const QUEST_COLLECTION = 'quests2';
+export const QUEST_COMPLETION_COLLECTION = 'questCompletion2';
+export const QUESTIONS_COLLECTION = 'questions2';
+export const ANSWER_COLLECTION = 'questAnswers2';
+export const OPTIONS_COLLECTION = 'options2';
+export const READING_COLLECTION = 'preQuestReadings2';
 
 export type QuestionTypeWithSingleOption = "singleSelect";
 export type QuestionTypeWithMultipleOptions = never;
 export type QuestionTypeWithOptions = QuestionTypeWithSingleOption | QuestionTypeWithMultipleOptions;
 export type QuestionType = QuestionTypeWithOptions;
-export type QuestTopic = "opportunity cost";
+export type QuestTopic = "Opportunity Cost" | "Budgeting";
 
 export type QuestId = string;
 export type PreQuestReadingId = string;
