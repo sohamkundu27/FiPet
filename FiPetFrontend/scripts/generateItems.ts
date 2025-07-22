@@ -1,5 +1,6 @@
 import { collection, deleteDoc, doc, getDocs, setDoc, getFirestore } from "@firebase/firestore";
 import { initializeApp } from '@firebase/app';
+import { Item } from "@/src/types/item";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -18,16 +19,9 @@ const app = initializeApp(firebaseConfig);
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
-type Item = {
-  name: string,
-  cost: number,
-  imageType: "emoji" | "png",
-  image: string,
-  requiredLevel: number,
-}
-
 const items: Item[] = [
   {
+    id: "0",
     name: "Hat",
     cost: 100,
     image: "🧢",

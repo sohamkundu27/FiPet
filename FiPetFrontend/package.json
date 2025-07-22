@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "generate-items": "npx tsc scripts/generateItems.ts 2>&1 1>/dev/null ; node scripts/generateItems.js",
+    "runScript": "npx ts-node -r tsconfig-paths/register",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -60,6 +60,7 @@
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "~5.8.3"
   },
   "private": true
