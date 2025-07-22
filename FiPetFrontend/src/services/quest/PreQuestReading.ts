@@ -12,7 +12,6 @@ export interface PreQuestReadingInterface {
   get bottomText(): string;
   get hasImage(): boolean;
   get image(): string|null;
-<<<<<<< HEAD
 }
 
 // The following should only be used in admin scripts.
@@ -23,18 +22,6 @@ export interface AdminPreQuestReadingInterface extends PreQuestReading {
 }
 
 export class PreQuestReading implements PreQuestReadingInterface, AdminPreQuestReadingInterface {
-=======
-
-  // The following paragraph of the schema should only be used in admin scripts.
-  setTopText(text: string): Promise<void>;
-  setBottomText(text: string): Promise<void>;
-  setImage(image: string|null): Promise<void>;
-  _setOrder(order: number): Promise<void>; // For package level use only.
-  _setQuestId(questId: QuestId|null): Promise<void>; // For package level use only.
-}
-
-export class PreQuestReading implements PreQuestReadingInterface {
->>>>>>> 99ab5d9 (Schema change)
 
 
   static async fromFirebaseId(db: Firestore, id: PreQuestReadingId) {
