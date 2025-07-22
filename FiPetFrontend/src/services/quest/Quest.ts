@@ -56,7 +56,6 @@ export interface QuestInterface {
   get topics(): QuestTopic[];
   get isDeleted(): boolean;
 
-  getQuestion(questionID: QuestionId): Question;
   getQuestions(): Question[];
   getReadings(): PreQuestReading[];
 }
@@ -66,8 +65,8 @@ export interface UserQuestInterface extends QuestInterface {
 
   complete(
     userId: string,
-    rewardHook?: (correctRatio: number, reward: Reward|null) => Promise<Reward>
-  ): Promise<Reward>;
+    handleReward: (correctRatio: number, reward: Reward|null) => Promise<Reward>
+  ): Promise<void>;
   getLatestQuestion(): Question|false;
   getNextQuestion(currentQuestion: Question): Question|false;
 }
