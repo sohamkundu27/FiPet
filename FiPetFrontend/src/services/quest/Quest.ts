@@ -691,7 +691,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     });
 
     if (index === -1) {
-      throw "Question does not exist in quest! (getNextQuestion)";
+      throw "Question does not exist in quest!";
     }
 
     const q = this._questions[index];
@@ -703,7 +703,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
         if (q.getAnswer().correct) {
           return index >= this._questions.length - 1 ? false : this._questions[index + 1];
         } else {
-          return q.hasPracticeQuestion() ? q.getPracticeQuestion() : false;
+          return q.hasPracticeQuestion() ? q.getPracticeQuestion() : (index >= this._questions.length - 1 ? false : this._questions[index + 1]);
         }
       }
     } else {
