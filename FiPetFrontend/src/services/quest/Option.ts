@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, Firestore, getDoc, getDocs, Query, updateDoc } from "@firebase/firestore";
+import { collection, doc, Firestore, getDoc, getDocs, Query, setDoc, updateDoc } from "@firebase/firestore";
 import { DBOption, OptionId, OPTIONS_COLLECTION, QuestId, QuestionId, QuestionType } from "@/src/types/quest";
 
 
@@ -17,9 +17,9 @@ export class SingleSelectOption implements OptionInterface {
    * Use in admin scripts only!
    */
   static async create(db: Firestore, args: Omit<DBOption<"singleSelect">, "id">) {
-    const optionRef = collection(db, OPTIONS_COLLECTION);
-    const optionDoc = await addDoc(optionRef, args);
-    const optionData = {...args, id: optionDoc.id}
+    const optionRef = doc(collection(db, OPTIONS_COLLECTION));
+    const optionData = {...args, id: optionRef.id};
+    await setDoc(optionRef, optionData);
     return new SingleSelectOption(db, optionData);
   }
 
@@ -93,7 +93,6 @@ export class OptionFactory {
     }
     const optionData = {
       ...optionDoc.data({serverTimestamps: "estimate"}),
-      id: optionDoc.id,
       questionId: optionDoc.get("questionId") || null
     } as DBOption<T>;
     return this.fromFirebaseData(optionData);
@@ -105,7 +104,6 @@ export class OptionFactory {
     optionDocs.forEach((optionDoc) => {
       const optionData = {
         ...optionDoc.data({serverTimestamps: "estimate"}),
-        id: optionDoc.id,
         questionId: optionDoc.get("questionId") || null
       } as DBOption<T>;
       options.push(this.fromFirebaseData(optionData));

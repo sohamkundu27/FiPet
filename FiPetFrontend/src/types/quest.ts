@@ -92,6 +92,7 @@ export type DBOption<T extends QuestionType> = {
 } & DBOptionShape<T>;
 
 export type DBQuestCompletion = {
+  id: QuestId,
   questId: QuestId,
   completedAt: Timestamp,
   reward: Reward,

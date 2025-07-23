@@ -130,12 +130,27 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
     }).catch((err) => {
       console.error(err);
       setError("Failed to load quest!");
-      setLoading(false);
     });
   }, [user, questID]);
 
-  // Always render the children and provide loading state through context
-  // This allows individual pages to handle loading states while keeping navigation intact
+  // Show loading or error state
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#FF7A00" />
+        <Text style={{ marginTop: 10, fontSize: 16 }}>Loading quest...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <Text style={{ fontSize: 16, color: 'red', textAlign: 'center' }}>Error: {error}</Text>
+      </View>
+    );
+  }
+
   return (
     <QuestContext.Provider value={{ 
       loading,
