@@ -1,16 +1,15 @@
 // Tentative Goal: Page shows quest details: description, progress towards completion, XP/rewards earned so far. Possible integrates with ./questions/index.tsx.
 import { useQuest } from "@/src/hooks/useQuest";
-import { Redirect, useLocalSearchParams, usePathname } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 import QuestComplete from '@/src/screens/quest/QuestComplete';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 
 export default function Page() {
   const { questID } = useLocalSearchParams();
-  const { getFurthestQuestion, isComplete, quest, loading, error } = useQuest();
-  const pathname = usePathname();
+  const { quest, loading, error } = useQuest();
 
   // Show loading state while quest data is being fetched
-  if (loading) {
+  if (loading || !quest) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
@@ -29,18 +28,21 @@ export default function Page() {
   }
 
   // If the quest is complete, show the completion screen
-  if (isComplete()) {
+  if (quest.isComplete) {
     return (<QuestComplete />);
   }
 
   // If the quest has a preQuest requirement, redirect to preQuest reading first
   // Check if there's a prereading that needs to be shown first
-  if (quest?.preQuest) {
+  if (quest.getReadings().length > 0) {
     return (<Redirect href={`/quests/${questID}/preQuestReading`} />);
   }
 
   // Show the first unanswered question
-  const furthestQuestion = getFurthestQuestion();
+  const furthestQuestion = quest.getLatestQuestion();
+  if (!furthestQuestion) {
+    return (<QuestComplete />);
+  }
   return (<Redirect href={`/quests/${questID}/questions/${furthestQuestion.id}`} />);
 }
 

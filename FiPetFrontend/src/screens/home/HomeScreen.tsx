@@ -9,12 +9,16 @@ import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
 import { getFontSize } from '@/src/hooks/useFont';
 import { useRouter, usePathname, useFocusEffect } from 'expo-router';
-import { useAuth } from '@/src/hooks/useAuth';
-import { getCurrentQuest, getNextAvailableQuest, QuestWithProgress } from '@/src/services/questsIndexService';
+import { Quest } from '@/src/services/quest/Quest';
+import { useAuth } from '@/src/hooks/useRequiresAuth';
+import { collection, limit, query } from '@firebase/firestore';
+import { db } from '@/src/config/firebase';
+import { QUEST_COLLECTION } from '@/src/types/quest';
 
 export default function HomeScreen() {
 
   const { level, streak, mood, coins, addMood } = useGamificationStats();
+  const [quests, setQuests] = useState<Quest[]|null>(null);
   const moodProgress = useRef<AnimatedCircularProgress>(null);
   const levelProgress = useRef<AnimatedCircularProgress>(null);
 
@@ -37,18 +41,13 @@ export default function HomeScreen() {
   });
 
   const { user } = useAuth();
-  const [currentQuest, setCurrentQuest] = useState<QuestWithProgress | null>(null);
 
   useFocusEffect(
     React.useCallback(() => {
       async function fetchQuest() {
-        if (user) {
-          let quest = await getCurrentQuest(user.uid);
-          if (!quest) {
-            quest = await getNextAvailableQuest(user.uid);
-          }
-          setCurrentQuest(quest);
-        }
+        const questQuery = query(collection(db,QUEST_COLLECTION), limit(2));
+        const quests = await Quest.fromFirebaseQuery(db, questQuery, false, false, user.uid);
+        setQuests(quests.filter((quest) => !quest.isComplete));
       }
       fetchQuest();
     }, [user])
@@ -213,33 +212,35 @@ export default function HomeScreen() {
               <Text style={styles.sectionSubtitle}>Complete quests to earn extra XP</Text>
             </View>
           </View>
-          <LinearGradient
-            colors={["#F97216", "#F9C116"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.quest}
-          >
-            <View style={styles.questContent}>
-              <Text style={styles.questTitle}>
-                {currentQuest ? currentQuest.quest.title : 'Quest Completed!'}
-              </Text>
-              <Text style={styles.questSubtitle}>
-                {currentQuest ? (currentQuest.quest.descriptions?.[0] || '') : 'You’ve finished all available quests.'}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={styles.playButton}
-              onPress={() => {
-                if (currentQuest) {
-                  router.push(`/quests/${currentQuest.quest.id}`);
-                }
-              }}
-              disabled={!currentQuest}
-            >
-              <Image source={require("@/src/assets/images/play.png")} style={{ width: Dimensions.get("window").width / 6.8, height: Dimensions.get("window").width / 6.8 }} />
-              <Text style={styles.playText}>Play</Text>
-            </TouchableOpacity>
-          </LinearGradient>
+          {quests?.map((quest) => {
+            return (
+              <LinearGradient
+                key={quest.id}
+                colors={["#F97216", "#F9C116"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.quest}
+              >
+                <View style={styles.questContent}>
+                  <Text style={styles.questTitle}>
+                    {quest.title}
+                  </Text>
+                  <Text style={styles.questSubtitle}>
+                    {quest.description}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.playButton}
+                  onPress={() => {
+                    router.push(`/quests/${quest.id}`);
+                  }}
+                >
+                  <Image source={require("@/src/assets/images/play.png")} style={{ width: Dimensions.get("window").width / 6.8, height: Dimensions.get("window").width / 6.8 }} />
+                  <Text style={styles.playText}>Play</Text>
+                </TouchableOpacity>
+              </LinearGradient>
+              );
+          })}
         </View>
       </ScrollView>
     </View>
