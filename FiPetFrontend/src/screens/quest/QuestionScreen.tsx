@@ -10,6 +10,7 @@ import { Reward } from "@/src/types/quest";
 import FeedbackRenderer from "@/src/components/questionFeedback/FeedbackRenderer";
 import { useAuth } from "@/src/hooks/useRequiresAuth";
 import { useGamificationStats } from "@/src/hooks/useGamificationStats";
+import QuestProgressBar from "@/src/components/QuestProgressBar";
 
 export default function QuestionScreen() {
 
@@ -58,18 +59,7 @@ export default function QuestionScreen() {
               resizeMode="contain"
             />
           </TouchableOpacity>
-          <View style={styles.progressBarSteps}>
-            {questions.map((q, step) => (
-              <View
-                key={step}
-                style={[
-                  styles.progressStep,
-                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                  q.order <= question.order ? styles.progressStepActive : styles.progressStepInactive,
-                ]}
-              />
-            ))}
-          </View>
+          <QuestProgressBar questions={questions} questionID={question.id}/>
         </View>
 
         {/* Question Number */}

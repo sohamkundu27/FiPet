@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useQuest } from '@/src/hooks/useQuest';
+import QuestProgressBar from '@/src/components/QuestProgressBar';
 
 export default function PreQuestReadingScreen() {
   const { quest, loading, error } = useQuest();
@@ -71,18 +72,7 @@ export default function PreQuestReadingScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
             <Image source={require('@/src/assets/images/arrow.png')} style={styles.backArrow} />
           </TouchableOpacity>
-          <View style={styles.progressBarContainer}>
-            {Array.from({ length: totalPages }, (_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.progressBar,
-                  index === 0 ? styles.progressBarLong : styles.progressBarShort,
-                  index < page ? styles.progressBarActive : styles.progressBarInactive,
-                ]}
-              />
-            ))}
-          </View>
+          <QuestProgressBar currentStep={page} numSteps={totalPages}/>
         </View>
         
         {/* Scrollable content */}
