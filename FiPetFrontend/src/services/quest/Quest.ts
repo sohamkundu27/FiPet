@@ -138,6 +138,9 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
           userData = {
             userId: userId,
           };
+          userData = {
+            userId: userId,
+          };
           const completionRef = collection(db, 'users', userId, QUEST_COMPLETION_COLLECTION);
           const completionQuery = query(completionRef, where("questId", "==", questData.id), limit(1));
           const completionDocs = await getDocs(completionQuery);
