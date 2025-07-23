@@ -117,7 +117,7 @@ export default function PreQuestReadingScreen() {
               <Text style={styles.nextButtonText}>{isLastPage ? 'Start Quest' : 'Next'}</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image, RefreshControl, Dimensions } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polygon, Circle, Line, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
@@ -137,6 +137,7 @@ export default function QuestScreen() {
                             {/* Objectives (descriptions) */}
                             <View style={styles.objectivesContainer}>
                                 <View style={styles.objectiveRow}>
+                                    <Text style={styles.objectiveText}>{quest.description}</Text>
                                     <Text style={styles.objectiveText}>{quest.description}</Text>
                                 </View>
                             </View>
@@ -494,3 +495,4 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins',
     },
 });
+
