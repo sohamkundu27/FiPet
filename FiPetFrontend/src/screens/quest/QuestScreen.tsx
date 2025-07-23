@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image, RefreshControl, Dimensions } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Polygon, Circle, Line, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
@@ -118,34 +118,26 @@ export default function QuestScreen() {
                 ) : (
                     <>
                     {quests.map((quest) => {
-                    return (
-                    <LinearGradient
-                        key={quest.id}
-                        colors={['#A259FF', '#3B82F6']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }} 
-                        style={[
-                            styles.questCard,
-                            isTablet && styles.questCardTablet,
-                            isLargeTablet && styles.questCardLargeTablet
-                        ]}
-                     >
+                      return (
+                        <LinearGradient
+                            key={quest.id}
+                            colors={['#A259FF', '#3B82F6']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }} 
+                            style={styles.questCard}
+                        >
 
                                     
-                        {/* Correct Answers Counter */}
-                        <CorrectAnswersCounter quest={quest} />
-
-                        <Text style={[
-                            styles.questCardTitle,
-                            isTablet && styles.questCardTitleTablet,
-                            isLargeTablet && styles.questCardTitleLargeTablet
-                        ]}>{quest.title}</Text>
+                            {/* Correct Answers Counter */}
+                            <CorrectAnswersCounter quest={quest} />
+                            <Text style={styles.questCardTitle}>{quest.title}</Text>
                                     
                             
                             
                             {/* Objectives (descriptions) */}
                             <View style={styles.objectivesContainer}>
                                 <View style={styles.objectiveRow}>
+                                    <Text style={styles.objectiveText}>{quest.description}</Text>
                                     <Text style={styles.objectiveText}>{quest.description}</Text>
                                 </View>
                             </View>
@@ -509,3 +501,4 @@ const styles = StyleSheet.create({
         fontSize: 20,
     },
 });
+

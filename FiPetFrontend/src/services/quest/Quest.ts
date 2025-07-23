@@ -691,7 +691,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     });
 
     if (index === -1) {
-      throw "Question does not exist in quest!";
+      throw "Question does not exist in quest! (getNextQuestion)";
     }
 
     const q = this._questions[index];
