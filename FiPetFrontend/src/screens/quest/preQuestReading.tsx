@@ -4,8 +4,6 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { getPreQuestReadingById } from '@/src/services/preQuestReadingService';
 import { useQuest } from '@/src/hooks/useQuest';
 
-const foxImage = require('@/src/assets/images/fox.png');
-
 export default function PreQuestReadingScreen() {
   const { questID } = useLocalSearchParams<{ questID?: string }>();
   const { quest, getAllQuestions } = useQuest();
@@ -67,11 +65,11 @@ export default function PreQuestReadingScreen() {
     if (!isLastPage) {
       setPage(page + 1);
     } else {
-      // Go to first question of the quest
-      if (allQuestions.length > 0) {
-        router.replace(`/quests/${questID}/questions/${allQuestions[0].id}`);
+      const latestQuestion = quest.getLatestQuestion();
+      if (!latestQuestion) {
+        router.replace(`/quests/${quest.id}/questions/${quest.getQuestions()[0]}`);
       } else {
-        router.replace(`/quests/${questID}`);
+        router.replace(`/quests/${quest.id}/questions/${latestQuestion.id}`);
       }
     }
   };
@@ -89,24 +87,30 @@ export default function PreQuestReadingScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
             <Text style={{ fontSize: 38, textAlign: 'center', lineHeight: 40 }}>×</Text>
           </TouchableOpacity>
-          <View style={[styles.progressBarSteps, { flex: 1 }]}> {/* Make bar stretch */}
-            {allQuestions.map((_, step: number) => (
+          <View style={styles.progressBarContainer}>
+            {Array.from({ length: totalPages }, (_, index) => (
               <View
-                key={step}
+                key={index}
                 style={[
-                  styles.progressStep,
-                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                  step < page ? styles.progressStepActive : styles.progressStepInactive,
+                  styles.progressBar,
+                  index === 0 ? styles.progressBarLong : styles.progressBarShort,
+                  index < page ? styles.progressBarActive : styles.progressBarInactive,
                 ]}
               />
             ))}
           </View>
         </View>
-        {/* Scrollable content below */}
-        <ScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.topText}>{String(pageData?.top || '')}</Text>
-          <Image source={require('@/src/assets/images/preQuestReading1.png')} style={styles.foxImage} resizeMode="contain" />
-          <Text style={styles.bottomText}>{String(pageData?.bottom || '')}</Text>
+        
+        {/* Scrollable content */}
+        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+          <Text style={styles.topText}>{String(readings[page].topText || '')}</Text>
+          
+          <View style={styles.imageContainer}>
+            <Image source={require('@/src/assets/images/preQuestReading1.png')} style={styles.foxImage} resizeMode="contain" />
+          </View>
+          
+          <Text style={styles.bottomText}>{String(readings[page].bottomText || '')}</Text>
+          
           <View style={styles.buttonRow}>
             {!isFirstPage && (
               <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -124,12 +128,56 @@ export default function PreQuestReadingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  progressBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: 12,
+    gap: 8,
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+  },
+  progressBarLong: {
+    flex: 3,
+  },
+  progressBarShort: {
+    flex: 1,
+  },
+  progressBarActive: {
+    backgroundColor: '#6C63FF',
+  },
+  progressBarInactive: {
+    backgroundColor: '#E0E0E0',
+  },
+  backArrowContainer: {
+    padding: 8,
+  },
+  backArrow: {
+    width: 24,
+    height: 24,
+    tintColor: '#333',
+  },
+  container: {
+    flexGrow: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: 32,
+    paddingVertical: 40,
   },
   loadingContainer: {
     flex: 1,
@@ -158,14 +206,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#444',
     textAlign: 'center',
-    marginBottom: 32,
+    lineHeight: 26,
+    marginBottom: 60,
+    paddingHorizontal: 16,
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 16,
+    gap: 12,
+    paddingHorizontal: 20,
+    marginBottom: 40,
+  },
+  backButton: {
+    backgroundColor: '#E8E8E8',
+    borderRadius: 25,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    minWidth: 120,
   },
   nextButton: {
     backgroundColor: '#6C63FF',

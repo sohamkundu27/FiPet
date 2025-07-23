@@ -34,18 +34,7 @@ export default function QuestionScreen() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#6C63FF" />
-        <Text style={{ marginTop: 10, fontSize: 16, marginBottom: 20 }}>Loading question...</Text>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 32,
-            backgroundColor: '#FF7A00',
-            borderRadius: 8,
-          }}
-        >
-          <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Go Back</Text>
-        </TouchableOpacity>
+        <Text style={{ marginTop: 10, fontSize: 16 }}>Loading question...</Text>
       </View>
     );
   }

@@ -87,7 +87,6 @@ export default function QuestScreen() {
         return (
             <View style={styles.correctAnswersBadge}>
                 <Text style={styles.correctAnswersText}>{answeredQuestions}/{questions.length}</Text>
-                <Text style={styles.correctAnswersText}>{answeredQuestions}/{questions.length}</Text>
             </View>
         );
     };
@@ -149,25 +148,7 @@ export default function QuestScreen() {
                             end={{ x: 1, y: 1 }} 
                             style={styles.questCard}
                         >
-                    {quests.map((quest) => {
-                      return (
-                        <LinearGradient
-                            key={quest.id}
-                            colors={['#A259FF', '#3B82F6']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }} 
-                            style={styles.questCard}
-                        >
 
-                                    
-                            {/* Correct Answers Counter */}
-                            <CorrectAnswersCounter quest={quest} />
-                            <Text style={styles.questCardTitle}>{quest.title}</Text>
-                                    
-                            
-                            
-                            {/* Objectives (descriptions) */}
-                            <View style={styles.objectivesContainer}>
                                     
                             {/* Correct Answers Counter */}
                             <CorrectAnswersCounter quest={quest} />
@@ -179,45 +160,9 @@ export default function QuestScreen() {
                             <View style={styles.objectivesContainer}>
                                 <View style={styles.objectiveRow}>
                                     <Text style={styles.objectiveText}>{quest.description}</Text>
-                                    <Text style={styles.objectiveText}>{quest.description}</Text>
                                 </View>
-                            </View>
                             </View>
 
-                            {/* Bottom Row - Stats and Play Button */}
-                            <View style={styles.bottomRow}>
-                                <View style={styles.questCardStatsRow}>
-                                    <View style={styles.questCardStat}>
-                                        <GoldCoinIcon />
-                                        <Text style={styles.questCardStatText}>{quest.reward.coins || 0}</Text>
-                                    </View>
-                                    <View style={styles.questCardStat}>
-                                        <CustomClockIcon />
-                                        <Text style={styles.questCardStatText}>{quest.duration} min</Text>
-                                    </View>
-                                </View>
-                                
-                                <TouchableOpacity
-                                    style={styles.playButton}
-                                    activeOpacity={0.85}
-                                    onPress={() => {
-                                        router.push(`/quests/${quest.id}`);
-                                    }}
-                                >
-                                    <GradientPlayIcon colors={['#A259FF', '#3B82F6']} />
-                                    <Text
-                                      style={[
-                                        styles.playButtonText,
-                                        { color: '#A259FF' }
-                                      ]}
-                                    >
-                                      Continue
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </LinearGradient>
-                      );
-                    })}
                             {/* Bottom Row - Stats and Play Button */}
                             <View style={styles.bottomRow}>
                                 <View style={styles.questCardStatsRow}>
