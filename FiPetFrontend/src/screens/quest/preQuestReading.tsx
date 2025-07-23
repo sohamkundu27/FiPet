@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
-import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
 import { useRouter, Stack } from 'expo-router';
 import { useQuest } from '@/src/hooks/useQuest';
 
 export default function PreQuestReadingScreen() {
   const { quest, loading, error } = useQuest();
-  const { quest, loading, error } = useQuest();
   const router = useRouter();
   const [page, setPage] = useState(0);
-  const [page, setPage] = useState(0);
 
-  if (loading || !quest) {
   if (loading || !quest) {
     return (
       <View style={styles.loadingContainer}>
@@ -36,25 +31,7 @@ export default function PreQuestReadingScreen() {
 
   // Handle missing preQuest document
   if (error) {
-  // Handle missing preQuest document
-  if (error) {
     return (
-      <View style={[styles.loadingContainer, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }]}>
-        <Text style={[styles.loadingText, { textAlign: 'center', paddingHorizontal: 8 }]}>
-          {error}
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            marginTop: 20,
-            paddingVertical: 12,
-            paddingHorizontal: 32,
-            backgroundColor: '#FF7A00', // App's orange
-            borderRadius: 24,
-          }}
-        >
-          <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Go Back</Text>
-        </TouchableOpacity>
       <View style={[styles.loadingContainer, { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }]}>
         <Text style={[styles.loadingText, { textAlign: 'center', paddingHorizontal: 8 }]}>
           {error}
@@ -74,11 +51,6 @@ export default function PreQuestReadingScreen() {
       </View>
     );
   }
-
-  const readings = quest.getReadings();
-  const totalPages = readings.length;
-  const isLastPage = page === totalPages - 1;
-  const isFirstPage = page === 0;
 
   const readings = quest.getReadings();
   const totalPages = readings.length;
@@ -291,4 +263,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-});
+}); 
