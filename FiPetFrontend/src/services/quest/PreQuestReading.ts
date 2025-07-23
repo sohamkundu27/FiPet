@@ -1,9 +1,5 @@
 import { DBPreQuestReading, PreQuestReadingId, QuestId, READING_COLLECTION } from "@/src/types/quest";
-<<<<<<< HEAD
 import { collection, doc, Firestore, getDoc, setDoc, updateDoc } from "@firebase/firestore";
-=======
-import { addDoc, collection, doc, Firestore, getDoc, updateDoc } from "@firebase/firestore";
->>>>>>> 99ab5d9 (Schema change)
 
 export interface PreQuestReadingInterface {
   get id(): PreQuestReadingId;
@@ -37,15 +33,9 @@ export class PreQuestReading implements PreQuestReadingInterface, AdminPreQuestR
   }
 
   static async create(db: Firestore, data: Omit<DBPreQuestReading, "id">) {
-<<<<<<< HEAD
     const readingRef = doc(collection(db, READING_COLLECTION));
     const readingData = {...data, id: readingRef.id};
     await setDoc(readingRef, readingData);
-=======
-    const readingRef = collection(db, READING_COLLECTION);
-    const result = await addDoc(readingRef, data);
-    const readingData = {...data, id: result.id} as DBPreQuestReading;
->>>>>>> 99ab5d9 (Schema change)
     return new PreQuestReading(db, readingData);
   }
 
