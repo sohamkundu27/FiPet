@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'expo-router';
 import { View, Image, Dimensions, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { getFontSize } from '@/src/hooks/useFont';
 import { useGamificationStats } from '@/src/hooks/useGamificationStats';
 import TabHeader from '@/src/components/TabHeader';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
+const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 export default function PetHouse() {
-  const {level, coins, mood, streak} = useGamificationStats();
+  const { level, coins, mood, streak } = useGamificationStats();
   const router = useRouter();
   const [showInventory, setShowInventory] = useState(false);
   const [showPassport, setShowPassport] = useState(false);
@@ -19,6 +21,32 @@ export default function PetHouse() {
   const pathname = usePathname();
   const oldPathName = useRef<string>("");
   const currentPathName = useRef<string>(pathname);
+
+  const [foxSize, setFoxSize] = useState(windowWidth * .85)
+  const [textBottomPosition, setTextBottomPosition] = useState(windowHeight * 0.055 + windowWidth * 0.065 + windowWidth * .85 + 10)
+  const foxBottomPosition = windowHeight * 0.055 + windowWidth * 0.065;
+
+  const [shelfLayout, setShelfLayout] = useState(null);
+  const [shelfLayout2, setShelfLayout2] = useState(null);
+  const [hasAdjustedSize, setHasAdjustedSize] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (shelfLayout2 && shelfLayout && !hasAdjustedSize) {
+      const shelfBottom = shelfLayout.y + shelfLayout.height;
+      const shelfTop2 = shelfLayout2.y;
+      const calculatedOverlap = shelfBottom - shelfTop2;
+
+      if (calculatedOverlap >= 0) {
+        setFoxSize(windowWidth * .85 - calculatedOverlap);
+        setTextBottomPosition(windowHeight * 0.055 + windowWidth * 0.065 + (windowWidth * .85 - calculatedOverlap) + 20);
+        setHasAdjustedSize(true);
+      }
+
+      setLoading(false);
+    }
+  }, [shelfLayout, shelfLayout2]);
 
   function didRouteChange(pathname: string) {
     return pathname !== oldPathName.current;
@@ -44,8 +72,8 @@ export default function PetHouse() {
   function LevelIcon() {
     return (
       <View style={{
-        width: 60,
-        height: 60,
+        width: windowHeight * 0.066964,
+        height: windowHeight * 0.066964,
         borderRadius: 30,
         backgroundColor: '#FFDD3C',
         justifyContent: 'center',
@@ -53,8 +81,8 @@ export default function PetHouse() {
         zIndex: 3,
       }}>
         <View style={{
-          width: 50,
-          height: 50,
+          width: windowHeight * 0.055804,
+          height: windowHeight * 0.055804,
           borderRadius: 25,
           backgroundColor: '#fff',
           justifyContent: 'center',
@@ -67,7 +95,7 @@ export default function PetHouse() {
         }}>
           <Image
             source={require('@/src/assets/images/trophy.png')}
-            style={{ width: 30, height: 30, resizeMode: 'contain' }}
+            style={{ width: windowHeight * 0.033482, height: windowHeight * 0.033482, resizeMode: 'contain' }}
           />
         </View>
       </View>
@@ -77,8 +105,8 @@ export default function PetHouse() {
   function StreakIcon() {
     return (
       <View style={{
-        width: 60,
-        height: 60,
+        width: windowHeight * 0.066964,
+        height: windowHeight * 0.066964,
         borderRadius: 30,
         backgroundColor: '#E43134',
         justifyContent: 'center',
@@ -86,8 +114,8 @@ export default function PetHouse() {
         zIndex: 3,
       }}>
         <View style={{
-          width: 50,
-          height: 50,
+          width: windowHeight * 0.055804,
+          height: windowHeight * 0.055804,
           borderRadius: 25,
           backgroundColor: '#fff',
           justifyContent: 'center',
@@ -100,7 +128,7 @@ export default function PetHouse() {
         }}>
           <Image
             source={require('@/src/assets/images/streak-fire-full.png')}
-            style={{ width: 30, height: 30, resizeMode: 'contain' }}
+            style={{ width: windowHeight * 0.033482, height: windowHeight * 0.033482, resizeMode: 'contain' }}
           />
         </View>
       </View>
@@ -110,8 +138,8 @@ export default function PetHouse() {
   function MoodIcon() {
     return (
       <View style={{
-        width: 50,
-        height: 50,
+        width: windowHeight * 0.055804,
+        height: windowHeight * 0.055804,
         borderRadius: 25,
         backgroundColor: '#fff',
         justifyContent: 'center',
@@ -122,7 +150,7 @@ export default function PetHouse() {
         shadowRadius: 3.84,
         elevation: 5,
       }}>
-        <Text style={{ fontSize: 20, color: '#333', fontFamily: 'Poppins-Regular' }}>❤️</Text>
+        <Text style={{ fontSize: getFontSize(20), color: '#333', fontFamily: 'Poppins-Regular' }}>❤️</Text>
       </View>
     );
   }
@@ -139,12 +167,36 @@ export default function PetHouse() {
           endColor: "#16D3F9",
         }}
       />
+
+      {loading && (
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: '#8CDDD1',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 100,
+        }}>
+          <View style={{
+            width: 50,
+            height: 50,
+            borderRadius: 25,
+            borderWidth: 3,
+            borderColor: '#fff',
+            borderTopColor: 'transparent',
+          }} />
+        </View>
+      )}
+
       <View style={styles.content}>
         <Image
           source={require('@/src/assets/images/Shelf.png')}
           style={{
-            width: 300,
-            height: 80,
+            width: windowWidth * 0.7246,
+            height: windowWidth * 0.1932,
             resizeMode: 'contain',
             position: 'absolute',
             top: windowHeight * 0.06,
@@ -153,35 +205,61 @@ export default function PetHouse() {
             alignSelf: 'center',
             zIndex: 2,
           }}
+          onLayout={(event) => {
+            const { x, y, width, height } = event.nativeEvent.layout;
+            setShelfLayout({ x, y, width, height });
+            console.log('Shelf Layout Event:', { x, y, width, height });
+          }}
         />
-        
+
+        <Image
+          source={require('@/src/assets/images/Shelf.png')}
+          style={{
+            width: windowWidth * 0.7246,
+            height: 0,
+            //resizeMode: 'contain',
+            position: 'absolute',
+            bottom: (foxBottomPosition + foxSize + 20) + getFontSize(16) * 3 + 30,
+            left: 0,
+            right: 0,
+            alignSelf: 'center',
+            zIndex: 2,
+          }}
+          onLayout={(event) => {
+            const { x, y, width, height } = event.nativeEvent.layout;
+            setShelfLayout2({ x, y, width, height });
+            console.log('Shelf 2 Layout Event:', { x, y, width, height });
+          }}
+        />
+
         {/* Top right circles - going down */}
         {/* Progress circle 1 - Level */}
         <TouchableOpacity
-          onPress={() => {router.push("/petHome/level");}}
+          onPress={() => { router.push("/petHome/level"); }}
           activeOpacity={0.5}
           style={{
             position: 'absolute',
-            top: 45,
-            right: 15,
+            top: windowHeight * 0.05023,
+            right: windowHeight * 0.01677,
           }}
         >
-        <AnimatedCircularProgress
-          ref={levelProgress}
-          size={60}
-          width={6}
-          fill={0}
-          backgroundColor="#bec0c0"
-          tintColor="#FFDD3C"
-          children={()=><LevelIcon/>}
+          <AnimatedCircularProgress
+            ref={levelProgress}
+            size={windowHeight * 0.06697}
+            width={windowHeight * 0.0066964}
+            rotation={0}
+            fill={0}
+            backgroundColor="#bec0c0"
+            tintColor="#FFDD3C"
+            children={() => <LevelIcon />}
           />
         </TouchableOpacity>
         <View style={{
           position: 'absolute',
-          top: 110,
-          right: 15,
-          width: 60,
-          height: 20,
+          top: windowHeight * 0.12297,
+          right: windowHeight * 0.01677,
+          width: windowHeight * 0.067,
+          height: windowHeight * 0.022,
           backgroundColor: '#E9E9E9',
           borderRadius: 14,
           justifyContent: 'center',
@@ -189,34 +267,36 @@ export default function PetHouse() {
           zIndex: 4,
         }}>
           <Text style={{
-            fontSize: 10,
+            fontSize: getFontSize(10),
             color: '#333',
             fontFamily: 'Poppins-Regular',
+            textAlign: 'center'
           }}>Level {level.current}</Text>
         </View>
-        
+
         {/* Progress circle 2 - Happiness */}
         <AnimatedCircularProgress
           style={{
             position: 'absolute',
-            top: 135,
-            right: 15,
+            top: windowHeight * 0.1507,
+            right: windowHeight * 0.01677,
             zIndex: 3,
           }}
           ref={moodProgress}
-          size={60}
-          width={6}
+          size={windowHeight * 0.06697}
+          width={windowHeight * 0.0066964}
+          rotation={0}
           fill={0}
           backgroundColor="#bec0c0"
           tintColor="#28B031"
-          children={()=><MoodIcon/>}
-          />
+          children={() => <MoodIcon />}
+        />
         <View style={{
           position: 'absolute',
-          top: 200,
-          right: 15,
-          width: 60,
-          height: 20,
+          top: windowHeight * 0.2231,
+          right: windowHeight * 0.01677,
+          width: windowHeight * 0.067,
+          height: windowHeight * 0.022,
           backgroundColor: '#E9E9E9',
           borderRadius: 14,
           justifyContent: 'center',
@@ -224,34 +304,36 @@ export default function PetHouse() {
           zIndex: 4,
         }}>
           <Text style={{
-            fontSize: 10,
+            fontSize: getFontSize(10),
             color: '#333',
             fontFamily: 'Poppins-Regular',
+            textAlign: 'center'
           }}>{mood.moodClassification}</Text>
         </View>
-        
+
         {/* Progress circle 3 - Streak */}
         <AnimatedCircularProgress
           style={{
             position: 'absolute',
-            top: 225,
-            right: 15,
+            top: windowHeight * 0.2516,
+            right: windowHeight * 0.01677,
             zIndex: 3,
           }}
           ref={streakProgress}
-          size={60}
-          width={6}
+          size={windowHeight * 0.06697}
+          width={windowHeight * 0.0066964}
+          rotation={0}
           fill={0}
           backgroundColor="#bec0c0"
           tintColor="#E43134"
-          children={()=><StreakIcon/>}
-          />
+          children={() => <StreakIcon />}
+        />
         <View style={{
           position: 'absolute',
-          top: 290,
-          right: 15,
-          width: 60,
-          height: 20,
+          top: windowHeight * 0.3239,
+          right: windowHeight * 0.01677,
+          width: windowHeight * 0.067,
+          height: windowHeight * 0.022,
           backgroundColor: '#E9E9E9',
           borderRadius: 14,
           justifyContent: 'center',
@@ -259,60 +341,96 @@ export default function PetHouse() {
           zIndex: 4,
         }}>
           <Text style={{
-            fontSize: 10,
+            fontSize: getFontSize(10),
             color: '#333',
             fontFamily: 'Poppins-Regular',
+            textAlign: 'center'
           }}>{streak.minutesUsed}/{streak.minutesRequired} min</Text>
         </View>
-        <View style={{ alignItems: 'center', marginBottom: 10, position: 'absolute', top: windowHeight * 0.19, left: 30 }}>
-          <View style={{ backgroundColor: '#fff', borderRadius: 16, width: 180, height: 60, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 16, color: '#333', textAlign: 'center', fontFamily: 'Poppins-Medium' }}>Hi again! I'm ready for the next quest.</Text>
+
+
+        {/* Text bubble positioned above fox */}
+        <View style={{
+          alignItems: 'center',
+          position: 'absolute',
+          bottom: textBottomPosition,
+          right: windowWidth * .5,
+          zIndex: 4,
+        }}>
+          <View style={{
+            backgroundColor: '#fff',
+            borderRadius: 16,
+            width: windowWidth * 0.43478,
+            padding: 5,
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <Text style={{
+              fontSize: getFontSize(16),
+              lineHeight: getFontSize(16) * 1.5,
+              color: '#333',
+              textAlign: 'center',
+              fontFamily: 'Poppins-Medium'
+            }}>Hi again! I'm ready for the next quest.</Text>
           </View>
         </View>
+
         {/* Rug image */}
         <Image
           source={require('@/src/assets/images/Rug.png')}
           style={{
             position: 'absolute',
-            bottom: 70,
-            left: 25,
-            width: 320,
-            height: 90,
+            bottom: windowHeight * 0.055,
+            alignSelf: 'center',
+            width: windowWidth * 0.8,
+            height: windowWidth * 0.25,
             resizeMode: 'contain',
             zIndex: 2,
           }}
         />
-        
-        <Image
-          source={require('@/src/assets/images/fox.png')}
-          style={{ width: 325, height: 325, resizeMode: 'contain', zIndex: 3, marginTop: 124, marginLeft: 45}}
+
+
+        {/* Brown floor background below the separator line */}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: windowHeight * 0.075 + windowWidth * 0.25,
+            backgroundColor: '#E2B486',
+            zIndex: 0,
+          }}
         />
-        
+
+        {/* Fox image with size restrictions */}
+        <Image
+          source={require('@/src/assets/images/fox_no_shadow.png')}
+          style={{
+            position: 'absolute',
+            bottom: foxBottomPosition,
+            alignSelf: 'center',
+            width: foxSize,
+            height: foxSize,
+            marginLeft: windowWidth * 0.108696,
+            resizeMode: 'contain',
+            zIndex: 3,
+          }}
+        />
+
+
         {/* Group image - behind brown floor but in front of background */}
         <Image
           source={require('@/src/assets/images/Group.png')}
           style={{
             position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: 180,
-            height: 200,
+            bottom: windowHeight * 0.075 + windowWidth * 0.25,
+            width: windowWidth,
+            height: windowWidth * .52,
             resizeMode: 'cover',
             zIndex: 1,
           }}
         />
-        
-        {/* Brown floor background below the separator line */}
-        <View style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: undefined,
-          bottom: 0,
-          height: 180,
-          backgroundColor: '#E2B486',
-          zIndex: 0,
-        }} />
 
         {/* Inventory View */}
         {showInventory && (
@@ -364,7 +482,7 @@ export default function PetHouse() {
                   <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
                 </View>
               </View>
-              
+
               {/* Inventory Shelf 2 */}
               <View style={{ position: 'relative' }}>
                 <Image
@@ -390,7 +508,7 @@ export default function PetHouse() {
                   <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
                 </View>
               </View>
-              
+
               {/* Inventory Shelf 3 */}
               <View style={{ position: 'relative' }}>
                 <Image
@@ -416,7 +534,7 @@ export default function PetHouse() {
                   <Text style={{ fontSize: 64, color: '#333', fontFamily: 'Poppins-Regular' }}>X</Text>
                 </View>
               </View>
-              
+
               {/* Inventory Shelf 4 */}
               <View style={{ position: 'relative' }}>
                 <Image
@@ -451,9 +569,9 @@ export default function PetHouse() {
                 position: 'absolute',
                 bottom: 30,
                 left: 25,
-                width: 50,
-                height: 50,
-                borderRadius: 30,
+                width: windowHeight * 0.055804,
+                height: windowHeight * 0.055804,
+                borderRadius: 100,
                 backgroundColor: '#fff',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -465,7 +583,7 @@ export default function PetHouse() {
                 elevation: 5,
               }}
             >
-              <Text style={{ fontSize: 24, color: '#333', fontFamily: 'Poppins-Regular' }}>×</Text>
+              <Text style={{ fontSize: getFontSize(24), lineHeight: getFontSize(24) * 1.5, color: '#333', fontFamily: 'Poppins-Regular' }}>×</Text>
             </TouchableOpacity>
 
             {/* Bottom right button */}
@@ -473,9 +591,9 @@ export default function PetHouse() {
               position: 'absolute',
               bottom: 30,
               right: 25,
-              width: 50,
-              height: 50,
-              borderRadius: 30,
+              width: windowHeight * 0.055804,
+              height: windowHeight * 0.055804,
+              borderRadius: 100,
               backgroundColor: '#fff',
               justifyContent: 'center',
               alignItems: 'center',
@@ -486,11 +604,11 @@ export default function PetHouse() {
               shadowRadius: 3.84,
               elevation: 5,
             }}>
-              <Text style={{ fontSize: 24, color: '#333' }}>+</Text>
+              <Text style={{ fontSize: getFontSize(24), lineHeight: getFontSize(24) * 1.5, color: '#333' }}>+</Text>
             </View>
           </View>
         )}
-        
+
         {/* Inventory button - bottom left */}
         {!showPassport && (
           <>
@@ -499,11 +617,11 @@ export default function PetHouse() {
               activeOpacity={0.7}
               style={{
                 position: 'absolute',
-                bottom: 30,
-                left: 25,
-                width: 50,
-                height: 50,
-                borderRadius: 30,
+                bottom: windowHeight * 0.0335,
+                left: windowHeight * 0.0279,
+                width: windowHeight * 0.0558,
+                height: windowHeight * 0.0558,
+                borderRadius: 100,
                 backgroundColor: '#fff',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -515,14 +633,17 @@ export default function PetHouse() {
                 elevation: 5,
               }}
             >
-              <Text style={{ fontSize: 24, color: '#333', fontFamily: 'Poppins-Regular' }}>→</Text>
+              <Image
+                source={require('@/src/assets/images/arrow_right.png')}
+                style={{ width: windowHeight * 0.033482, height: windowHeight * 0.033482, resizeMode: 'contain' }}
+              />
             </TouchableOpacity>
             <View style={{
               position: 'absolute',
-              bottom: 5,
-              left: 20,
-              width: 60,
-              height: 20,
+              bottom: windowHeight * 0.0056,
+              left: windowHeight * 0.0223,
+              height: windowHeight * 0.0223,
+              paddingHorizontal: 5,
               backgroundColor: '#E9E9E9',
               borderRadius: 14,
               justifyContent: 'center',
@@ -530,14 +651,16 @@ export default function PetHouse() {
               zIndex: 4,
             }}>
               <Text style={{
-                fontSize: 10,
+                fontSize: getFontSize(10),
+                lineHeight: getFontSize(10) * 1.5,
                 color: '#333',
                 fontFamily: 'Poppins-Regular',
               }}>Inventory</Text>
             </View>
+
           </>
         )}
-        
+
         {/* Passport button - bottom right */}
         {!showPassport && (
           <>
@@ -546,11 +669,11 @@ export default function PetHouse() {
               activeOpacity={0.7}
               style={{
                 position: 'absolute',
-                bottom: 30,
-                right: 25,
-                width: 50,
-                height: 50,
-                borderRadius: 30,
+                bottom: windowHeight * 0.0335,
+                right: windowHeight * 0.0279,
+                width: windowHeight * 0.0558,
+                height: windowHeight * 0.0558,
+                borderRadius: 100,
                 backgroundColor: '#fff',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -562,14 +685,14 @@ export default function PetHouse() {
                 elevation: 5,
               }}
             >
-              <Text style={{ fontSize: 24, color: '#333' }}>🐾</Text>
+              <Text style={{ fontSize: getFontSize(24), lineHeight: getFontSize(24) * 1.5, color: '#333' }}>🐾</Text>
             </TouchableOpacity>
             <View style={{
               position: 'absolute',
-              bottom: 5,
-              right: 20,
-              width: 60,
-              height: 20,
+              bottom: windowHeight * 0.0056,
+              right: windowHeight * 0.0223,
+              height: windowHeight * 0.0223,
+              paddingHorizontal: 5,
               backgroundColor: '#E9E9E9',
               borderRadius: 14,
               justifyContent: 'center',
@@ -577,14 +700,15 @@ export default function PetHouse() {
               zIndex: 4,
             }}>
               <Text style={{
-                fontSize: 10,
+                fontSize: getFontSize(10),
+                lineHeight: getFontSize(10) * 1.5,
                 color: '#333',
                 fontFamily: 'Poppins-Regular',
               }}>Passport</Text>
             </View>
           </>
         )}
-        
+
         {/* Passport Modal */}
         {showPassport && (
           <View style={{
@@ -614,7 +738,7 @@ export default function PetHouse() {
               }}>
                 Pet Passport
               </Text>
-              
+
               {/* Close button */}
               <TouchableOpacity
                 onPress={() => setShowPassport(false)}
@@ -622,9 +746,9 @@ export default function PetHouse() {
                   position: 'absolute',
                   top: 15,
                   right: 15,
-                  width: 30,
-                  height: 30,
-                  borderRadius: 15,
+                  width: windowHeight * 0.033482,
+                  height: windowHeight * 0.033482,
+                  borderRadius: 100,
                   backgroundColor: '#fff',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -635,9 +759,9 @@ export default function PetHouse() {
                   elevation: 5,
                 }}
               >
-                <Text style={{ fontSize: 18, color: '#333', fontFamily: 'Poppins-Regular' }}>×</Text>
+                <Text style={{ fontSize: getFontSize(18), lineHeight: getFontSize(18) * 1.5, color: '#333', fontFamily: 'Poppins-Regular' }}>×</Text>
               </TouchableOpacity>
-              
+
               <Text style={{
                 fontSize: 16,
                 color: '#666',

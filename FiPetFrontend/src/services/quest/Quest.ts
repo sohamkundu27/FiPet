@@ -564,7 +564,6 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
         }
       }
 
-      console.log(answerQuestionsSnap.docs.map((doc)=>doc.get("id")));
       answersSnapshot.docs.forEach((doc) => {
 
         const answerType = doc.get("type") as QuestionType; // @ts-ignore
