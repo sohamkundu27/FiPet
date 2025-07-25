@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#fff',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingVertical: 13,
     paddingBottom: 34, // Safe area bottom
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
