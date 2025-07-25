@@ -70,7 +70,7 @@ export default function PreQuestReadingScreen() {
         {/* Fixed progress bar and back arrow at the top */}
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
-            <Image source={require('@/src/assets/images/arrow.png')} style={styles.backArrow} />
+            <Text style={{ fontSize: 38, textAlign: 'center', lineHeight: 40 }}>×</Text>
           </TouchableOpacity>
           <QuestProgressBar currentStep={page} numSteps={totalPages}/>
         </View>
