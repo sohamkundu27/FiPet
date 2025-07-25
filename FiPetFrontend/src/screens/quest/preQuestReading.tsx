@@ -75,7 +75,7 @@ export default function PreQuestReadingScreen() {
         {/* Fixed progress bar and back arrow at the top */}
         <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingTop: 87, paddingHorizontal: 16, marginBottom: 16 }}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
-            <Image source={require('@/src/assets/images/arrow.png')} style={styles.backArrow} />
+            <Text style={{ fontSize: 38, textAlign: 'center', lineHeight: 40 }}>×</Text>
           </TouchableOpacity>
           <View style={[styles.progressBarSteps, { flex: 1 }]}> {/* Make bar stretch */}
             {allQuestions.map((_, step: number) => (

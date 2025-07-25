@@ -350,6 +350,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 25,
     shadowRadius: 4,
     elevation: 3,
+    marginBottom: 10
   },
   questContent: {
     flex: 1,
