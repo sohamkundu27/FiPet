@@ -14,8 +14,6 @@ export default function Layout () {
         <Stack.Screen name="index" options={{headerShown: false}}/>
         <Stack.Screen name="questions/index" options={{headerShown: false}}/>
         <Stack.Screen name="questions/[questionID]" options={{headerShown: false}}/>
-        <Stack.Screen name="practice/index" options={{headerShown: false}}/>
-        <Stack.Screen name="practice/[practiceID]" options={{headerShown: false}}/>
       </Stack>
     </QuestProvider>
   )

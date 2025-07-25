@@ -272,7 +272,7 @@ async function create() {
 async function test() {
 
   const _query = query(collection(db, QUEST_COLLECTION), limit(1));
-  const quests = await Quest.fromFirebase(db, _query);
+  const quests = await Quest.fromFirebaseQuery(db, _query);
   console.log(quests[0]);
   const questions = quests[0].getQuestions();
   console.log(questions.toString());

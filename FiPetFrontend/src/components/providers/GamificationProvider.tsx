@@ -13,6 +13,7 @@ type GamificationContextType = {
   streak: StreakInfo,
   addMood: (percentage: number) => void,
   addXP: (xp: number) => boolean,
+  addCoins: (coins: number) => void,
 };
 
 export const GamificationContext = createContext<GamificationContextType>(null!);
@@ -374,12 +375,19 @@ export const GamificationProvider = ({ children }: { children: any }) => {
     });
   }
 
+  function addCoins(amount: number) {
+    const userDocRef = doc( db, 'users', user.uid );
+    updateDoc( userDocRef, {
+      current_coins: coins.coins + amount,
+    });
+  }
+
   /**
    * Returns true if the pet leveled up.
    */
   function addXP(xp: number): boolean {
     const userDocRef = doc( db, 'users', user.uid );
-    let _xp = constrain(level.xp + xp, 0, 100);
+    let _xp = level.xp;
     let _level = level.current;
     let leveledUp = false;
 
@@ -398,7 +406,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
 
 
   return (
-    <GamificationContext.Provider value={{ coins, streak, mood, level, addMood, addXP }}>
+    <GamificationContext.Provider value={{ coins, streak, mood, level, addMood, addXP, addCoins }}>
       {children}
     </GamificationContext.Provider>
   );
