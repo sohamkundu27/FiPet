@@ -118,19 +118,28 @@ export default function QuestScreen() {
                 ) : (
                     <>
                     {quests.map((quest) => {
-                      return (
-                        <LinearGradient
-                            key={quest.id}
-                            colors={['#A259FF', '#3B82F6']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }} 
-                            style={styles.questCard}
-                        >
+                    return (
+                    <LinearGradient
+                        key={quest.id}
+                        colors={['#A259FF', '#3B82F6']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }} 
+                        style={[
+                            styles.questCard,
+                            isTablet && styles.questCardTablet,
+                            isLargeTablet && styles.questCardLargeTablet
+                        ]}
+                     >
 
                                     
-                            {/* Correct Answers Counter */}
-                            <CorrectAnswersCounter quest={quest} />
-                            <Text style={styles.questCardTitle}>{quest.title}</Text>
+                        {/* Correct Answers Counter */}
+                        <CorrectAnswersCounter quest={quest} />
+
+                        <Text style={[
+                            styles.questCardTitle,
+                            isTablet && styles.questCardTitleTablet,
+                            isLargeTablet && styles.questCardTitleLargeTablet
+                        ]}>{quest.title}</Text>
                                     
                             
                             
