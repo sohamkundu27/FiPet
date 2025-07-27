@@ -86,7 +86,7 @@ export default function PreQuestReadingScreen() {
         </View>
         
         {/* Scrollable content */}
-        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           <Text style={styles.topText}>{String(readings[page].topText || '')}</Text>
           
           <View style={styles.imageContainer}>
@@ -94,7 +94,10 @@ export default function PreQuestReadingScreen() {
           </View>
           
           <Text style={styles.bottomText}>{String(readings[page].bottomText || '')}</Text>
-          
+        </ScrollView>
+        
+        {/* Fixed button row at the bottom */}
+        <View style={styles.footerContainer}>
           <View style={styles.buttonRow}>
             {!isFirstPage && (
               <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -105,7 +108,7 @@ export default function PreQuestReadingScreen() {
               <Text style={styles.nextButtonText}>{isLastPage ? 'Start Quest' : 'Next'}</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </View>
       </View>
     </>
   );
@@ -155,12 +158,16 @@ const styles = StyleSheet.create({
     height: 24,
     tintColor: '#333',
   },
+  scrollContainer: {
+    flex: 1,
+  },
   container: {
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
     paddingVertical: 40,
+    paddingBottom: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -206,16 +213,22 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
     lineHeight: 26,
-    marginBottom: 60,
+    marginBottom: 40,
     paddingHorizontal: 16,
+  },
+  footerContainer: {
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    paddingBottom: 40,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
-    paddingHorizontal: 20,
-    marginBottom: 40,
   },
   backButton: {
     backgroundColor: '#E8E8E8',
