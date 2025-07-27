@@ -1,95 +1,41 @@
-// Goal: Page shows XP/rewards and completion screen.
-// STATUS: NOT IMPLEMENTED
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity, View, Image, Text, Platform } from 'react-native';
+import React from 'react';
+import { StyleSheet, TouchableOpacity, View, Image, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuest } from '@/src/hooks/useQuest';
-import { useAuth } from '@/src/hooks/useAuth';
-import { doc, setDoc, collection, updateDoc } from '@firebase/firestore';
-import { db } from '@/src/config/firebase';
-import { markQuestCompleted } from '@/src/services/userQuestProgressService';
 
 export default function QuestComplete() {
   const router = useRouter();
-  const { quest, getCorrectAnswerRatio, getTotalXPEarned, isComplete, addXP, addCoins, questXpAwarded } = useQuest();
-  const { user } = useAuth();
-  const [questBonusAwarded, setQuestBonusAwarded] = useState(false);
-  const [hasMarkedCompleted, setHasMarkedCompleted] = useState(false);
-  const correctRatio = getCorrectAnswerRatio();
+  const { quest, loading } = useQuest();
+
+  if (!quest || loading || !quest.isComplete) {
+    throw "Quest was not completed!";
+  }
+
+  const questions = quest.getQuestions();
+  const questionCount = questions.reduce((data, question) => {
+    return {
+      regular: data.regular + (question.isPractice ? 0 : 1),
+      correct: data.correct + (question.getAnswer().correct ? 1 : 0),
+    }
+  }, {
+    regular: 0,
+    correct: 0,
+  });
+  const correctRatio = questionCount.correct / questionCount.regular;
   const mood = correctRatio > 0.8 ? 'Happy' : 'Sad';
   
-  // Individual question XP is already awarded, so we just show the total here
-  const questionXP = getTotalXPEarned();
-  // Only award quest completion bonus if they did well and haven't received it before
-  const questBonusXP = (mood === 'Sad' || questXpAwarded) ? 0 : (quest?.xpReward || 0);
-  const xpEarned = questionXP + questBonusXP;
-  
-  // Calculate coin rewards
-  const questCoinReward = (mood === 'Sad' || questXpAwarded) ? 0 : (quest?.coinReward || 0);
-  const coinEarned = questCoinReward;
   
   const title = mood === 'Sad' ? 'So Close' : 'Well done!';
   const emoji = mood === 'Sad' ? '😢' : '🎉';
 
-  useEffect(() => {
-    // Only run once when the component mounts and quest is complete
-    if (isComplete() && user && quest && !hasMarkedCompleted) {
-      setHasMarkedCompleted(true);
-      
-      // Only award the quest completion bonus if not already awarded
-      if (!questBonusAwarded && (questBonusXP > 0 || questCoinReward > 0) && !questXpAwarded) {
-        const awardQuestBonus = async () => {
-          try {
-            // Award XP if available
-            if (questBonusXP > 0) {
-              await addXP(questBonusXP);
-            }
-            
-            // Award coins if available
-            if (questCoinReward > 0) {
-              await addCoins(questCoinReward);
-            }
-            
-            setQuestBonusAwarded(true);
-            
-            // Save quest bonus award status to Firestore
-            const userProgressRef = doc(db, 'users', user.uid, 'questProgress', quest.id);
-            const xpProgressRef = doc(collection(userProgressRef, 'xpProgress'), 'tracking');
-            await setDoc(xpProgressRef, {
-              questBonusAwarded: true,
-              lastUpdated: new Date().toISOString()
-            }, { merge: true });
-            
-            // Mark quest as completed
-            await markQuestCompleted(user.uid, quest.id);
-          } catch (error) {
-            console.error('Error awarding quest bonus:', error);
-          }
-        };
-        
-        awardQuestBonus();
-      } else {
-        // Even if no bonus rewards, still mark quest as completed
-        const markCompleted = async () => {
-          try {
-            await markQuestCompleted(user.uid, quest.id);
-          } catch (error) {
-            console.error('Error marking quest as completed:', error);
-          }
-        };
-        
-        markCompleted();
-      }
-    }
-  }, [isComplete, questBonusXP, addXP, questBonusAwarded, questionXP, questXpAwarded, user, quest, hasMarkedCompleted]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}<Text style={styles.emoji}>{emoji}</Text></Text>
-      <Text style={styles.xpText}>+{xpEarned} <Text style={styles.xpHighlight}>XP</Text></Text>
-      {coinEarned > 0 && (
-        <Text style={styles.coinText}>+{coinEarned} <Text style={styles.coinHighlight}>🪙</Text></Text>
+      <Text style={styles.xpText}>+{quest?.reward.xp} <Text style={styles.xpHighlight}>XP</Text></Text>
+      {quest?.reward.coins > 0 && (
+        <Text style={styles.coinText}>+{quest?.reward.coins} <Text style={styles.coinHighlight}>🪙</Text></Text>
       )}
       <Text style={styles.moodText}>Mood: {mood}</Text>
       <View style={styles.foxContainer}>

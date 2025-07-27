@@ -1,164 +1,37 @@
-import { StyleSheet, View, TouchableOpacity, Text, Image, Modal, ScrollView, ActivityIndicator } from "react-native";
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { StyleSheet, View, TouchableOpacity, Text, Image, ScrollView, ActivityIndicator } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuest } from "@/src/hooks/useQuest";
-import { ThemedText } from "@/src/components/ThemedText";
-import { QuestAnswer } from "@/src/components/questProvider";
-import { useState, useEffect } from "react";
+import { useState, useRef, RefObject } from "react";
 import { ThemedView } from "@/src/components/ThemedView";
-import QuestionRenderer from "@/src/components/questions/QuestionRenderer";
+import QuestionRenderer, { QuestionRef } from "@/src/components/questions/QuestionRenderer";
 import CorrectModal from '@/src/components/modals/correctModal';
 import IncorrectModal from '@/src/components/modals/incorrectModal';
-import { getPracticeQuestionById } from '@/src/services/practiceQuestionService';
-
-// Option type for internal use
-interface QuestionOption {
-  id: string;
-  text: string;
-}
+import { Reward } from "@/src/types/quest";
+import FeedbackRenderer from "@/src/components/questionFeedback/FeedbackRenderer";
+import { useAuth } from "@/src/hooks/useRequiresAuth";
+import { useGamificationStats } from "@/src/hooks/useGamificationStats";
+import QuestProgressBar from "@/src/components/QuestProgressBar";
 
 export default function QuestionScreen() {
-  const { questionID, questID, practiceID, originalQuestionID } = useLocalSearchParams<{
-    questID?: string;
-    questionID?: string;
-    practiceID?: string;
-    originalQuestionID?: string;
+
+  const questionRef = useRef<QuestionRef>(null);
+  const { questionID } = useLocalSearchParams<{
+    questID: string;
+    questionID: string;
   }>();
   const router = useRouter();
-  const { getOptions, getAnswer, hasAnswer, getQuestion, selectOption, getAllQuestions } = useQuest();
+  const { quest, loading } = useQuest();
+  const {user} = useAuth();
+  const [readyForSubmit, setReadyForSubmit] = useState<boolean>(false);
 
   // State for both types
-  const [selectedOptions, setSelectedOptions] = useState<QuestionOption[]>([]);
-  const [checked, setChecked] = useState(false);
-  const [answer, setAnswer] = useState<QuestAnswer | null>(null);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showIncorrectModal, setShowIncorrectModal] = useState(false);
-  const [practiceQuestion, setPracticeQuestion] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
 
-  // Detect if this is a practice question
-  const isPractice = !!practiceID;
-
-  // For practice questions, load the question
-  useEffect(() => {
-    if (isPractice && practiceID) {
-      setLoading(true);
-      getPracticeQuestionById(practiceID)
-        .then(q => setPracticeQuestion(q))
-        .finally(() => setLoading(false));
-    }
-  }, [isPractice, practiceID]);
-
-  // Get question and options
-  let question: any = null;
-  let options: QuestionOption[] = [];
-  let allQuestions: any[] = [];
-  let currentIndex = 0;
-  if (isPractice) {
-    question = practiceQuestion;
-    options = practiceQuestion ? practiceQuestion.options.map((option: string, index: number) => ({ id: `option_${index}`, text: option })) : [];
-    // For progress bar, use all quest questions
-    allQuestions = getAllQuestions();
-    currentIndex = originalQuestionID ? allQuestions.findIndex(q => q.id === originalQuestionID) : 0;
-  } else {
-    question = questionID ? getQuestion(questionID) : null;
-    options = question ? getOptions(question) : [];
-    allQuestions = getAllQuestions();
-    currentIndex = questionID ? allQuestions.findIndex((q) => q.id === questionID) : 0;
-  }
-
-  // Option selection logic
-  function handleOptionSelect(option: QuestionOption) {
-    if (checked) return;
-    if (question && question.type === "multiselect") {
-      setSelectedOptions((prev) => {
-        const exists = prev.some((o) => o.id === option.id);
-        if (exists) {
-          return prev.filter((o) => o.id !== option.id);
-        } else {
-          return [...prev, option];
-        }
-      });
-    } else {
-      setSelectedOptions([option]);
-    }
-  }
-
-  // Check answer logic
-  async function checkAnswer() {
-    if (checked) return;
-    if (!question) return;
-    if (isPractice) {
-      if (!practiceQuestion || selectedOptions.length === 0) return;
-      // Find the selected option index
-      const selectedOptionIndex = practiceQuestion.options.findIndex((opt: string) => opt === selectedOptions[0].text);
-      // Check if the selected option is correct
-      const correct = practiceQuestion.correctAnswers.some((correctAnswer: string) => {
-        const correctIndex = Number(correctAnswer);
-        return correctIndex === selectedOptionIndex;
-      });
-      setChecked(true);
-      setAnswer({
-        option: selectedOptions[0],
-        outcome: {
-          id: selectedOptions[0].id,
-          text: selectedOptions[0].text,
-          xpReward: correct ? 10 : 0,
-          isCorrectAnswer: correct,
-        },
-        nextQuestion: null,
-      });
-      if (correct) {
-        setShowCorrectModal(true);
-      } else {
-        setShowIncorrectModal(true);
-      }
-    } else {
-      if (question.type === "multiselect" && selectedOptions.length > 0) {
-        const result = await selectOption(question.id, selectedOptions[0].id);
-        setAnswer(result);
-        setChecked(true);
-        if (!result.outcome.isCorrectAnswer) {
-          setShowIncorrectModal(true);
-        } else setShowCorrectModal(true);
-      } else if (selectedOptions.length > 0) {
-        const result = await selectOption(question.id, selectedOptions[0].id);
-        setAnswer(result);
-        setChecked(true);
-        if (!result.outcome.isCorrectAnswer) {
-          setShowIncorrectModal(true);
-        } else setShowCorrectModal(true);
-      }
-    }
-  }
-
-  // Navigation for continue/correct
-  function handleContinue() {
-    if (isPractice) {
-      // For practice, go back to quest
-      router.replace(`/quests/${questID}`);
-    } else if (answer && answer.nextQuestion) {
-      router.replace(`/quests/${questID}/questions/${answer.nextQuestion.id}`);
-    } else {
-      router.replace(`/quests/${questID}`);
-    }
-  }
-
-  // Navigation for explanation/incorrect
-  function handleSeeExplanation() {
-    // Use unified explanation route with appropriate params
-    const params = new URLSearchParams();
-    if (isPractice) {
-      params.append('practiceID', practiceID!);
-      params.append('originalQuestionID', originalQuestionID || '');
-    } else {
-      params.append('questionID', questionID!);
-    }
-    
-    router.push(`/quests/${questID}/explanation?${params.toString()}`);
-  }
+  const {addXP, addCoins} = useGamificationStats();
 
   // UI rendering
-  if (loading || (isPractice && !practiceQuestion)) {
+  if (loading || !quest) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#6C63FF" />
@@ -166,18 +39,9 @@ export default function QuestionScreen() {
       </View>
     );
   }
-  if (!question) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontSize: 16, color: 'red' }}>Question not found</Text>
-      </View>
-    );
-  }
 
-  const selectedOptionProp =
-    question.type === "multiselect"
-      ? selectedOptions.length > 0 ? selectedOptions[0] : null
-      : selectedOptions.length > 0 ? selectedOptions[0] : null;
+  const questions = quest.getQuestions();
+  const question = quest.getQuestion(questionID);
 
   return (
     <ThemedView style={styles.container}>
@@ -195,99 +59,78 @@ export default function QuestionScreen() {
               resizeMode="contain"
             />
           </TouchableOpacity>
-          <View style={styles.progressBarSteps}>
-            {allQuestions.map((_, step) => (
-              <View
-                key={step}
-                style={[
-                  styles.progressStep,
-                  step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-                  step <= currentIndex ? styles.progressStepActive : styles.progressStepInactive,
-                ]}
-              />
-            ))}
-          </View>
+          <QuestProgressBar questions={questions} questionID={question.id}/>
         </View>
 
         {/* Question Number */}
-        {isPractice && (
-          <Text style={styles.questionNumber}>Practice Question {currentIndex + 1}</Text>
-        )}
-        {!isPractice && (
-          <Text style={styles.questionNumber}>Question {currentIndex + 1}</Text>
+        {question.isPractice ? (
+          <Text style={styles.questionNumber}>Practice Question</Text>
+        ) : (
+          <Text style={styles.questionNumber}>Question {question.order + 1}</Text>
         )}
         {/* Question Text */}
         <Text style={styles.questionText}>{question.prompt}</Text>
 
-        {/* Options */}
-        <View style={styles.optionsContainer}>
-          {options.map((option) => {
-            const isSelected =
-              question.type === "multiselect"
-                ? selectedOptions.some((o) => o.id === option.id)
-                : selectedOptionProp?.id === option.id;
-
-            return (
+        {question.isAnswered ? (
+          <>
+            <FeedbackRenderer question={question}/>
+            <View style={styles.checkAnswerContainer}>
               <TouchableOpacity
-                key={option.id}
-                style={[
-                  styles.optionButton,
-                  isSelected && styles.selectedOptionButton,
-                  checked && styles.disabledOptionButton,
-                ]}
-                onPress={() => handleOptionSelect(option)}
-                disabled={checked}
+                style={styles.checkAnswerButton}
+                onPress={() => {
+                  const next = quest.getNextQuestion(question);
+                  if (next === false) {
+                    quest.complete(user.uid).then((reward) => {
+                      router.replace(`/(tabs)/quests/${quest.id}`);
+                    });
+                  } else {
+                    router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
+                  }
+                }}
               >
-                <Text style={styles.optionText}>{option.text}</Text>
+                <Text style={styles.checkAnswerText}>
+                  {question.hasPracticeQuestion() ? 'PRACTICE MORE' : 'CONTINUE'}
+                </Text>
               </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Feedback */}
-        {checked && answer && answer.outcome.isCorrectAnswer && (
-          <View style={styles.feedbackBox}>
-            <Text style={styles.feedbackText}>✅ Correct!</Text>
-            <Text style={styles.xpText}>{answer.outcome.text}{"\n"}🎉 {Math.abs(answer.outcome.xpReward)} XP</Text>
-          </View>
+            </View>
+          </>
+        ) : (
+          <>
+            <QuestionRenderer
+              question={question}
+              ref={questionRef as RefObject<QuestionRef>}
+              onSubmit={(correct: boolean, reward: Reward|null) => {
+                if (correct) {
+                  if (reward) {
+                    addXP(reward.xp);
+                    addCoins(reward.coins);
+                  }
+                  setShowCorrectModal(true);
+                } else {
+                  setShowIncorrectModal(true);
+                }
+              }}
+              onError={(err: string) => {}}
+              preSubmit={() => {}}
+              onReadyForSubmit={() => setReadyForSubmit(true)}
+            />
+            <View style={styles.checkAnswerContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.checkAnswerButton,
+                  !readyForSubmit
+                    ? styles.disabledCheckAnswerButton
+                    : null,
+                ]}
+                onPress={() => {questionRef.current?.submit()}}
+                disabled={!readyForSubmit}
+              >
+                <Text style={styles.checkAnswerText}>CHECK ANSWER</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
-
-        {/* Continue/Next Button */}
-        <View style={styles.continueContainer}>
-          {checked && answer && answer.outcome.isCorrectAnswer && (
-            <TouchableOpacity
-              style={styles.continueLink}
-              onPress={handleContinue}
-            >
-              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>
-                {isPractice || (answer && !answer.nextQuestion) ? 'Finish' : 'Continue'}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
       </ScrollView>
-
-      {/* Check Answer Button - Fixed at bottom */}
-      {!checked && (
-        <View style={styles.checkAnswerContainer}>
-          <TouchableOpacity
-            style={[
-              styles.checkAnswerButton,
-              (question.type === "multiselect" && selectedOptions.length === 0) ||
-              (!selectedOptionProp)
-                ? styles.disabledCheckAnswerButton
-                : null,
-            ]}
-            onPress={checkAnswer}
-            disabled={
-              (question.type === "multiselect" && selectedOptions.length === 0) ||
-              !selectedOptionProp
-            }
-          >
-            <Text style={styles.checkAnswerText}>CHECK ANSWER</Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       {/* Correct Modal */}
       <CorrectModal
@@ -295,7 +138,18 @@ export default function QuestionScreen() {
         onClose={() => setShowCorrectModal(false)}
         onContinue={() => {
           setShowCorrectModal(false);
-          handleContinue();
+          const next = quest.getNextQuestion(question);
+          if (next === false) {
+            quest.complete(user.uid).then((reward) => {
+              if (reward) {
+                addXP(reward.xp);
+                addCoins(reward.coins);
+              }
+              router.replace(`/(tabs)/quests/${quest.id}`);
+            });
+          } else {
+            router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
+          }
         }}
       />
       {/* Incorrect Modal */}
@@ -304,7 +158,6 @@ export default function QuestionScreen() {
         onClose={() => setShowIncorrectModal(false)}
         onConfirm={() => {
           setShowIncorrectModal(false);
-          handleSeeExplanation();
         }}
         onCancel={() => setShowIncorrectModal(false)}
         title="Not Quite"
