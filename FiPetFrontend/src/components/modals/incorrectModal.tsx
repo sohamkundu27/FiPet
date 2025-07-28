@@ -54,12 +54,12 @@ export default function IncorrectModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: '#FF6384', // Solid red background instead of transparent overlay
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
-    backgroundColor: 'rgba(255, 99, 132, 0.95)',
+    backgroundColor: '#FF6384', // Solid red background instead of semi-transparent
     borderRadius: 24,
     padding: 32,
     alignItems: 'center',

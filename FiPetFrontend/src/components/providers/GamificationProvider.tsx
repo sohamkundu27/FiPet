@@ -387,11 +387,11 @@ export const GamificationProvider = ({ children }: { children: any }) => {
    */
   function addXP(xp: number): boolean {
     const userDocRef = doc( db, 'users', user.uid );
-    let _xp = level.xp;
+    let _xp = level.xp + xp; // Add the XP parameter to current XP
     let _level = level.current;
     let leveledUp = false;
 
-    if ( _xp > level.requiredXP ) {
+    if ( _xp >= level.requiredXP ) { // Changed > to >= for proper level up condition
       _level += 1;
       leveledUp = true;
     }
