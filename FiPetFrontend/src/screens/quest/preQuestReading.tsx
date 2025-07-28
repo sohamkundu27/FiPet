@@ -51,9 +51,9 @@ export default function PreQuestReadingScreen() {
     } else {
       const latestQuestion = quest.getLatestQuestion();
       if (!latestQuestion) {
-        router.replace(`/quests/${quest.id}/questions/${quest.getQuestions()[0]}`);
+        router.replace(`/(tabs)/quests/${quest.id}/questions/${quest.getQuestions()[0].id}`);
       } else {
-        router.replace(`/quests/${quest.id}/questions/${latestQuestion.id}`);
+        router.replace(`/(tabs)/quests/${quest.id}/questions/${latestQuestion.id}`);
       }
     }
   };

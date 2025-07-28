@@ -56,10 +56,10 @@ export default function QuestComplete() {
         </View>
         
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.outlineButton} onPress={() => router.replace('/home')}>
+          <TouchableOpacity style={styles.outlineButton} onPress={() => router.replace('/(tabs)/home')}>
             <Text style={styles.outlineButtonText}>RETURN HOME</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.gradientButton} onPress={() => router.replace('/quests')}>
+          <TouchableOpacity style={styles.gradientButton} onPress={() => router.replace('/(tabs)/quests')}>
             <LinearGradient
               colors={["#4F8CFF", "#7C3AED"]}
               start={{ x: 0, y: 0 }}
