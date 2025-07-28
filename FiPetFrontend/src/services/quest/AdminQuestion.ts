@@ -1,9 +1,9 @@
-import { addDoc, collection, CollectionReference, doc, FieldValue, Firestore, getDocs, limit, query, serverTimestamp, setDoc, Timestamp, updateDoc, where } from "@firebase/firestore";
+import { Firestore, CollectionReference } from "firebase-admin/firestore";
 import { ItemId } from "@/src/types/item";
-import { ANSWER_COLLECTION, DBOption, DBPracticeQuestion, DBQuestAnswer, DBQuestion, OPTIONS_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, Reward } from "@/src/types/quest";
-import { Option, OptionFactory, SingleSelectOption } from "./Option";
+import { DBOption, DBPracticeQuestion, DBQuestAnswer, DBQuestion, OPTIONS_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, Reward } from "@/src/types/quest";
+import { AdminOption, AdminOptionFactory, AdminSingleSelectOption } from "./AdminOption";
 
-export interface QuestionInterface {
+export interface AdminQuestionInterface {
   get id(): QuestionId;
   get questId(): QuestId|null;
   get type(): QuestionType;
@@ -13,36 +13,22 @@ export interface QuestionInterface {
   get order(): number;
 
   hasPracticeQuestion(): boolean
-  getPracticeQuestion(): Question;
-}
+  getPracticeQuestion(): AdminQuestion;
 
-export interface UserQuestionInterface extends QuestionInterface {
-  get isAnswered(): boolean;
-}
-
-// The following should only be used in admin scripts.
-export interface AdminQuestionInterface extends QuestionInterface {
   setPrompt(prompt: string): Promise<void>;
   setReward(reward: Reward): Promise<void>
-  setPracticeQuestion(question: Question|null): Promise<void>;
+  setPracticeQuestion(question: AdminQuestion|null): Promise<void>;
 }
 
-export interface QuestionWithOptionsInterface extends QuestionInterface {
-  answer(
-    option: Option,
-    userId: string,
-    rewardHook?: (correct: boolean, reward: Reward|null) => Promise<Reward>,
-  ): Promise<{correct: boolean, reward: Reward|null}>;
-  hasAnswer(): boolean;
-  getAnswer(): Option;
-  getCorrectOption(): Option;
-  getOptions(): Option[];
+export interface AdminQuestionWithOptionsInterface extends AdminQuestionInterface {
+  getCorrectOption(): AdminOption;
+  getOptions(): AdminOption[];
 
-  removeOption(option: Option): void; // use in admin scripts only!
-  addOption(option: Option): void; // use in admin scripts only!
+  removeOption(option: AdminOption): void; // use in admin scripts only!
+  addOption(option: AdminOption): void; // use in admin scripts only!
 }
 
-export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestionInterface {
+export class AdminSingleSelectQuestion implements AdminQuestionWithOptionsInterface {
 
   /**
    * Practice question will be set up inside here (order, questId, practiceFor)
@@ -52,27 +38,26 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     data: Omit<DBQuestion<"singleSelect">, "id">,
     correctOptionData: Omit<DBOption<"singleSelect">, "id"|"questionId">,
     optionData: Omit<DBOption<"singleSelect">, "id"|"questionId">[],
-    practiceQuestion?: Question,
+    practiceQuestion?: AdminQuestion,
   ) {
-    const questionsRef = collection(db, QUESTIONS_COLLECTION);
-    const questionRef = doc(questionsRef);
+    const questionRef = db.collection(QUESTIONS_COLLECTION).doc();
     const questionData = {
       id: questionRef.id,
       ...data
     } as DBQuestion<"singleSelect">;
-    await setDoc(questionRef, questionData);
+    await questionRef.create(questionData);
 
-    const options: SingleSelectOption[] = [];
+    const options: AdminSingleSelectOption[] = [];
     for (let optionDatum of optionData) {
       options.push(
-        await SingleSelectOption.create(db, {...optionDatum, questionId: questionData.id})
+        await AdminSingleSelectOption.create(db, {...optionDatum, questionId: questionData.id})
       );
     }
     options.push(
-      await SingleSelectOption.create(db, {...correctOptionData, questionId: questionData.id})
+      await AdminSingleSelectOption.create(db, {...correctOptionData, questionId: questionData.id})
     );
 
-    const question = new SingleSelectQuestion(
+    const question = new AdminSingleSelectQuestion(
       db,
       questionData,
       options,
@@ -89,28 +74,22 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
 
   private _db: Firestore;
   private _dbData: DBQuestion<"singleSelect">;
-  private _completionData?: DBQuestAnswer<"singleSelect">;
-  private _options: SingleSelectOption[];// All options except for the correct one.
-  private _practiceQuestion?: Question;
-  private _answer?: SingleSelectOption;
-  private _correctOption: SingleSelectOption;
+  private _options: AdminSingleSelectOption[];// All options except for the correct one.
+  private _practiceQuestion?: AdminQuestion;
+  private _correctOption: AdminSingleSelectOption;
   private _isPractice: boolean = false;
 
   constructor(
     db: Firestore,
     data: DBQuestion<"singleSelect">,
-    options: SingleSelectOption[],
-    correctOption: SingleSelectOption,
-    practiceQuestion?: Question,
-    answer?: SingleSelectOption,
-    completionData?: DBQuestAnswer<"singleSelect">
+    options: AdminSingleSelectOption[],
+    correctOption: AdminSingleSelectOption,
+    practiceQuestion?: AdminQuestion,
   ) {
     this._db = db;
     this._dbData = data;
-    this._completionData = completionData;
     this._options = options;
     this._correctOption = correctOption;
-    this._answer = answer;
     this._isPractice = data.isPractice;
     this._practiceQuestion = practiceQuestion;
   };
@@ -131,22 +110,20 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     return this._dbData.prompt;
   }
   get reward() {
-    return this._completionData?.reward || this._dbData.reward || null;
+    return this._dbData.reward || null;
   }
   get isPractice() {
     return this._isPractice;
-  }
-  get isAnswered() {
-    return !!this._completionData;
   }
   get order() {
     return this._dbData.order;
   }
 
-
   async setPrompt(prompt: string) {
-    const docRef = doc(this._db, QUESTIONS_COLLECTION, this._dbData.id);
-    await updateDoc(docRef, {
+    await this._db
+    .collection(QUESTIONS_COLLECTION)
+    .doc(this._dbData.id)
+    .update({
       prompt: prompt,
     });
     this._dbData.prompt = prompt;
@@ -157,22 +134,26 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     coins: number,
     itemIds: ItemId[],
   }) {
-    const docRef = doc(this._db, QUESTIONS_COLLECTION, this._dbData.id);
-    await updateDoc(docRef, {
+    await this._db
+    .collection(QUESTIONS_COLLECTION)
+    .doc(this._dbData.id)
+    .update({
       reward: reward,
     });
     this._dbData.reward = reward;
   }
 
-  async setPracticeQuestion(question: Question|null) {
+  async setPracticeQuestion(question: AdminQuestion|null) {
 
     // remove old
     if (this._practiceQuestion) {
-      const docRef = doc(this._db, QUESTIONS_COLLECTION, this._practiceQuestion.id);
-      await updateDoc(docRef, {
+      await this._db
+      .collection(QUESTIONS_COLLECTION)
+      .doc(this._practiceQuestion.id)
+      .update({
         order: 0,
         practiceFor: null,
-      });
+      })
       this._practiceQuestion._dbData.isPractice = false;
       this._practiceQuestion._dbData.practiceFor = null;
       this._practiceQuestion._isPractice = false;
@@ -182,12 +163,14 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
 
     // add new
     if (question) {
-      const docRef = doc(this._db, QUESTIONS_COLLECTION, question.id);
-      await updateDoc(docRef, {
+      await this._db
+      .collection(QUESTIONS_COLLECTION)
+      .doc(question.id)
+      .update({
         questId: null,
         order: this._dbData.order + 0.5,
         practiceFor: this._dbData.id,
-      });
+      })
       this._practiceQuestion = question;
       this._practiceQuestion._isPractice = true;
       this._practiceQuestion._dbData.isPractice = true;
@@ -198,24 +181,30 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
   };
 
   async _setQuestId(questId: QuestId|null) {
-    const docRef = doc(this._db, QUESTIONS_COLLECTION, this._dbData.id);
-    await updateDoc(docRef, {
+    await this._db
+    .collection(QUESTIONS_COLLECTION)
+    .doc(this._dbData.id)
+    .update({
       questId: questId,
     });
     this._dbData.questId = questId;
   };
 
   async _setOrder(order: number) {
-    const docRef = doc(this._db, QUESTIONS_COLLECTION, this._dbData.id);
-    await updateDoc(docRef, {
+    await this._db
+    .collection(QUESTIONS_COLLECTION)
+    .doc(this._dbData.id)
+    .update({
       order: order,
     });
     this._dbData.order = order;
   };
 
-  async removeOption(option: Option) {
-    const optionRef = doc(this._db, OPTIONS_COLLECTION, option.id);
-    await updateDoc(optionRef, {
+  async removeOption(option: AdminOption) {
+    await this._db
+    .collection(OPTIONS_COLLECTION)
+    .doc(option.id)
+    .update({
       questionId: null,
     });
     this._options = this._options.filter((value) => {
@@ -223,12 +212,14 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     });
   };
 
-  async addOption(option: Option) {
-    const optionRef = doc(this._db, OPTIONS_COLLECTION, option.id);
+  async addOption(option: AdminOption) {
     if (option.questionId !== null) {
       throw "An option cannot belong to multiple questions!";
     }
-    await updateDoc(optionRef, {
+    await this._db
+    .collection(OPTIONS_COLLECTION)
+    .doc(option.id)
+    .update({
       questionId: this._dbData.id,
     });
     this._options.push(option);
@@ -246,58 +237,6 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     return this._practiceQuestion;
   };
 
-  async answer(
-    option: Option,
-    userId: string,
-    rewardHook?: (correct: boolean, reward: Reward|null) => Promise<Reward>,
-  ) {
-
-    if (this._completionData) {
-      throw "This question has already been answered!";
-    }
-
-    const isCorrect = option.correct;
-    let reward = this._dbData.reward;
-    if (rewardHook) {
-      reward = await rewardHook(isCorrect, this._dbData.reward);
-    }
-
-    const answersRef = doc(this._db, 'users', userId, ANSWER_COLLECTION, this._dbData.id);
-    const completionData: Omit<DBQuestAnswer<"singleSelect">, "answeredAt"> & {answeredAt: FieldValue} = {
-      id: this._dbData.id,
-      questId: this._dbData.questId,
-      questionId: this._dbData.id,
-      order: this._dbData.order,
-      correctOptionId: this._correctOption.id,
-      selectedOptionId: option.id,
-      correct: isCorrect,
-      reward: reward,
-      answeredAt: serverTimestamp(),
-    };
-    await setDoc(answersRef, completionData);
-    this._completionData = {
-      ...completionData,
-      answeredAt: new Timestamp(Date.now() / 1000, 0)
-    };
-    this._answer = option;
-
-    return {
-      correct: isCorrect,
-      reward: reward,
-    };
-  };
-
-  hasAnswer() {
-    return !!this._completionData;
-  };
-
-  getAnswer() {
-    if ( !this._answer ) {
-      throw "Question has not been answered!";
-    }
-    return this._answer;
-  };
-
   getCorrectOption() {
     return this._correctOption;
   };
@@ -310,22 +249,22 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
   };
 }
 
-export type Question = SingleSelectQuestion;
+export type AdminQuestion = AdminSingleSelectQuestion;
 
-export class QuestionFactory {
+export class AdminQuestionFactory {
 
   private _db: Firestore;
-  private optionFactory: OptionFactory;
+  private optionFactory: AdminOptionFactory;
   private optionCollection: CollectionReference;
   private questionCollection: CollectionReference;
   private completionCollection: CollectionReference;
 
   constructor(db: Firestore) {
     this._db = db;
-    this.optionCollection = collection(this._db, OPTIONS_COLLECTION);
-    this.questionCollection = collection(this._db, QUESTIONS_COLLECTION);
-    this.completionCollection = collection(this._db, QUEST_COMPLETION_COLLECTION);
-    this.optionFactory = new OptionFactory(this._db);
+    this.optionCollection = this._db.collection(OPTIONS_COLLECTION);
+    this.questionCollection = this._db.collection(QUESTIONS_COLLECTION);
+    this.completionCollection = this._db.collection(QUEST_COMPLETION_COLLECTION);
+    this.optionFactory = new AdminOptionFactory(this._db);
   }
 
   /**
@@ -334,9 +273,9 @@ export class QuestionFactory {
    */
   async _findCorrectOption<T extends QuestionType>(
     questionId: QuestionId,
-    options: Option[],
+    options: AdminOption[],
     completionData?: DBQuestAnswer<T>
-  ): Promise<Option> {
+  ): Promise<AdminOption> {
     let correctOption = options.find((option) => {
       return (completionData && completionData?.correctOptionId === option.id) ||
         (!completionData && option.correct);
@@ -356,9 +295,9 @@ export class QuestionFactory {
    * Helper function to find the user's answer to the question.
    */
   async _findAnswer<T extends QuestionType>(
-    options: Option[],
+    options: AdminOption[],
     completionData: DBQuestAnswer<T>
-  ): Promise<Option> {
+  ): Promise<AdminOption> {
     let answer = options.find((option) => {
       return option.id === completionData.correctOptionId;
     });
@@ -371,15 +310,13 @@ export class QuestionFactory {
   }
 
   async _getCompletionData<T extends QuestionType>(questionId: QuestionId): Promise<DBQuestAnswer<T>|null> {
-    const answerQuery = query(
-      this.completionCollection,
-      where("questionId", "==", questionId),
-      limit(1)
-    );
-    const answerDocs = await getDocs(answerQuery);
+    const answerDocs = await this.completionCollection
+    .where("questionId", "==", questionId)
+    .limit(1)
+    .get();
     if (answerDocs.size > 0) {
       return {
-        ...answerDocs.docs[0].data({serverTimestamps: "estimate"}),
+        ...answerDocs.docs[0].data(),
         id: answerDocs.docs[0].id
       } as DBQuestAnswer<T>;
     } else {
@@ -387,17 +324,15 @@ export class QuestionFactory {
     }
   }
 
-  async _findPracticeQuestion<T extends QuestionType>(questId: QuestId): Promise<Question|null> {
-    const questionsQuery = query(
-      this.questionCollection,
-      where("practiceFor","==", questId),
-      limit(1)
-    );
-    const questionDocs = await getDocs(questionsQuery);
+  async _findPracticeQuestion<T extends QuestionType>(questId: QuestId): Promise<AdminQuestion|null> {
+    const questionDocs = await this.questionCollection
+    .where("practiceFor","==", questId)
+    .limit(1)
+    .get();
     if (questionDocs.size > 0 ) {
       const completionData = await this._getCompletionData(questionDocs.docs[0].id);
       const questionData = {
-        ...questionDocs.docs[0].data({serverTimestamps: "estimate"}),
+        ...questionDocs.docs[0].data(),
         id: questionDocs.docs[0].id
       } as DBPracticeQuestion<T>;
       return await this.fromFirebaseData(questionData, completionData || undefined);
@@ -414,28 +349,19 @@ export class QuestionFactory {
     switch (questionType) {
 
       case "singleSelect":
-        const optionsQuery = query(
-          this.optionCollection,
-          where("questionId", "==",data.id)
-        );
+        const optionsQuery = this.optionCollection.where("questionId", "==",data.id);
         let options = await this.optionFactory.fromFirebaseQuery<"singleSelect">(optionsQuery);
 
         const correctOption = await this._findCorrectOption(data.id, options, completionData);
         options = options.filter((option) => !option.correct);
-        let answer;
-        if (completionData) {
-          answer = await this._findAnswer(options, completionData);
-        }
 
         const practiceQuestion = await this._findPracticeQuestion(data.id) || undefined;
 
-        return new SingleSelectQuestion(
+        return new AdminSingleSelectQuestion(
           this._db,
           data, options,
           correctOption,
           practiceQuestion,
-          answer,
-          completionData
         );
 
 

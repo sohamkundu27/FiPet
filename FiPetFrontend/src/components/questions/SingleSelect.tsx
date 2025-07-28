@@ -1,12 +1,12 @@
 import { useAuth } from "@/src/hooks/useRequiresAuth";
-import { SingleSelectOption } from "@/src/services/quest/Option";
-import { SingleSelectQuestion } from "@/src/services/quest/Question";
+import { UserSingleSelectOption } from "@/src/services/quest/UserOption";
+import { UserSingleSelectQuestion } from "@/src/services/quest/UserQuestion";
 import { useEffect, useState, useMemo } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import { QuestionProps } from "./QuestionRenderer";
 
 type SingleSelectProps = QuestionProps & {
-  question: SingleSelectQuestion,
+  question: UserSingleSelectQuestion,
 };
 
 export default function SingleSelect({question, onSubmit, rewardHook, ref, preSubmit, onError, onReadyForSubmit, onUnreadyForSubmit}: SingleSelectProps) {
@@ -21,7 +21,7 @@ export default function SingleSelect({question, onSubmit, rewardHook, ref, preSu
     options.sort(() => Math.random() - 0.5);
   }, [options]);
 
-  const [selectedOption, setSelected] = useState<SingleSelectOption|null>(null);
+  const [selectedOption, setSelected] = useState<UserSingleSelectOption|null>(null);
 
   ref.current = {
     submit: () => {

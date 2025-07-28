@@ -1,4 +1,4 @@
-import { SingleSelectQuestion, UserQuestionInterface } from "@/src/services/quest/Question";
+import { UserSingleSelectQuestion, UserQuestionInterface } from "@/src/services/quest/UserQuestion";
 import SingleSelect from "./SingleSelect";
 import { QuestionType, Reward } from "@/src/types/quest";
 import { RefObject } from "react";
@@ -25,7 +25,7 @@ export default function QuestionRenderer(props: QuestionProps) {
   switch (questionType) {
     case "singleSelect":
       return (
-        <SingleSelect {...props} question={props.question as SingleSelectQuestion} />
+        <SingleSelect {...props} question={props.question as UserSingleSelectQuestion} />
       );
 
     default:

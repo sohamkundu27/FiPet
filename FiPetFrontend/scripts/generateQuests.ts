@@ -1,28 +1,18 @@
-import { collection, getFirestore, limit, query } from "@firebase/firestore";
-import { initializeApp } from '@firebase/app';
-import { Quest } from "@/src/services/quest/Quest";
-import { createPracticeQuestionJSON, createQuestionJSON, QUEST_COLLECTION } from "@/src/types/quest";
-import { PreQuestReading } from "@/src/services/quest/PreQuestReading";
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDh1F64AeCS_xzkgATynBu4K4xOEIi1mns",
-  authDomain: "fipet-521d1.firebaseapp.com",
-  projectId: "fipet-521d1",
-  storageBucket: "fipet-521d1.firebasestorage.app",
-  messagingSenderId: "365751870741",
-  appId: "1:365751870741:web:a0afa3d48256677627751c",
-  measurementId: "G-S8BFBHYL8B"
-};
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { AdminQuest } from "@/src/services/quest/AdminQuest";
+import { createPracticeQuestionJSON, createQuestionJSON } from "@/src/types/quest";
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const app = initializeApp({
+  credential: cert("../../serviceAccountKey.json")
+});
 
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
 async function create() {
-  await Quest.createFromJSON(db, {
+  await AdminQuest.createFromJSON(db, {
     quests: [
       {
         title: "Intro to Budgeting",
@@ -271,50 +261,6 @@ async function create() {
 }
 async function test() {
 
-  const _query = query(collection(db, QUEST_COLLECTION), limit(1));
-  const quests = await Quest.fromFirebaseQuery(db, _query);
-  console.log(quests[0]);
-  const questions = quests[0].getQuestions();
-  console.log(questions.toString());
-  const question = questions[0];
-  await quests[0].removeQuestion(question);
-  console.log("question removed");
-  await quests[0].addQuestion(question);
-  console.log(questions.toString());
-  await quests[0].addReading(
-    await PreQuestReading.create(db, {
-      bottomText: "test1",
-      topText: "test1",
-      image: null,
-      questId: quests[0].id,
-      order: 0,
-    })
-  );
-  await quests[0].addReading(
-    await PreQuestReading.create(db, {
-      bottomText: "test2",
-      topText: "test2",
-      image: null,
-      questId: quests[0].id,
-      order: 0,
-    }),
-    0
-  );
-  await quests[0].addReading(
-    await PreQuestReading.create(db, {
-      bottomText: "test3",
-      topText: "test3",
-      image: null,
-      questId: quests[0].id,
-      order: 1,
-    }),
-    1
-  );
-  let readings = quests[0].getReadings();
-  await quests[0].removeReading(readings[1]);
-  await quests[0].removeReading(readings[0]);
-  await quests[0].removeReading(readings[0]);
-  console.log(readings);
 }
 
 create();

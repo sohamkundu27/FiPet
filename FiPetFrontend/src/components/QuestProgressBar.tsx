@@ -1,11 +1,11 @@
 import { View, StyleSheet, ViewStyle } from "react-native";
 import React from "react";
-import { Question } from "../services/quest/Question";
+import { UserQuestion } from "../services/quest/UserQuestion";
 
 
 type QuestProgressBarProps = (
   {
-    questions: Question[],
+    questions: UserQuestion[],
     questionID: string,
   } |
   {
@@ -15,7 +15,7 @@ type QuestProgressBarProps = (
 ) & {style?: ViewStyle};
 
 export default function QuestProgressBar({questions, questionID, style}: {
-  questions: Question[],
+  questions: UserQuestion[],
   questionID: string,
   style?: ViewStyle
 }): React.JSX.Element;

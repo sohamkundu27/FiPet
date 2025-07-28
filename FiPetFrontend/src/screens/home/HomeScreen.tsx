@@ -1,6 +1,5 @@
 "use client"
-import React from 'react';
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, SafeAreaView, Pressable } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { AnimatedCircularProgress } from 'react-native-circular-progress'
@@ -9,7 +8,7 @@ import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
 import { getFontSize } from '@/src/hooks/useFont';
 import { useRouter, usePathname, useFocusEffect } from 'expo-router';
-import { Quest } from '@/src/services/quest/Quest';
+import { UserQuest } from '@/src/services/quest/UserQuest';
 import { useAuth } from '@/src/hooks/useRequiresAuth';
 import { collection, limit, query } from '@firebase/firestore';
 import { db } from '@/src/config/firebase';
@@ -18,7 +17,7 @@ import { QUEST_COLLECTION } from '@/src/types/quest';
 export default function HomeScreen() {
 
   const { level, streak, mood, coins, addMood } = useGamificationStats();
-  const [quests, setQuests] = useState<Quest[]|null>(null);
+  const [quests, setQuests] = useState<UserQuest[]|null>(null);
   const moodProgress = useRef<AnimatedCircularProgress>(null);
   const levelProgress = useRef<AnimatedCircularProgress>(null);
 
@@ -46,7 +45,7 @@ export default function HomeScreen() {
     React.useCallback(() => {
       async function fetchQuest() {
         const questQuery = query(collection(db,QUEST_COLLECTION), limit(2));
-        const quests = await Quest.fromFirebaseQuery(db, questQuery, false, false, user.uid);
+        const quests = await UserQuest.fromFirebaseQuery(db, questQuery, user.uid, false, false);
         setQuests(quests.filter((quest) => !quest.isComplete));
       }
       fetchQuest();

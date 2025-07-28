@@ -1,4 +1,4 @@
-import { collection, doc, Firestore, getDoc, getDocs, Query, setDoc, updateDoc } from "@firebase/firestore";
+import { Firestore, Query } from "firebase-admin/firestore";
 import { DBOption, OptionId, OPTIONS_COLLECTION, QuestId, QuestionId, QuestionType } from "@/src/types/quest";
 
 
@@ -15,16 +15,16 @@ export interface AdminOptionInterface extends OptionInterface{
   setFeedback(feedback: string): Promise<void>;
 }
 
-export class SingleSelectOption implements OptionInterface, AdminOptionInterface {
+export class AdminSingleSelectOption implements OptionInterface, AdminOptionInterface {
 
   /**
    * Use in admin scripts only!
    */
   static async create(db: Firestore, args: Omit<DBOption<"singleSelect">, "id">) {
-    const optionRef = doc(collection(db, OPTIONS_COLLECTION));
+    const optionRef = db.collection(OPTIONS_COLLECTION).doc();
     const optionData = {...args, id: optionRef.id};
-    await setDoc(optionRef, optionData);
-    return new SingleSelectOption(db, optionData);
+    await optionRef.create(optionData);
+    return new AdminSingleSelectOption(db, optionData);
   }
 
   readonly type: QuestionType = "singleSelect";
@@ -54,25 +54,29 @@ export class SingleSelectOption implements OptionInterface, AdminOptionInterface
   }
 
   async setText(text: string) {
-    const optionRef = doc(this._db, OPTIONS_COLLECTION, this.id);
-    await updateDoc(optionRef, {
+    this._db
+    .collection(OPTIONS_COLLECTION)
+    .doc(this.id)
+    .update({
       text: text,
     });
     this._dbData.text = text;
   }
 
   async setFeedback(feedback: string) {
-    const optionRef = doc(this._db, OPTIONS_COLLECTION, this.id);
-    await updateDoc(optionRef, {
+    this._db
+    .collection(OPTIONS_COLLECTION)
+    .doc(this.id)
+    .update({
       feedback: feedback,
     });
     this._dbData.feedback = feedback;
   }
 }
 
-export type Option = SingleSelectOption;
+export type AdminOption = AdminSingleSelectOption;
 
-export class OptionFactory {
+export class AdminOptionFactory {
 
   private _db: Firestore;
 
@@ -84,7 +88,7 @@ export class OptionFactory {
     const questionType = data.type as QuestionType;
     switch (questionType) {
       case "singleSelect":
-        return new SingleSelectOption(this._db, data);
+        return new AdminSingleSelectOption(this._db, data);
       default:
         const exhaustiveCheck: never = questionType;
         throw new Error(`Unhandled question type: ${exhaustiveCheck}`);
@@ -92,24 +96,26 @@ export class OptionFactory {
   }
 
   async fromFirebaseId<T extends QuestionType>(id: OptionId[T]) {
-    const optionRef = doc(this._db, OPTIONS_COLLECTION, id);
-    const optionDoc = await getDoc(optionRef);
-    if (!optionDoc.exists()) {
+    const optionDoc = await this._db
+    .collection(OPTIONS_COLLECTION)
+    .doc(id)
+    .get();
+    if (!optionDoc.exists) {
       throw `Option (${id}) does not exist!`;
     }
     const optionData = {
-      ...optionDoc.data({serverTimestamps: "estimate"}),
+      ...optionDoc.data(),
       questionId: optionDoc.get("questionId") || null
     } as DBOption<T>;
     return this.fromFirebaseData(optionData);
   }
 
   async fromFirebaseQuery<T extends QuestionType>(query: Query) {
-    const options: Option[] = [];
-    const optionDocs = await getDocs(query);
+    const options: AdminOption[] = [];
+    const optionDocs = await query.get();
     optionDocs.forEach((optionDoc) => {
       const optionData = {
-        ...optionDoc.data({serverTimestamps: "estimate"}),
+        ...optionDoc.data(),
         questionId: optionDoc.get("questionId") || null
       } as DBOption<T>;
       options.push(this.fromFirebaseData(optionData));

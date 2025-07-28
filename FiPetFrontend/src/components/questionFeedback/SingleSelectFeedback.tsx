@@ -1,9 +1,9 @@
-import { SingleSelectQuestion } from "@/src/services/quest/Question";
+import { UserSingleSelectQuestion } from "@/src/services/quest/UserQuestion";
 import { View, StyleSheet, Text } from "react-native";
 import { FeedbackProps } from "./FeedbackRenderer";
 
 type SingleSelectProps = FeedbackProps & {
-  question: SingleSelectQuestion,
+  question: UserSingleSelectQuestion,
 };
 
 export default function SingleSelectFeedback({question}: SingleSelectProps) {
