@@ -80,7 +80,7 @@ export default function QuestionScreen() {
                 onPress={() => {
                   const next = quest.getNextQuestion(question);
                   if (next === false) {
-                    quest.complete(user.uid).then((reward) => {
+                    quest.complete().then((reward) => {
                       router.replace(`/(tabs)/quests/${quest.id}`);
                     });
                   } else {

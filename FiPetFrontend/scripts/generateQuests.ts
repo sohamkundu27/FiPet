@@ -5,7 +5,7 @@ import { createPracticeQuestionJSON, createQuestionJSON } from "@/src/types/ques
 
 // Initialize Firebase
 const app = initializeApp({
-  credential: cert("../../serviceAccountKey.json")
+  credential: cert("./serviceAccountKey.json")
 });
 
 // Initialize Cloud Firestore and get a reference to the service

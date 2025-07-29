@@ -172,7 +172,7 @@ export class UserQuest implements UserQuestInterface {
    * Recommended to run @see _loadAnsweredQuestions beforehand.
    */
   private async _loadQuestions(since: number=-1): Promise<void> {
-    return new Promise(async (res) => {
+    return new Promise(async (res, rej) => {
       const factory = new UserQuestionFactory(this._db);
 
       const questionsRef = collection(this._db, QUESTIONS_COLLECTION);
@@ -182,27 +182,30 @@ export class UserQuest implements UserQuestInterface {
         orderBy("order"),
         where("order", ">", since)
       );
-      const questionsSnap = await getDocs(questionsQuery);
+      try {
+        const questionsSnap = await getDocs(questionsQuery);
 
-      if (questionsSnap.size === 0) {
-        res();
-      }
-
-      questionsSnap.forEach(async (doc) => {
-        const questionType = doc.get("type") as QuestionType; // @ts-ignore
-        const questionData = doc.data({serverTimestamps: "estimate"}) as DBQuestion<typeof questionType>;
-        const question = await factory.fromFirebaseData(questionData);
-        this._questions.push(question);
-        if (this._questions.length >= questionsSnap.size) {
+        if (questionsSnap.size === 0) {
           res();
         }
-      });
 
+        questionsSnap.forEach(async (doc) => {
+          const questionType = doc.get("type") as QuestionType; // @ts-ignore
+          const questionData = doc.data({serverTimestamps: "estimate"}) as DBQuestion<typeof questionType>;
+            const question = await factory.fromFirebaseData(questionData);
+            this._questions.push(question);
+            if (this._questions.length >= questionsSnap.size) {
+              res();
+            }
+        });
+      } catch(err) {
+        rej(err);
+      }
     })
   }
 
   private async _loadReadings(): Promise<void> {
-    return new Promise(async (res) => {
+    return new Promise(async (res, rej) => {
 
       const readingsRef = collection(this._db, READING_COLLECTION);
       const readingsQuery = query(
@@ -210,22 +213,26 @@ export class UserQuest implements UserQuestInterface {
         where("questId", "==", this._dbData.id),
         orderBy("order")
       );
-      const readingsSnap = await getDocs(readingsQuery);
+      try {
+        const readingsSnap = await getDocs(readingsQuery);
 
-      if (readingsSnap.size === 0) {
-        res();
-      }
-
-      readingsSnap.forEach(async (doc) => {
-        const readingData = doc.data({serverTimestamps: "estimate"}) as DBPreQuestReading;
-        const reading = new UserPreQuestReading(this._db, readingData);
-        this._readings.push(reading);
-        if (this._readings.length >= readingsSnap.size) {
+        if (readingsSnap.size === 0) {
           res();
         }
-      });
 
-    })
+        readingsSnap.forEach(async (doc) => {
+          const readingData = doc.data({serverTimestamps: "estimate"}) as DBPreQuestReading;
+          const reading = new UserPreQuestReading(readingData);
+          this._readings.push(reading);
+          if (this._readings.length >= readingsSnap.size) {
+            res();
+          }
+        });
+      } catch(err) {
+        rej(err);
+      }
+
+    });
   }
 
   /**
