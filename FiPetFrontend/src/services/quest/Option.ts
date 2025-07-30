@@ -31,7 +31,7 @@ export class SingleSelectOption implements OptionInterface, AdminOptionInterface
 
   private _dbData: DBOption<"singleSelect">;
   private _db: Firestore;
-
+ 
   constructor(db: Firestore, data: DBOption<"singleSelect">) {
     this._dbData = data;
     this._db = db;
