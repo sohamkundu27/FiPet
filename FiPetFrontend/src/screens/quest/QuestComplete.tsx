@@ -29,11 +29,11 @@ export default function QuestComplete() {
   });
   const correctRatio = questionCount.correct / questionCount.regular;
   const mood = correctRatio > 0.8 ? 'Happy' : 'Sad';
-  
+
   // Calculate XP and coins based on performance
   const baseXP = quest?.reward.xp || 0;
   const baseCoins = quest?.reward.coins || 0;
-  
+
   // Performance multiplier: minimum 20% reward even for poor performance, scale up to 100% for perfect score
   // Example: 3/5 correct = 60% ratio = 60% of base rewards
   // Example: 5/5 correct = 100% ratio = 100% of base rewards  
@@ -41,7 +41,7 @@ export default function QuestComplete() {
   const performanceMultiplier = Math.max(0.2, correctRatio);
   const earnedXP = Math.round(baseXP * performanceMultiplier);
   const earnedCoins = Math.round(baseCoins * performanceMultiplier);
-  
+
   const title = mood === 'Sad' ? 'So Close' : 'Well done!';
   const emoji = mood === 'Sad' ? '😢' : '🎉';
 
@@ -58,7 +58,7 @@ export default function QuestComplete() {
         const leveledUp = addXP(earnedXP);
         addCoins(earnedCoins);
         rewardsApplied.current = true;
-        
+
         console.log(`Updated user rewards: +${earnedXP} XP, +${earnedCoins} coins`);
         if (leveledUp) {
           console.log('User leveled up!');
@@ -83,7 +83,7 @@ export default function QuestComplete() {
           )}
           <Text style={styles.moodText}>Mood: {mood}</Text>
         </View>
-        
+
         <View style={styles.foxContainer}>
           <Image
             source={mood === 'Sad' ? require('@/src/assets/images/sad-fox.png') : require('@/src/assets/images/happy-fox.png')}
@@ -96,9 +96,12 @@ export default function QuestComplete() {
             resizeMode="contain"
           />
         </View>
-        
+
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.outlineButton} onPress={() => router.replace('/(tabs)/home')}>
+          <TouchableOpacity style={styles.outlineButton} onPress={() => {
+            router.replace('/(tabs)/quests')
+            router.replace('/(tabs)/home')
+          }}>
             <Text style={styles.outlineButtonText}>RETURN HOME</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.gradientButton} onPress={() => router.replace('/(tabs)/quests')}>
