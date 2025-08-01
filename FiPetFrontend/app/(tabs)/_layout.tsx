@@ -19,9 +19,8 @@ export default function TabLayout() {
       }
     }
     if (route.includes('[questID]') && includesAll) {
-      if (segments[segments.length - 1] !== '[questID]') {
-        shouldHideTabBar = true;
-      }
+      // Hide tab bar for all quest-related routes, including quest completion
+      shouldHideTabBar = true;
     } else if (includesAll) {
       shouldHideTabBar = true;
     }
