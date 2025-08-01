@@ -1,12 +1,13 @@
 // Tentative Goal: Page shows quest details: description, progress towards completion, XP/rewards earned so far. Possible integrates with ./questions/index.tsx.
 import { useQuest } from "@/src/hooks/useQuest";
-import { Redirect, useLocalSearchParams } from "expo-router";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import QuestComplete from '@/src/screens/quest/QuestComplete';
 import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function Page() {
   const { questID } = useLocalSearchParams();
   const { quest, loading, error } = useQuest();
+  const router = useRouter();
 
   // Show loading state while quest data is being fetched
   if (loading || !quest) {
