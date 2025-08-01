@@ -65,8 +65,6 @@ export default function QuestComplete() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-      {/* Simulated bottom nav bar area */}
-      <View style={styles.bottomNavBar} />
     </View>
   );
 }
@@ -202,15 +200,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     fontFamily: 'Poppins-Bold',
-  },
-  bottomNavBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 56,
-    backgroundColor: '#fafafa',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
   },
 });
