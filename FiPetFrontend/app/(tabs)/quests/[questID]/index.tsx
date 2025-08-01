@@ -1,12 +1,13 @@
 // Tentative Goal: Page shows quest details: description, progress towards completion, XP/rewards earned so far. Possible integrates with ./questions/index.tsx.
 import { useQuest } from "@/src/hooks/useQuest";
-import { Redirect, useLocalSearchParams } from "expo-router";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import QuestComplete from '@/src/screens/quest/QuestComplete';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function Page() {
   const { questID } = useLocalSearchParams();
   const { quest, loading, error } = useQuest();
+  const router = useRouter();
 
   // Show loading state while quest data is being fetched
   if (loading || !quest) {
@@ -14,6 +15,12 @@ export default function Page() {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
         <Text style={styles.loadingText}>Loading quest...</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -23,6 +30,12 @@ export default function Page() {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.errorText}>Error: {error}</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -57,6 +70,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#666',
+    marginBottom: 20,
   },
   errorText: {
     marginTop: 16,
@@ -64,5 +78,17 @@ const styles = StyleSheet.create({
     color: '#ff0000',
     textAlign: 'center',
     paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  backButton: {
+    backgroundColor: '#FF7A00',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
