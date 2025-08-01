@@ -65,8 +65,6 @@ export default function QuestComplete() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-      {/* Simulated bottom nav bar area */}
-      <View style={styles.bottomNavBar} />
     </View>
   );
 }
