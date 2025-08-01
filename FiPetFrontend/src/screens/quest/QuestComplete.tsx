@@ -32,41 +32,48 @@ export default function QuestComplete() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}<Text style={styles.emoji}>{emoji}</Text></Text>
-      <Text style={styles.xpText}>+{quest?.reward.xp} <Text style={styles.xpHighlight}>XP</Text></Text>
-      {quest?.reward.coins > 0 && (
-        <Text style={styles.coinText}>+{quest?.reward.coins} <Text style={styles.coinHighlight}>🪙</Text></Text>
-      )}
-      <Text style={styles.moodText}>Mood: {mood}</Text>
-      <View style={styles.foxContainer}>
-        <Image
-          source={mood === 'Sad' ? require('@/src/assets/images/sad-fox.png') : require('@/src/assets/images/happy-fox.png')}
-          style={styles.foxImage}
-          resizeMode="contain"
-        />
-        <Image
-          source={require('@/src/assets/images/fox-shadow.png')}
-          style={styles.foxShadow}
-          resizeMode="contain"
-        />
+      <View style={styles.contentContainer}>
+        <View style={styles.textSection}>
+          <Text style={styles.title}>{title}<Text style={styles.emoji}>{emoji}</Text></Text>
+          <Text style={styles.xpText}>+{earnedXP} <Text style={styles.xpHighlight}>XP</Text></Text>
+          {earnedCoins > 0 && (
+            <Text style={styles.coinText}>+{earnedCoins} <Text style={styles.coinHighlight}>🪙</Text></Text>
+          )}
+          <Text style={styles.moodText}>Mood: {mood}</Text>
+        </View>
+
+        <View style={styles.foxContainer}>
+          <Image
+            source={mood === 'Sad' ? require('@/src/assets/images/sad-fox.png') : require('@/src/assets/images/happy-fox.png')}
+            style={styles.foxImage}
+            resizeMode="contain"
+          />
+          <Image
+            source={require('@/src/assets/images/fox-shadow.png')}
+            style={styles.foxShadow}
+            resizeMode="contain"
+          />
+        </View>
+
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={styles.outlineButton} onPress={() => {
+            router.replace('/(tabs)/quests')
+            router.replace('/(tabs)/home')
+          }}>
+            <Text style={styles.outlineButtonText}>RETURN HOME</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.gradientButton} onPress={() => router.replace('/(tabs)/quests')}>
+            <LinearGradient
+              colors={["#4F8CFF", "#7C3AED"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientButtonBg}
+            >
+              <Text style={styles.gradientButtonText}>NEXT QUEST</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.outlineButton} onPress={() => router.replace('/home')}>
-          <Text style={styles.outlineButtonText}>RETURN HOME</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.gradientButton} onPress={() => router.replace('/quests')}>
-          <LinearGradient
-            colors={["#4F8CFF", "#7C3AED"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientButtonBg}
-          >
-            <Text style={styles.gradientButtonText}>NEXT QUEST</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-      {/* Simulated bottom nav bar area */}
-      <View style={styles.bottomNavBar} />
     </View>
   );
 }
