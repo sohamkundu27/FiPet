@@ -1,0 +1,47 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "preQuestReadings2",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "questId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questAnswers2",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "questId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questions2",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "questId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
