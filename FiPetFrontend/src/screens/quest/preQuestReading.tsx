@@ -33,6 +33,18 @@ export default function PreQuestReadingScreen() {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
         <Text style={styles.loadingText}>Loading...</Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            marginTop: 20,
+            paddingVertical: 12,
+            paddingHorizontal: 32,
+            backgroundColor: '#FF7A00', // App's orange
+            borderRadius: 24,
+          }}
+        >
+          <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
