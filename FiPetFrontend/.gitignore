@@ -2,6 +2,8 @@
 
 # firebase
 serviceAccountKey.json
+firestore-debug.log
+firebase-debug.log
 
 # dependencies
 node_modules/
