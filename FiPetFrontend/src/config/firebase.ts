@@ -21,10 +21,14 @@ const app = initializeApp(firebaseConfig);
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage)
 });
-connectAuthEmulator(auth, "http://10.0.2.2:9099");
+if (process.env.EXPO_PUBLIC_USE_EMULATOR === "true") {
+  connectAuthEmulator(auth, `http://${process.env.EXPO_PUBLIC_EMULATOR_IP}:9099`);
+}
 
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
-connectFirestoreEmulator(db, '10.0.2.2', 8080);
+if (process.env.EXPO_PUBLIC_USE_EMULATOR === "true") {
+  connectFirestoreEmulator(db, process.env.EXPO_PUBLIC_EMULATOR_IP as string, 8080);
+}
 
 export { auth, db };
