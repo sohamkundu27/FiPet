@@ -4,9 +4,18 @@ import { AdminQuest } from "@/src/services/quest/AdminQuest";
 import { createPracticeQuestionJSON, createQuestionJSON } from "@/src/types/quest";
 
 // Initialize Firebase
-const app = initializeApp({
-  credential: cert("./serviceAccountKey.json")
-});
+//const app = initializeApp({
+//  credential: cert("./serviceAccountKey.json")
+//});
+let app;
+if (process.env.FIRESTORE_EMULATOR_HOST) {
+  app = initializeApp({ projectId: "fipet-521d1" });
+} else {
+  app = initializeApp({
+    credential: cert("./serviceAccountKey.json"),
+    projectId: "fipet-521d1"
+  });
+}
 
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);

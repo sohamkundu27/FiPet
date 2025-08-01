@@ -26,6 +26,7 @@ export interface UserQuestionWithOptionsInterface extends UserQuestionInterface 
   getAnswer(): UserOption;
   getCorrectOption(): UserOption;
   getOptions(): UserOption[];
+  markAsAnswered(option: UserOption, reward: Reward|null): void;
 }
 
 export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterface {
@@ -138,6 +139,26 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
       correct: isCorrect,
       reward: reward,
     };
+  };
+
+  // Method to mark question as answered locally (without Firestore write)
+  markAsAnswered(option: UserOption, reward: Reward|null) {
+    if (this._completionData) {
+      return; // Already answered
+    }
+
+    this._completionData = {
+      id: this._dbData.id,
+      questId: this._dbData.questId,
+      questionId: this._dbData.id,
+      order: this._dbData.order,
+      correctOptionId: this._correctOption.id,
+      selectedOptionId: option.id,
+      correct: option.correct,
+      reward: reward,
+      answeredAt: new Timestamp(Date.now() / 1000, 0)
+    };
+    this._answer = option;
   };
 
   hasAnswer() {

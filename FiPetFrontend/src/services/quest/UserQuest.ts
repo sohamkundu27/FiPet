@@ -236,7 +236,7 @@ export class UserQuest implements UserQuestInterface {
   }
 
   /**
-   * Returns the highest order from the questions answered.
+   * Loads all answered questions for this quest from the database.
    * 
    * Requires the constructor has userData passed (requires @see _userId)
    * Recommended to run @see _loadQuestions afterward.
@@ -246,11 +246,11 @@ export class UserQuest implements UserQuestInterface {
     const factory = new UserQuestionFactory(this._db);
     let highestQuestionOrder = -1;
 
-    const answersRef = collection(this._db, 'users', this._userId, ANSWER_COLLECTION);
+    // Read from the new answeredQuestions collection structure
+    const answersRef = collection(this._db, 'users', this._userId, 'answeredQuestions', this._dbData.id, 'questions');
     const answersQuery = query(
       answersRef,
-      where("questId", "==", this._dbData.id),
-      orderBy("order")
+      orderBy("timestamp")
     );
     const answersSnapshot = await getDocs(answersQuery);
     
@@ -290,14 +290,25 @@ export class UserQuest implements UserQuestInterface {
       }
 
       answersSnapshot.docs.forEach((doc) => {
+        // Extract data from the new collection structure
+        const answerData = doc.data();
+        const questionId = answerData.questionId;
+        const isCorrect = answerData.isCorrect;
+        
+        // Create a mock completion data structure for the question
+        const mockCompletionData: DBQuestAnswer<"singleSelect"> = {
+          id: questionId,
+          questId: this._dbData.id,
+          questionId: questionId,
+          order: answerData.order || 0,
+          answeredAt: new Timestamp(Date.now() / 1000, 0),
+          correct: isCorrect,
+          correctOptionId: answerData.correctOptionId || '',
+          selectedOptionId: answerData.selectedOptionId || '',
+          reward: null
+        };
 
-        const answerType = doc.get("type") as QuestionType; // @ts-ignore
-        const answerData = {
-          ...doc.data({serverTimestamps: "estimate"}),
-          id: doc.id
-        } as DBQuestAnswer<typeof answerType>;
-
-        const questionDoc = binSearch(answerQuestionsSnap.docs, answerData.questionId, (doc, value) => {
+        const questionDoc = binSearch(answerQuestionsSnap.docs, questionId, (doc, value) => {
           const docValue = doc.get("id");
           if (docValue === value) {
             return 0;
@@ -308,15 +319,20 @@ export class UserQuest implements UserQuestInterface {
           }
         });
         if (questionDoc === false) {
-          console.error(`A previously answered question (${answerData.questionId}) was not found in the database.`);
+          console.error(`A previously answered question (${questionId}) was not found in the database.`);
           handleLoop();
           return;
         }
         const questionType = questionDoc.get("type") as QuestionType; // @ts-ignore
         const questionData = questionDoc.data({serverTimestamps: "estimate"}) as DBQuestion<typeof questionType>;
 
-        factory.fromFirebaseData(questionData, answerData).then((question) => {
-          questions[answerData.order] = question;
+        // Update the completion data with the correct order and option IDs
+        mockCompletionData.order = questionData.order;
+        // We'll need to get the correct option ID from the question data
+        // For now, we'll use a placeholder and let the question factory handle it
+
+        factory.fromFirebaseData(questionData, mockCompletionData).then((question) => {
+          questions[questionData.order] = question;
           handleLoop(questionData.order);
         }).catch(() => {
           handleLoop();
