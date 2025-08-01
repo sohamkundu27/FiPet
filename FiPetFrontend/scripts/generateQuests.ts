@@ -3,7 +3,6 @@ import { initializeApp } from '@firebase/app';
 import { Quest } from "@/src/services/quest/Quest";
 import { createPracticeQuestionJSON, createQuestionJSON, QUEST_COLLECTION } from "@/src/types/quest";
 import { PreQuestReading } from "@/src/services/quest/PreQuestReading";
-import { connectAuthEmulator } from "@firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -21,7 +20,9 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
-connectFirestoreEmulator(db, '127.0.0.1', 8080);
+if (process.env.EXPO_PUBLIC_USE_EMULATOR === "true") {
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+}
 
 async function create() {
   await Quest.createFromJSON(db, {
