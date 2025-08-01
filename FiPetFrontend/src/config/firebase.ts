@@ -1,6 +1,6 @@
 import { initializeApp } from '@firebase/app';
-import { getReactNativePersistence, initializeAuth } from '@firebase/auth';
-import { getFirestore } from '@firebase/firestore';
+import { getReactNativePersistence, initializeAuth, connectAuthEmulator } from '@firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from '@firebase/firestore';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 // Your web app's Firebase configuration
@@ -21,8 +21,10 @@ const app = initializeApp(firebaseConfig);
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage)
 });
+connectAuthEmulator(auth, "http://10.0.2.2:9099");
 
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
+connectFirestoreEmulator(db, '10.0.2.2', 8080);
 
 export { auth, db };
