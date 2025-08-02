@@ -65,8 +65,8 @@ export interface UserQuestInterface extends QuestInterface {
 
   complete(
     userId: string,
-    handleReward: (correctRatio: number, reward: Reward|null) => Promise<Reward>
-  ): Promise<void>;
+    rewardHook?: (correctRatio: number, reward: Reward|null) => Promise<Reward>
+  ): Promise<Reward>;
   getLatestQuestion(): Question|false;
   getNextQuestion(currentQuestion: Question): Question|false;
 }
@@ -126,7 +126,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
       const questDocs = await getDocs(questQuery);
 
       questDocs.forEach(async (questDoc) => {
-        const questData = questDoc.data({serverTimestamps: "estimate"}) as DBQuest;
+        const questData = {...questDoc.data({serverTimestamps: "estimate"}), id: questDoc.id} as DBQuest;
 
 
         let userData: undefined | {
@@ -150,7 +150,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
         const quest = new Quest(db, questData, userData);
         if (loadQuestions) {
           let lastOrder;
-          if (userId) {
+          if (userData) {
             lastOrder = await quest._loadAnsweredQuestions();
           }
           await quest._loadQuestions(lastOrder);
@@ -185,7 +185,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     const questRef = doc(db, QUEST_COLLECTION, questId);
     const questDoc = await getDoc(questRef);
 
-    const questData = questDoc.data({serverTimestamps: "estimate"}) as DBQuest;
+    const questData = {...questDoc.data({serverTimestamps: "estimate"}), id: questDoc.id} as DBQuest;
 
 
     let userData: undefined | {
@@ -209,7 +209,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     const quest = new Quest(db, questData, userData);
     if (loadQuestions) {
       let lastOrder;
-      if (userId) {
+      if (userData) {
         lastOrder = await quest._loadAnsweredQuestions();
       }
       await quest._loadQuestions(lastOrder);
@@ -221,7 +221,6 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
 
     return quest;
   }
-
   static async _createQuestion<T extends QuestionType>(
     db: Firestore,
     questionData: Omit<DBQuestion<T>, "id">,
@@ -690,7 +689,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     });
 
     if (index === -1) {
-      throw "Question does not exist in quest! (getNextQuestion)";
+      throw "Question does not exist in quest!";
     }
 
     const q = this._questions[index];
@@ -702,7 +701,7 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
         if (q.getAnswer().correct) {
           return index >= this._questions.length - 1 ? false : this._questions[index + 1];
         } else {
-          return q.hasPracticeQuestion() ? q.getPracticeQuestion() : false;
+          return q.hasPracticeQuestion() ? q.getPracticeQuestion() : (index >= this._questions.length - 1 ? false : this._questions[index + 1]);
         }
       }
     } else {
@@ -731,7 +730,6 @@ export class Quest implements AdminQuestInterface, UserQuestInterface {
     }
     return theQuestion;
   };
-
   getQuestions() {
     return this._questions;
   };
