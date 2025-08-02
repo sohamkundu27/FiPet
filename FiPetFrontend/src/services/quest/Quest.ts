@@ -63,8 +63,8 @@ export interface QuestInterface {
   ): Promise<Reward>;
   getLatestQuestion(): Question|false;
   getNextQuestion(currentQuestion: Question): Question|false;
-  getQuestions(): Question[];
-  getReadings(): PreQuestReading[];
+  getQuestion(questionId: QuestionId): Question;
+}
 
   // For admin scripts only:
   delete(): Promise<void>;
