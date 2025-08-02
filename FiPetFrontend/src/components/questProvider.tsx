@@ -37,7 +37,7 @@ export const QuestProvider = ({ children, questID }: { children: any, questID: s
 
   // Fetch quest and questions on mount
   useEffect(() => {
-    UserQuest.fromFirebaseId(db, questID, user.uid, true, true).then((quest) => {
+    UserQuest.fromFirebaseId(db, questID, user, true, true).then((quest) => {
       setQuest(quest);
       setLoading(false);
     }).catch((err) => {

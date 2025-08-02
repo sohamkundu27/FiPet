@@ -7,9 +7,15 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
+import { initializeApp } from "firebase-admin/app";
 import {setGlobalOptions} from "firebase-functions";
 import {onRequest} from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
+
+// Initialize the Firebase Admin SDK
+initializeApp({
+  projectId: "fipet-521d1"
+});
 
 // Export cloud functions
 export { submitAnswer } from "./submitAnswer";
@@ -30,7 +36,7 @@ export { completeQuest } from "./completeQuest";
 // this will be the maximum concurrent request count.
 setGlobalOptions({ maxInstances: 10 });
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+export const helloWorld = onRequest((request, response) => {
+  logger.info("Hello logs!", {structuredData: true});
+  response.send("Hello from Firebase!");
+});

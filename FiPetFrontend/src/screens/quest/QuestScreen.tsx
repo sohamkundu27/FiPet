@@ -38,7 +38,7 @@ export default function QuestScreen() {
         try {
             setLoading(true);
             const questQuery = collection(db, QUEST_COLLECTION);
-            const quests = await UserQuest.fromFirebaseQuery(db, questQuery, user.uid, false, false);
+            const quests = await UserQuest.fromFirebaseQuery(db, questQuery, user, false, false);
             setQuests(quests.filter((quest) => !quest.isComplete));
             setLastFetchTime(now);
         } catch (error) {

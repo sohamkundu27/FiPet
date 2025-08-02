@@ -1,6 +1,7 @@
-import { collection, CollectionReference, doc, FieldValue, Firestore, getDocs, limit, query, serverTimestamp, setDoc, Timestamp, where } from "@firebase/firestore";
-import { ANSWER_COLLECTION, DBPracticeQuestion, DBQuestAnswer, DBQuestion, OPTIONS_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, Reward } from "@/src/types/quest";
+import { collection, CollectionReference, FieldValue, Firestore, getDocs, limit, query, serverTimestamp, Timestamp, where } from "@firebase/firestore";
+import { DBPracticeQuestion, DBQuestAnswer, DBQuestion, OPTIONS_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, Reward } from "@/src/types/quest";
 import { UserOption, UserOptionFactory, UserSingleSelectOption } from "./UserOption";
+import { User } from "@firebase/auth";
 
 export interface UserQuestionInterface {
   get id(): QuestionId;
@@ -19,8 +20,7 @@ export interface UserQuestionInterface {
 export interface UserQuestionWithOptionsInterface extends UserQuestionInterface {
   answer(
     option: UserOption,
-    userId: string,
-    rewardHook?: (correct: boolean, reward: Reward|null) => Promise<Reward>,
+    user: User,
   ): Promise<{correct: boolean, reward: Reward|null}>;
   hasAnswer(): boolean;
   getAnswer(): UserOption;
@@ -32,7 +32,6 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
 
   readonly type: QuestionType = "singleSelect";
 
-  private _db: Firestore;
   private _dbData: DBQuestion<"singleSelect">;
   private _completionData?: DBQuestAnswer<"singleSelect">;
   private _options: UserSingleSelectOption[];// All options except for the correct one.
@@ -42,7 +41,6 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
   private _isPractice: boolean = false;
 
   constructor(
-    db: Firestore,
     data: DBQuestion<"singleSelect">,
     options: UserSingleSelectOption[],
     correctOption: UserSingleSelectOption,
@@ -50,7 +48,6 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
     answer?: UserSingleSelectOption,
     completionData?: DBQuestAnswer<"singleSelect">
   ) {
-    this._db = db;
     this._dbData = data;
     this._completionData = completionData;
     this._options = options;
@@ -101,21 +98,34 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
 
   async answer(
     option: UserOption,
-    userId: string,
-    rewardHook?: (correct: boolean, reward: Reward|null) => Promise<Reward>,
+    user: User,
   ) {
 
     if (this._completionData) {
       throw "This question has already been answered!";
     }
 
-    const isCorrect = option.correct;
-    let reward = this._dbData.reward;
-    if (rewardHook) {
-      reward = await rewardHook(isCorrect, this._dbData.reward);
+    const token = await user.getIdToken();
+    const funcUrl = process.env.EXPO_PUBLIC_USE_EMULATOR === "true" ?
+      `http://${process.env.EXPO_PUBLIC_EMULATOR_IP}:5001/fipet-521d1/us-central1/submitAnswer` :
+      "https://submitAnswer-45en4vdieq-uc.a.run.app";
+    const res = await fetch(funcUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        questionId: this._dbData.id,
+        selectedOptionId: option.id,
+      })
+    });
+
+    if (res.status !== 200) {
+      throw "Could not complete quest.";
     }
 
-    const answersRef = doc(this._db, 'users', userId, ANSWER_COLLECTION, this._dbData.id);
+    const json = await res.json();
+
     const completionData: Omit<DBQuestAnswer<"singleSelect">, "answeredAt"> & {answeredAt: FieldValue} = {
       id: this._dbData.id,
       questId: this._dbData.questId,
@@ -123,11 +133,10 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
       order: this._dbData.order,
       correctOptionId: this._correctOption.id,
       selectedOptionId: option.id,
-      correct: isCorrect,
-      reward: reward,
+      correct: json.correct,
+      reward: json.reward,
       answeredAt: serverTimestamp(),
     };
-    await setDoc(answersRef, completionData);
     this._completionData = {
       ...completionData,
       answeredAt: new Timestamp(Date.now() / 1000, 0)
@@ -135,8 +144,8 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
     this._answer = option;
 
     return {
-      correct: isCorrect,
-      reward: reward,
+      correct: json.correct,
+      reward: json.reward,
     };
   };
 
@@ -283,7 +292,6 @@ export class UserQuestionFactory {
         const practiceQuestion = await this._findPracticeQuestion(data.id) || undefined;
 
         return new UserSingleSelectQuestion(
-          this._db,
           data, options,
           correctOption,
           practiceQuestion,

@@ -45,7 +45,7 @@ export default function HomeScreen() {
     React.useCallback(() => {
       async function fetchQuest() {
         const questQuery = query(collection(db,QUEST_COLLECTION), limit(2));
-        const quests = await UserQuest.fromFirebaseQuery(db, questQuery, user.uid, false, false);
+        const quests = await UserQuest.fromFirebaseQuery(db, questQuery, user, false, false);
         setQuests(quests.filter((quest) => !quest.isComplete));
       }
       fetchQuest();

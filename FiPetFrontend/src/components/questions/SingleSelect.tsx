@@ -9,7 +9,7 @@ type SingleSelectProps = QuestionProps & {
   question: UserSingleSelectQuestion,
 };
 
-export default function SingleSelect({question, onSubmit, rewardHook, ref, preSubmit, onError, onReadyForSubmit, onUnreadyForSubmit}: SingleSelectProps) {
+export default function SingleSelect({question, onSubmit, ref, preSubmit, onError, onReadyForSubmit, onUnreadyForSubmit}: SingleSelectProps) {
 
   const {user} = useAuth();
 
@@ -30,7 +30,7 @@ export default function SingleSelect({question, onSubmit, rewardHook, ref, preSu
         onError("No option selected!");
         return;
       }
-      question.answer(selectedOption, user.uid, rewardHook).then((results) => {
+      question.answer(selectedOption, user).then((results) => {
         onSubmit(results.correct, results.reward);
       }).catch((err) => {
         console.error(err);

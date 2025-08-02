@@ -8,7 +8,6 @@ import CorrectModal from '@/src/components/modals/correctModal';
 import IncorrectModal from '@/src/components/modals/incorrectModal';
 import { Reward } from "@/src/types/quest";
 import FeedbackRenderer from "@/src/components/questionFeedback/FeedbackRenderer";
-import { useAuth } from "@/src/hooks/useRequiresAuth";
 import { useGamificationStats } from "@/src/hooks/useGamificationStats";
 import QuestProgressBar from "@/src/components/QuestProgressBar";
 
@@ -21,7 +20,6 @@ export default function QuestionScreen() {
   }>();
   const router = useRouter();
   const { quest, loading } = useQuest();
-  const {user} = useAuth();
   const [readyForSubmit, setReadyForSubmit] = useState<boolean>(false);
 
   // State for both types
@@ -140,11 +138,7 @@ export default function QuestionScreen() {
           setShowCorrectModal(false);
           const next = quest.getNextQuestion(question);
           if (next === false) {
-            quest.complete(user.uid).then((reward) => {
-              if (reward) {
-                addXP(reward.xp);
-                addCoins(reward.coins);
-              }
+            quest.complete().then((reward) => {
               router.replace(`/(tabs)/quests/${quest.id}`);
             });
           } else {

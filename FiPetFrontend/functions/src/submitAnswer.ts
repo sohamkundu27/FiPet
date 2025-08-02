@@ -1,11 +1,7 @@
 import { onRequest } from "firebase-functions/v2/https";
-import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import * as logger from "firebase-functions/logger";
-
-// Initialize Firebase Admin
-initializeApp();
 
 // Collection constants (matching the types)
 const QUESTIONS_COLLECTION = 'questions2';
@@ -13,6 +9,7 @@ const OPTIONS_COLLECTION = 'options2';
 const ANSWER_COLLECTION = 'questAnswers2';
 
 export const submitAnswer = onRequest({ maxInstances: 10 }, async (req, res) => {
+
   // Check if user is authenticated via Authorization header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -20,7 +17,7 @@ export const submitAnswer = onRequest({ maxInstances: 10 }, async (req, res) => 
     return;
   }
 
-  const token = authHeader.split('Bearer ')[1];
+  const token = authHeader.split(' ')[1];
   
   // Verify the Firebase ID token and get the user ID
   let userId: string;
@@ -32,12 +29,13 @@ export const submitAnswer = onRequest({ maxInstances: 10 }, async (req, res) => 
     return;
   }
   
-  const { questionId, selectedOptionId } = req.body;
+  const { questionId, selectedOptionId } = JSON.parse(req.body);
 
   if (!questionId || !selectedOptionId) {
     res.status(400).json({ error: "Missing required parameters: questionId and selectedOptionId" });
     return;
   }
+
 
   try {
     const db = getFirestore();

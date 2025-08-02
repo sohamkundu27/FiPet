@@ -1,11 +1,7 @@
 import { onRequest } from "firebase-functions/v2/https";
-import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import * as logger from "firebase-functions/logger";
-
-// Initialize Firebase Admin
-initializeApp();
 
 // Collection constants (matching the types)
 const QUEST_COLLECTION = 'quests2';
@@ -21,7 +17,7 @@ export const completeQuest = onRequest({ maxInstances: 10 }, async (req, res) =>
     return;
   }
 
-  const token = authHeader.split('Bearer ')[1];
+  const token = authHeader.split(' ')[1];
   
   // Verify the Firebase ID token and get the user ID
   let userId: string;
@@ -33,7 +29,7 @@ export const completeQuest = onRequest({ maxInstances: 10 }, async (req, res) =>
     return;
   }
   
-  const { questId } = req.body;
+  const { questId } = JSON.parse(req.body);
 
   if (!questId) {
     res.status(400).json({ error: "Missing required parameter: questId" });

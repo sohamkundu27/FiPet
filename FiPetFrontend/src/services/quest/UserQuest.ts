@@ -1,7 +1,8 @@
-import { collection, doc, getDocs, query, where, orderBy, limit, Query, serverTimestamp, FieldValue, Timestamp, Firestore, getDoc, setDoc } from '@firebase/firestore';
+import { collection, doc, getDocs, query, where, orderBy, limit, Query, serverTimestamp, FieldValue, Timestamp, Firestore, getDoc } from '@firebase/firestore';
 import { ANSWER_COLLECTION, DBPreQuestReading, DBQuest, DBQuestAnswer, DBQuestCompletion, DBQuestion, QUEST_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, QuestTopic, READING_COLLECTION, Reward } from '@/src/types/quest';
 import { UserQuestion, UserQuestionFactory } from './UserQuestion';
 import { UserPreQuestReading } from './UserPreQuestReading';
+import { User } from '@firebase/auth';
 
 /**
  * Assumes sorted by ascending.
@@ -39,9 +40,7 @@ export interface UserQuestInterface {
   getNextQuestion(currentQuestion: UserQuestion): UserQuestion|false;
   getReadings(): UserPreQuestReading[];
 
-  complete(
-    rewardHook?: (correctRatio: number, reward: Reward|null) => Promise<Reward>
-  ): Promise<Reward>;
+  complete(): Promise<Reward>;
 }
 
 export class UserQuest implements UserQuestInterface {
@@ -54,7 +53,7 @@ export class UserQuest implements UserQuestInterface {
   static async fromFirebaseQuery(
     db: Firestore,
     questQuery: Query,
-    userId: string,
+    user: User,
     loadQuestions: boolean = true,
     loadReadings: boolean = true,
   ) {
@@ -68,13 +67,13 @@ export class UserQuest implements UserQuestInterface {
         const questData = questDoc.data({serverTimestamps: "estimate"}) as DBQuest;
 
         let userData: undefined | {
-          userId: string,
+          user: User,
           completionData?: DBQuestCompletion,
         };
         userData = {
-          userId: userId,
+          user: user,
         };
-        const completionRef = collection(db, 'users', userId, QUEST_COMPLETION_COLLECTION);
+        const completionRef = collection(db, 'users', user.uid, QUEST_COMPLETION_COLLECTION);
         const completionQuery = query(completionRef, where("questId", "==", questData.id), limit(1));
         const completionDocs = await getDocs(completionQuery);
         if (completionDocs.size === 1 ) {
@@ -110,7 +109,7 @@ export class UserQuest implements UserQuestInterface {
   static async fromFirebaseId(
     db: Firestore,
     questId: QuestId,
-    userId: string,
+    user: User,
     loadQuestions: boolean = true,
     loadReadings: boolean = true,
   ) {
@@ -122,13 +121,13 @@ export class UserQuest implements UserQuestInterface {
 
 
     let userData: undefined | {
-      userId: string,
+      user: User,
       completionData?: DBQuestCompletion,
     };
     userData = {
-      userId: userId,
+      user: user,
     };
-    const completionRef = collection(db, 'users', userId, QUEST_COMPLETION_COLLECTION);
+    const completionRef = collection(db, 'users', user.uid, QUEST_COMPLETION_COLLECTION);
     const completionQuery = query(completionRef, where("questId", "==", questData.id), limit(1));
     const completionDocs = await getDocs(completionQuery);
     if (completionDocs.size === 1 ) {
@@ -154,14 +153,14 @@ export class UserQuest implements UserQuestInterface {
   private _dbData: DBQuest;
   private _questions: UserQuestion[]; // If no user is set, the following is true: _questions[i].order === i
   private _readings: UserPreQuestReading[];
-  private _userId: string;
+  private _user: User;
   private _completionData?: DBQuestCompletion;
 
-  private constructor(db: Firestore, data: DBQuest, userData: {completionData?: DBQuestCompletion, userId: string}) {
+  private constructor(db: Firestore, data: DBQuest, userData: {completionData?: DBQuestCompletion, user: User}) {
     this._db = db;
     this._dbData = data;
     this._completionData = userData?.completionData;
-    this._userId = userData?.userId;
+    this._user = userData.user;
     this._questions = [];
     this._readings = [];
   }
@@ -238,7 +237,7 @@ export class UserQuest implements UserQuestInterface {
   /**
    * Returns the highest order from the questions answered.
    * 
-   * Requires the constructor has userData passed (requires @see _userId)
+   * Requires the constructor has userData passed (requires @see _user)
    * Recommended to run @see _loadQuestions afterward.
    */
   private async _loadAnsweredQuestions(): Promise<number> {
@@ -246,7 +245,7 @@ export class UserQuest implements UserQuestInterface {
     const factory = new UserQuestionFactory(this._db);
     let highestQuestionOrder = -1;
 
-    const answersRef = collection(this._db, 'users', this._userId, ANSWER_COLLECTION);
+    const answersRef = collection(this._db, 'users', this._user.uid, ANSWER_COLLECTION);
     const answersQuery = query(
       answersRef,
       where("questId", "==", this._dbData.id),
@@ -350,26 +349,38 @@ export class UserQuest implements UserQuestInterface {
     return this._dbData.deleted;
   }
 
-  async complete(
-    rewardHook?: (correctRatio: number, reward: Reward|null) => Promise<Reward>
-  ) {
-    let reward = this._dbData.reward;
-    if (rewardHook) {
-      reward = await rewardHook(1, reward);
+  async complete() {
+
+    const token = await this._user.getIdToken();
+    const funcUrl = process.env.EXPO_PUBLIC_USE_EMULATOR === "true" ?
+      `http://${process.env.EXPO_PUBLIC_EMULATOR_IP}:5001/fipet-521d1/us-central1/completeQuest` :
+      "https://completeQuest-45en4vdieq-uc.a.run.app";
+    const res = await fetch(funcUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        questId: this._dbData.id,
+      })
+    });
+
+    if (res.status !== 200) {
+      throw "Could not complete quest.";
     }
-    const completionRef = doc(this._db, 'users', this._userId, QUEST_COMPLETION_COLLECTION, this._dbData.id);
+
+    const json = await res.json();
     const data: Omit<DBQuestCompletion, 'completedAt'> & {completedAt: FieldValue} = {
       id: this._dbData.id,
-      reward: reward,
+      reward: json.reward,
       completedAt: serverTimestamp(),
       questId: this._dbData.id
     }
-    await setDoc(completionRef, data);
     this._completionData = {
       ...data,
       completedAt: new Timestamp(Date.now()/1000, 0),
     }
-    return reward;
+    return json.reward;
   };
 
   /**
