@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { addDoc, collection, CollectionReference, doc, FieldValue, Firestore, getDocs, limit, query, serverTimestamp, setDoc, Timestamp, updateDoc, where } from "@firebase/firestore";
-=======
-import { addDoc, collection, CollectionReference, doc, FieldValue, Firestore, getDocs, limit, query, serverTimestamp, Timestamp, updateDoc, where } from "@firebase/firestore";
->>>>>>> 0332845 (Schema change)
 import { ItemId } from "@/src/types/item";
 import { ANSWER_COLLECTION, DBOption, DBPracticeQuestion, DBQuestAnswer, DBQuestion, OPTIONS_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, Reward } from "@/src/types/quest";
 import { Option, OptionFactory, SingleSelectOption } from "./Option";
@@ -34,13 +30,8 @@ export interface QuestionWithOptionsInterface extends QuestionInterface {
   answer(
     option: Option,
     userId: string,
-<<<<<<< HEAD
     rewardHook?: (correct: boolean, reward: Reward|null) => Promise<Reward>,
   ): Promise<{correct: boolean, reward: Reward|null}>;
-=======
-    handleReward: (correct: boolean, reward: Reward|null) => Promise<Reward>
-  ): Promise<boolean>;
->>>>>>> 0332845 (Schema change)
   hasAnswer(): boolean;
   getAnswer(): Option;
   getCorrectOption(): Option;
@@ -63,36 +54,21 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     practiceQuestion?: Question,
   ) {
     const questionsRef = collection(db, QUESTIONS_COLLECTION);
-<<<<<<< HEAD
     const questionRef = doc(questionsRef);
     const questionData = {
       id: questionRef.id,
       ...data
     } as DBQuestion<"singleSelect">;
     await setDoc(questionRef, questionData);
-=======
-    const result = await addDoc(questionsRef, {
-      ...data
-    });
-    const questionData = {...data, id: result.id} as DBQuestion<"singleSelect">;
->>>>>>> 0332845 (Schema change)
 
     const options: SingleSelectOption[] = [];
     for (let optionDatum of optionData) {
       options.push(
-<<<<<<< HEAD
         await SingleSelectOption.create(db, {...optionDatum, questionId: questionData.id})
       );
     }
     options.push(
       await SingleSelectOption.create(db, {...correctOptionData, questionId: questionData.id})
-=======
-        await SingleSelectOption.create(db, {...optionDatum, questionId: result.id})
-      );
-    }
-    options.push(
-      await SingleSelectOption.create(db, {...correctOptionData, questionId: result.id})
->>>>>>> 0332845 (Schema change)
     );
 
     const question = new SingleSelectQuestion(
@@ -113,11 +89,7 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
   private _db: Firestore;
   private _dbData: DBQuestion<"singleSelect">;
   private _completionData?: DBQuestAnswer<"singleSelect">;
-<<<<<<< HEAD
   private _options: SingleSelectOption[];// All options except for the correct one.
-=======
-  private _options: SingleSelectOption[];
->>>>>>> 0332845 (Schema change)
   private _practiceQuestion?: Question;
   private _answer?: SingleSelectOption;
   private _correctOption: SingleSelectOption;
@@ -166,12 +138,9 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
   get isAnswered() {
     return !!this._completionData;
   }
-<<<<<<< HEAD
   get order() {
     return this._dbData.order;
   }
-=======
->>>>>>> 0332845 (Schema change)
 
 
   async setPrompt(prompt: string) {
@@ -279,11 +248,7 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
   async answer(
     option: Option,
     userId: string,
-<<<<<<< HEAD
     rewardHook?: (correct: boolean, reward: Reward|null) => Promise<Reward>,
-=======
-    handleReward: (correct: boolean, reward: Reward|null) => Promise<Reward>
->>>>>>> 0332845 (Schema change)
   ) {
 
     if (this._completionData) {
@@ -291,7 +256,6 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     }
 
     const isCorrect = option.correct;
-<<<<<<< HEAD
     let reward = this._dbData.reward;
     if (rewardHook) {
       reward = await rewardHook(isCorrect, this._dbData.reward);
@@ -300,12 +264,6 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     const answersRef = doc(this._db, 'users', userId, ANSWER_COLLECTION, this._dbData.id);
     const completionData: Omit<DBQuestAnswer<"singleSelect">, "answeredAt"> & {answeredAt: FieldValue} = {
       id: this._dbData.id,
-=======
-    const reward = await handleReward(isCorrect, this._dbData.reward);
-
-    const answersRef = collection(this._db, 'users', userId, ANSWER_COLLECTION);
-    const completionData: Omit<DBQuestAnswer<"singleSelect">, "id"|"answeredAt"> & {answeredAt: FieldValue} = {
->>>>>>> 0332845 (Schema change)
       questId: this._dbData.questId,
       questionId: this._dbData.id,
       order: this._dbData.order,
@@ -315,28 +273,17 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
       reward: reward,
       answeredAt: serverTimestamp(),
     };
-<<<<<<< HEAD
     await setDoc(answersRef, completionData);
     this._completionData = {
       ...completionData,
-=======
-    const result = await addDoc(answersRef, completionData);
-    this._completionData = {
-      ...completionData,
-      id: result.id,
->>>>>>> 0332845 (Schema change)
       answeredAt: new Timestamp(Date.now() / 1000, 0)
     };
     this._answer = option;
 
-<<<<<<< HEAD
     return {
       correct: isCorrect,
       reward: reward,
     };
-=======
-    return isCorrect;
->>>>>>> 0332845 (Schema change)
   };
 
   hasAnswer() {
@@ -354,12 +301,9 @@ export class SingleSelectQuestion implements AdminQuestionInterface, UserQuestio
     return this._correctOption;
   };
 
-<<<<<<< HEAD
   /**
    * All options except for the correct one.
    */
-=======
->>>>>>> 0332845 (Schema change)
   getOptions() {
     return this._options;
   };
@@ -473,16 +417,10 @@ export class QuestionFactory {
           this.optionCollection,
           where("questionId", "==",data.id)
         );
-<<<<<<< HEAD
         let options = await this.optionFactory.fromFirebaseQuery<"singleSelect">(optionsQuery);
 
         const correctOption = await this._findCorrectOption(data.id, options, completionData);
         options = options.filter((option) => !option.correct);
-=======
-        const options = await this.optionFactory.fromFirebaseQuery<"singleSelect">(optionsQuery);
-
-        const correctOption = await this._findCorrectOption(data.id, options, completionData);
->>>>>>> 0332845 (Schema change)
         let answer;
         if (completionData) {
           answer = await this._findAnswer(options, completionData);

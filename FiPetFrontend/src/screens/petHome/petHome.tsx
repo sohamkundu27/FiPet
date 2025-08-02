@@ -26,8 +26,8 @@ export default function PetHouse() {
   const [textBottomPosition, setTextBottomPosition] = useState(windowHeight * 0.055 + windowWidth * 0.065 + windowWidth * .85 + 10)
   const foxBottomPosition = windowHeight * 0.055 + windowWidth * 0.065;
 
-  const [shelfLayout, setShelfLayout] = useState(null);
-  const [shelfLayout2, setShelfLayout2] = useState(null);
+  const [shelfLayout, setShelfLayout] = useState<{x: number, y: number, width: number, height: number} | null>(null);
+  const [shelfLayout2, setShelfLayout2] = useState<{x: number, y: number, width: number, height: number} | null>(null);
   const [hasAdjustedSize, setHasAdjustedSize] = useState(false);
 
   const [loading, setLoading] = useState(true);

@@ -69,6 +69,7 @@ export interface UserQuestInterface extends QuestInterface {
   ): Promise<Reward>;
   getLatestQuestion(): Question|false;
   getNextQuestion(currentQuestion: Question): Question|false;
+  getQuestion(questionId: QuestionId): Question;
 }
 
 // For admin scripts only:

@@ -92,10 +92,7 @@ export type DBOption<T extends QuestionType> = {
 } & DBOptionShape<T>;
 
 export type DBQuestCompletion = {
-<<<<<<< HEAD
   id: QuestId,
-=======
->>>>>>> 0332845 (Schema change)
   questId: QuestId,
   completedAt: Timestamp,
   reward: Reward,
