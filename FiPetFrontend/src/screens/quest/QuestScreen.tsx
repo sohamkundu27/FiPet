@@ -13,9 +13,25 @@ import { collection } from '@firebase/firestore';
 import { QUEST_COLLECTION } from '@/src/types/quest';
 
 export default function QuestScreen() {
-    const { width, height } = Dimensions.get('window');
-    const isTablet = width >= 768;
-    const isLargeTablet = width >= 1024;
+    const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+    const { width, height } = dimensions;
+    
+    // Enhanced responsive breakpoints
+    const isSmallPhone = width < 380;
+    const isPhone = width < 768;
+    const isTablet = width >= 768 && width < 1024;
+    const isLargeTablet = width >= 1024 && width < 1440;
+    const isDesktop = width >= 1440;
+    const isLandscape = width > height;
+
+    // Listen for dimension changes
+    useEffect(() => {
+        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+            setDimensions(window);
+        });
+
+        return () => subscription?.remove();
+    }, []);
 
     const {level, coins, streak} = useGamificationStats();
     const router = useRouter();
@@ -68,13 +84,17 @@ export default function QuestScreen() {
         return (
             <View style={[
                 styles.correctAnswersBadge,
+                isSmallPhone && styles.correctAnswersBadgeSmallPhone,
                 isTablet && styles.correctAnswersBadgeTablet,
-                isLargeTablet && styles.correctAnswersBadgeLargeTablet
+                isLargeTablet && styles.correctAnswersBadgeLargeTablet,
+                isDesktop && styles.correctAnswersBadgeDesktop
             ]}>
                 <Text style={[
                     styles.correctAnswersText,
+                    isSmallPhone && styles.correctAnswersTextSmallPhone,
                     isTablet && styles.correctAnswersTextTablet,
-                    isLargeTablet && styles.correctAnswersTextLargeTablet
+                    isLargeTablet && styles.correctAnswersTextLargeTablet,
+                    isDesktop && styles.correctAnswersTextDesktop
                 ]}>{answeredQuestions}/{questions.length}</Text>
             </View>
         );
@@ -96,15 +116,21 @@ export default function QuestScreen() {
             <ScrollView 
                 contentContainerStyle={[
                     styles.scrollContent,
+                    isSmallPhone && styles.scrollContentSmallPhone,
                     isTablet && styles.scrollContentTablet,
-                    isLargeTablet && styles.scrollContentLargeTablet
+                    isLargeTablet && styles.scrollContentLargeTablet,
+                    isDesktop && styles.scrollContentDesktop,
+                    isLandscape && styles.scrollContentLandscape
                 ]}
+                showsVerticalScrollIndicator={!isPhone}
+                scrollIndicatorInsets={isTablet ? { right: 2 } : undefined}
                 refreshControl={
                     <RefreshControl
                         refreshing={loading}
                         onRefresh={() => fetchQuests(true)}
                         colors={['#A259FF', '#3B82F6']}
                         tintColor="#A259FF"
+                        progressViewOffset={isTablet ? 20 : 0}
                     />
                 }
             >
@@ -112,16 +138,20 @@ export default function QuestScreen() {
                     <View style={styles.loadingContainer}>
                         <Text style={[
                             styles.loadingText,
+                            isSmallPhone && styles.loadingTextSmallPhone,
                             isTablet && styles.loadingTextTablet,
-                            isLargeTablet && styles.loadingTextLargeTablet
+                            isLargeTablet && styles.loadingTextLargeTablet,
+                            isDesktop && styles.loadingTextDesktop
                         ]}>Loading quest...</Text>
                     </View>
                 ) : quests.length === 0 ? (
                     <View style={styles.emptyContainer}>
                         <Text style={[
                             styles.emptyText,
+                            isSmallPhone && styles.emptyTextSmallPhone,
                             isTablet && styles.emptyTextTablet,
-                            isLargeTablet && styles.emptyTextLargeTablet
+                            isLargeTablet && styles.emptyTextLargeTablet,
+                            isDesktop && styles.emptyTextDesktop
                         ]}>No quests available</Text>
                     </View>
                 ) : (
@@ -135,8 +165,11 @@ export default function QuestScreen() {
                         end={{ x: 1, y: 1 }} 
                         style={[
                             styles.questCard,
+                            isSmallPhone && styles.questCardSmallPhone,
                             isTablet && styles.questCardTablet,
-                            isLargeTablet && styles.questCardLargeTablet
+                            isLargeTablet && styles.questCardLargeTablet,
+                            isDesktop && styles.questCardDesktop,
+                            isLandscape && styles.questCardLandscape
                         ]}
                      >
 
@@ -146,8 +179,10 @@ export default function QuestScreen() {
 
                         <Text style={[
                             styles.questCardTitle,
+                            isSmallPhone && styles.questCardTitleSmallPhone,
                             isTablet && styles.questCardTitleTablet,
-                            isLargeTablet && styles.questCardTitleLargeTablet
+                            isLargeTablet && styles.questCardTitleLargeTablet,
+                            isDesktop && styles.questCardTitleDesktop
                         ]}>{quest.title}</Text>
                                     
                             
@@ -157,13 +192,17 @@ export default function QuestScreen() {
                                 <View style={styles.objectiveRow}>
                                     <Text style={[
                                         styles.objectiveEmoji,
+                                        isSmallPhone && styles.objectiveEmojiSmallPhone,
                                         isTablet && styles.objectiveEmojiTablet,
-                                        isLargeTablet && styles.objectiveEmojiLargeTablet
+                                        isLargeTablet && styles.objectiveEmojiLargeTablet,
+                                        isDesktop && styles.objectiveEmojiDesktop
                                     ]}>📊</Text>
                                     <Text style={[
                                         styles.objectiveText,
+                                        isSmallPhone && styles.objectiveTextSmallPhone,
                                         isTablet && styles.objectiveTextTablet,
-                                        isLargeTablet && styles.objectiveTextLargeTablet
+                                        isLargeTablet && styles.objectiveTextLargeTablet,
+                                        isDesktop && styles.objectiveTextDesktop
                                     ]}>{quest.description}</Text>
                                 </View>
                             </View>
@@ -172,31 +211,51 @@ export default function QuestScreen() {
                             <View style={styles.bottomRow}>
                                 <View style={[
                                     styles.questCardStatsRow,
+                                    isSmallPhone && styles.questCardStatsRowSmallPhone,
                                     isTablet && styles.questCardStatsRowTablet,
-                                    isLargeTablet && styles.questCardStatsRowLargeTablet
+                                    isLargeTablet && styles.questCardStatsRowLargeTablet,
+                                    isDesktop && styles.questCardStatsRowDesktop
                                 ]}>
                                     <View style={[
                                         styles.questCardStat,
+                                        isSmallPhone && styles.questCardStatSmallPhone,
                                         isTablet && styles.questCardStatTablet,
-                                        isLargeTablet && styles.questCardStatLargeTablet
+                                        isLargeTablet && styles.questCardStatLargeTablet,
+                                        isDesktop && styles.questCardStatDesktop
                                     ]}>
-                                        <GoldCoinIcon size={isLargeTablet ? 28 : isTablet ? 24 : 20} />
+                                        <GoldCoinIcon size={
+                                            isDesktop ? 32 : 
+                                            isLargeTablet ? 28 : 
+                                            isTablet ? 24 : 
+                                            isSmallPhone ? 16 : 20
+                                        } />
                                             <Text style={[
                                                 styles.questCardStatText,
+                                                isSmallPhone && styles.questCardStatTextSmallPhone,
                                                 isTablet && styles.questCardStatTextTablet,
-                                                isLargeTablet && styles.questCardStatTextLargeTablet
+                                                isLargeTablet && styles.questCardStatTextLargeTablet,
+                                                isDesktop && styles.questCardStatTextDesktop
                                             ]}>{quest.reward.coins || 0}</Text>
                                     </View>
                                     <View style={[
                                         styles.questCardStat,
+                                        isSmallPhone && styles.questCardStatSmallPhone,
                                         isTablet && styles.questCardStatTablet,
-                                        isLargeTablet && styles.questCardStatLargeTablet
+                                        isLargeTablet && styles.questCardStatLargeTablet,
+                                        isDesktop && styles.questCardStatDesktop
                                     ]}>
-                                        <CustomClockIcon size={isLargeTablet ? 28 : isTablet ? 24 : 22} />
+                                        <CustomClockIcon size={
+                                            isDesktop ? 32 : 
+                                            isLargeTablet ? 28 : 
+                                            isTablet ? 24 : 
+                                            isSmallPhone ? 18 : 22
+                                        } />
                                         <Text style={[
                                             styles.questCardStatText,
+                                            isSmallPhone && styles.questCardStatTextSmallPhone,
                                             isTablet && styles.questCardStatTextTablet,
-                                            isLargeTablet && styles.questCardStatTextLargeTablet
+                                            isLargeTablet && styles.questCardStatTextLargeTablet,
+                                            isDesktop && styles.questCardStatTextDesktop
                                         ]}>{quest.duration} min</Text>
                                     </View>
                                 </View>
@@ -204,20 +263,32 @@ export default function QuestScreen() {
                                 <TouchableOpacity
                                     style={[
                                         styles.playButton,
+                                        isSmallPhone && styles.playButtonSmallPhone,
                                         isTablet && styles.playButtonTablet,
-                                        isLargeTablet && styles.playButtonLargeTablet
+                                        isLargeTablet && styles.playButtonLargeTablet,
+                                        isDesktop && styles.playButtonDesktop
                                     ]}
                                     activeOpacity={0.85}
                                     onPress={() => {
                                        router.push(`/quests/${quest.id}`);
                                     }}
                                 >
-                                    <GradientPlayIcon colors={['#A259FF', '#3B82F6']} size={isLargeTablet ? 32 : isTablet ? 28 : 24} />
+                                    <GradientPlayIcon 
+                                        colors={['#A259FF', '#3B82F6']} 
+                                        size={
+                                            isDesktop ? 36 : 
+                                            isLargeTablet ? 32 : 
+                                            isTablet ? 28 : 
+                                            isSmallPhone ? 20 : 24
+                                        } 
+                                    />
                                     <Text
                                       style={[
                                         styles.playButtonText,
+                                        isSmallPhone && styles.playButtonTextSmallPhone,
                                         isTablet && styles.playButtonTextTablet,
                                         isLargeTablet && styles.playButtonTextLargeTablet,
+                                        isDesktop && styles.playButtonTextDesktop,
                                         { color: '#A259FF' }
                                       ]}
                                     >
@@ -553,5 +624,160 @@ const styles = StyleSheet.create({
     },
     emptyTextLargeTablet: {
         fontSize: 20,
+    },
+    
+    // Small Phone Styles (< 380px)
+    scrollContentSmallPhone: {
+        padding: 12,
+        paddingTop: 16,
+    },
+    questCardSmallPhone: {
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        marginHorizontal: 0,
+    },
+    questCardTitleSmallPhone: {
+        fontSize: 20,
+        lineHeight: 20*1.2,
+        marginBottom: 16,
+        letterSpacing: -0.3,
+    },
+    objectiveEmojiSmallPhone: {
+        fontSize: 16,
+        lineHeight: 16*1.5,
+        marginRight: 10,
+        width: 20,
+    },
+    objectiveTextSmallPhone: {
+        fontSize: 14,
+        lineHeight: 14*1.4,
+    },
+    questCardStatsRowSmallPhone: {
+        gap: 4,
+        flexWrap: 'wrap',
+    },
+    questCardStatSmallPhone: {
+        borderRadius: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        minWidth: 60,
+        minHeight: 32, // Better touch target
+    },
+    questCardStatTextSmallPhone: {
+        fontSize: 10,
+        lineHeight: 10*1.3,
+        marginLeft: 6,
+    },
+    playButtonSmallPhone: {
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        left: 3,
+        minHeight: 44, // Better touch target
+    },
+    playButtonTextSmallPhone: {
+        fontSize: 14,
+        lineHeight: 14*1.3,
+        marginLeft: 4,
+    },
+    correctAnswersBadgeSmallPhone: {
+        top: 8,
+        right: 8,
+        borderRadius: 8,
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+    },
+    correctAnswersTextSmallPhone: {
+        fontSize: 10,
+        lineHeight: 10*1.5,
+    },
+    loadingTextSmallPhone: {
+        fontSize: 14,
+    },
+    emptyTextSmallPhone: {
+        fontSize: 14,
+    },
+    
+    // Desktop Styles (>= 1440px)
+    scrollContentDesktop: {
+        paddingHorizontal: 80,
+        paddingTop: 50,
+        maxWidth: 1200,
+    },
+    questCardDesktop: {
+        borderRadius: 48,
+        padding: 48,
+        marginBottom: 40,
+        marginHorizontal: 20,
+        cursor: Platform.OS === 'web' ? 'pointer' : undefined,
+    },
+    questCardTitleDesktop: {
+        fontSize: 44,
+        lineHeight: 44*1.2,
+        marginBottom: 44,
+        letterSpacing: -1.1,
+    },
+    objectiveEmojiDesktop: {
+        fontSize: 30,
+        lineHeight: 30*1.5,
+        marginRight: 24,
+        width: 36,
+    },
+    objectiveTextDesktop: {
+        fontSize: 22,
+        lineHeight: 22*1.4,
+    },
+    questCardStatsRowDesktop: {
+        gap: 16,
+    },
+    questCardStatDesktop: {
+        borderRadius: 24,
+        paddingHorizontal: 22,
+        paddingVertical: 10,
+        minWidth: 130,
+        minHeight: 48, // Better interaction area
+    },
+    questCardStatTextDesktop: {
+        fontSize: 18,
+        lineHeight: 18*1.3,
+        marginLeft: 14,
+    },
+    playButtonDesktop: {
+        borderRadius: 28,
+        paddingHorizontal: 44,
+        paddingVertical: 22,
+        minHeight: 64, // Better interaction area
+        cursor: Platform.OS === 'web' ? 'pointer' : undefined,
+    },
+    playButtonTextDesktop: {
+        fontSize: 22,
+        lineHeight: 22*1.3,
+        marginLeft: 12,
+    },
+    correctAnswersBadgeDesktop: {
+        top: 22,
+        right: 22,
+        borderRadius: 24,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+    },
+    correctAnswersTextDesktop: {
+        fontSize: 18,
+        lineHeight: 18*1.5,
+    },
+    loadingTextDesktop: {
+        fontSize: 22,
+    },
+    emptyTextDesktop: {
+        fontSize: 22,
+    },
+    
+    // Landscape Styles
+    scrollContentLandscape: {
+        paddingVertical: 16,
+    },
+    questCardLandscape: {
+        marginVertical: 8,
     },
 });

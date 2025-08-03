@@ -56,23 +56,24 @@ export default function QuestionScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Progress Bar Header */}
+      <View style={styles.progressHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
+          <Image
+            source={require('@/src/assets/images/arrow.png')}
+            style={styles.backArrow}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+        <QuestProgressBar questions={questions} questionID={question.id} currentQuestion={question}/>
+      </View>
+
+      {/* Scrollable Content Area */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Progress Bar Header */}
-        <View style={styles.progressHeader}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
-            <Image
-              source={require('@/src/assets/images/arrow.png')}
-              style={styles.backArrow}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          <QuestProgressBar questions={questions} questionID={question.id}/>
-        </View>
-
         {/* Question Number */}
         {question.isPractice ? (
           <Text style={styles.questionNumber}>Practice Question</Text>
@@ -83,65 +84,60 @@ export default function QuestionScreen() {
         <Text style={styles.questionText}>{question.prompt}</Text>
 
         {question.isAnswered ? (
-          <>
-            <FeedbackRenderer question={question}/>
-            <View style={styles.checkAnswerContainer}>
-              <TouchableOpacity
-                style={styles.checkAnswerButton}
-                onPress={() => {
-                  const next = quest.getNextQuestion(question);
-                  if (next === false) {
-                    quest.complete(user.uid).then((reward) => {
-                      router.replace(`/(tabs)/quests/${quest.id}`);
-                    });
-                  } else {
-                    router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
-                  }
-                }}
-              >
-                <Text style={styles.checkAnswerText}>
-                  {question.hasPracticeQuestion() ? 'PRACTICE MORE' : 'CONTINUE'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </>
+          <FeedbackRenderer question={question}/>
         ) : (
-          <>
-            <QuestionRenderer
-              question={question}
-              ref={questionRef as RefObject<QuestionRef>}
-              onSubmit={(correct: boolean, reward: Reward|null) => {
-                if (correct) {
-                  if (reward) {
-                    addXP(reward.xp);
-                    addCoins(reward.coins);
-                  }
-                  setShowCorrectModal(true);
-                } else {
-                  setShowIncorrectModal(true);
+          <QuestionRenderer
+            question={question}
+            ref={questionRef as RefObject<QuestionRef>}
+            onSubmit={(correct: boolean, reward: Reward|null) => {
+              if (correct) {
+                if (reward) {
+                  addXP(reward.xp);
+                  addCoins(reward.coins);
                 }
-              }}
-              onError={(err: string) => {}}
-              preSubmit={() => {}}
-              onReadyForSubmit={() => setReadyForSubmit(true)}
-            />
-            <View style={styles.checkAnswerContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.checkAnswerButton,
-                  !readyForSubmit
-                    ? styles.disabledCheckAnswerButton
-                    : null,
-                ]}
-                onPress={() => {questionRef.current?.submit()}}
-                disabled={!readyForSubmit}
-              >
-                <Text style={styles.checkAnswerText}>CHECK ANSWER</Text>
-              </TouchableOpacity>
-            </View>
-          </>
+                setShowCorrectModal(true);
+              } else {
+                setShowIncorrectModal(true);
+              }
+            }}
+            onError={(err: string) => {}}
+            preSubmit={() => {}}
+            onReadyForSubmit={() => setReadyForSubmit(true)}
+          />
         )}
       </ScrollView>
+
+      {/* Fixed Bottom Button Container */}
+      <View style={styles.checkAnswerContainer}>
+        <TouchableOpacity
+          style={[
+            styles.checkAnswerButton,
+            question.isAnswered ? null : (!readyForSubmit ? styles.disabledCheckAnswerButton : null),
+          ]}
+          onPress={() => {
+            if (question.isAnswered) {
+              const next = quest.getNextQuestion(question);
+              if (next === false) {
+                quest.complete(user.uid).then((reward) => {
+                  router.replace(`/(tabs)/quests/${quest.id}`);
+                });
+              } else {
+                router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
+              }
+            } else {
+              questionRef.current?.submit();
+            }
+          }}
+          disabled={!question.isAnswered && !readyForSubmit}
+        >
+          <Text style={styles.checkAnswerText}>
+            {question.isAnswered 
+              ? (question.hasPracticeQuestion() ? 'PRACTICE MORE' : 'CONTINUE')
+              : 'CHECK ANSWER'
+            }
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Correct Modal */}
       <CorrectModal
@@ -183,30 +179,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 24,
-    paddingBottom: 100, // Extra space for fixed button
-  },
-  checkAnswerContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    paddingHorizontal: 24,
-    paddingVertical: 13,
-    paddingBottom: 34, // Safe area bottom
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
   progressHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 16,
     paddingTop: 87,
+    paddingHorizontal: 24,
   },
   backArrowContainer: {
     padding: 8,
@@ -214,6 +192,27 @@ const styles = StyleSheet.create({
   backArrow: {
     width: 32,
     height: 24,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 24,
+    paddingTop: 0,
+    paddingBottom: 20,
+  },
+  checkAnswerContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    paddingBottom: 34, // Safe area bottom
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   progressBarSteps: {
     flexDirection: 'row',
