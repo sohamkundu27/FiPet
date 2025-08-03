@@ -31,7 +31,19 @@ export default function QuestProgressBar(args: QuestProgressBarProps): React.JSX
   let numSteps: number = 0;
   let currentStep: number = 0;
   if ( "questionID" in args ) {
-    currentStep = args.questions.findIndex((q) => q.id === args.questionID);
+    const currentQuestion = args.questions.find((q) => q.id === args.questionID);
+    if (currentQuestion) {
+      if (currentQuestion.isPractice) {
+        // For practice questions, find the base question's index in the main questions array
+        const baseQuestionOrder = Math.floor(currentQuestion.order);
+        currentStep = args.questions.findIndex((q) => !q.isPractice && q.order === baseQuestionOrder);
+      } else {
+        // For regular questions, find the index in the questions array
+        currentStep = args.questions.findIndex((q) => q.id === args.questionID);
+      }
+    } else {
+      currentStep = args.questions.findIndex((q) => q.id === args.questionID);
+    }
     numSteps = args.questions.length;
   } else {
     numSteps = args.numSteps;
