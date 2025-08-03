@@ -65,7 +65,7 @@ export default function QuestionScreen() {
             resizeMode="contain"
           />
         </TouchableOpacity>
-        <QuestProgressBar questions={questions} questionID={question.id}/>
+        <QuestProgressBar questions={questions} questionID={question.id} currentQuestion={question}/>
       </View>
 
       {/* Scrollable Content Area */}

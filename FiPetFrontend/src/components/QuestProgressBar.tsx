@@ -7,6 +7,7 @@ type QuestProgressBarProps = (
   {
     questions: Question[],
     questionID: string,
+    currentQuestion?: Question,
   } |
   {
     numSteps: number,
@@ -14,9 +15,10 @@ type QuestProgressBarProps = (
   }
 ) & {style?: ViewStyle};
 
-export default function QuestProgressBar({questions, questionID, style}: {
+export default function QuestProgressBar({questions, questionID, currentQuestion, style}: {
   questions: Question[],
   questionID: string,
+  currentQuestion?: Question,
   style?: ViewStyle
 }): React.JSX.Element;
 export default function QuestProgressBar({numSteps, currentStep, style}: {
@@ -31,19 +33,22 @@ export default function QuestProgressBar(args: QuestProgressBarProps): React.JSX
   let numSteps: number = 0;
   let currentStep: number = 0;
   if ( "questionID" in args ) {
-    const currentQuestion = args.questions.find((q) => q.id === args.questionID);
+    // Use the passed currentQuestion if available, otherwise find it
+    const currentQuestion = args.currentQuestion || args.questions.find((q) => q.id === args.questionID);
+    
     if (currentQuestion) {
       if (currentQuestion.isPractice) {
-        // For practice questions, find the base question's index in the main questions array
-        const baseQuestionOrder = Math.floor(currentQuestion.order);
-        currentStep = args.questions.findIndex((q) => !q.isPractice && q.order === baseQuestionOrder);
+        // For practice questions, use the base question order as the current step
+        currentStep = Math.floor(currentQuestion.order);
       } else {
-        // For regular questions, find the index in the questions array
-        currentStep = args.questions.findIndex((q) => q.id === args.questionID);
+        // For regular questions, use the order as the current step
+        currentStep = currentQuestion.order;
       }
     } else {
+      // Fallback: try to find by ID in the questions array
       currentStep = args.questions.findIndex((q) => q.id === args.questionID);
     }
+    
     numSteps = args.questions.length;
   } else {
     numSteps = args.numSteps;
