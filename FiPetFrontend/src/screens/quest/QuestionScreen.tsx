@@ -1,7 +1,7 @@
 import { StyleSheet, View, TouchableOpacity, Text, Image, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuest } from "@/src/hooks/useQuest";
-import { useState, useRef, RefObject } from "react";
+import { useState, useRef, RefObject, useEffect } from "react";
 import { ThemedView } from "@/src/components/ThemedView";
 import QuestionRenderer, { QuestionRef } from "@/src/components/questions/QuestionRenderer";
 import CorrectModal from '@/src/components/modals/correctModal';
@@ -27,8 +27,17 @@ export default function QuestionScreen() {
   // State for both types
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showIncorrectModal, setShowIncorrectModal] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const {addXP, addCoins} = useGamificationStats();
+
+  // Reset feedback state when question changes
+  useEffect(() => {
+    setShowFeedback(false);
+    setShowCorrectModal(false);
+    setShowIncorrectModal(false);
+    setReadyForSubmit(false);
+  }, [questionID]);
 
   // UI rendering
   if (loading || !quest) {
@@ -83,7 +92,7 @@ export default function QuestionScreen() {
         {/* Question Text */}
         <Text style={styles.questionText}>{question.prompt}</Text>
 
-        {question.isAnswered ? (
+        {question.isAnswered && showFeedback ? (
           <FeedbackRenderer question={question}/>
         ) : (
           <QuestionRenderer
@@ -142,9 +151,13 @@ export default function QuestionScreen() {
       {/* Correct Modal */}
       <CorrectModal
         isVisible={showCorrectModal}
-        onClose={() => setShowCorrectModal(false)}
+        onClose={() => {
+          setShowCorrectModal(false);
+          setShowFeedback(true);
+        }}
         onContinue={() => {
           setShowCorrectModal(false);
+          setShowFeedback(false);
           const next = quest.getNextQuestion(question);
           if (next === false) {
             quest.complete(user.uid).then((reward) => {
@@ -162,11 +175,18 @@ export default function QuestionScreen() {
       {/* Incorrect Modal */}
       <IncorrectModal
         isVisible={showIncorrectModal}
-        onClose={() => setShowIncorrectModal(false)}
+        onClose={() => {
+          setShowIncorrectModal(false);
+          setShowFeedback(true);
+        }}
         onConfirm={() => {
           setShowIncorrectModal(false);
+          setShowFeedback(true);
         }}
-        onCancel={() => setShowIncorrectModal(false)}
+        onCancel={() => {
+          setShowIncorrectModal(false);
+          setShowFeedback(true);
+        }}
         title="Not Quite"
         text=""
       />
