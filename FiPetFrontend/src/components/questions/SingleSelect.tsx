@@ -1,7 +1,7 @@
 import { useAuth } from "@/src/hooks/useRequiresAuth";
 import { UserSingleSelectOption } from "@/src/services/quest/UserOption";
 import { UserSingleSelectQuestion } from "@/src/services/quest/UserQuestion";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import { QuestionProps } from "./QuestionRenderer";
 
@@ -13,9 +13,7 @@ export default function SingleSelect({question, onSubmit, ref, preSubmit, onErro
 
   const {user} = useAuth();
 
-  const incorrectOptions = question.getOptions();
-  const correctOption = question.getCorrectOption();
-  const options = useMemo(() => [...incorrectOptions, correctOption], [incorrectOptions,correctOption]);
+  const options = question.getOptions();
 
   useEffect(() => {
     options.sort(() => Math.random() - 0.5);

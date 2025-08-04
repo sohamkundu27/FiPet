@@ -100,6 +100,7 @@ export const submitAnswer = onRequest({ maxInstances: 10 }, async (req, res) => 
     res.json({
       success: true,
       correct: selectedOptionCorrect,
+      correctOptionId: correctOptionId,
       reward: selectedOptionCorrect ? questionData?.reward || null : null,
     });
 

@@ -1,5 +1,6 @@
 import { Timestamp } from "@firebase/firestore";
 import { ItemId } from "./item";
+import type {FieldPath, WhereFilterOp} from "@firebase/firestore";
 
 export const QUEST_COLLECTION = 'quests2';
 export const QUEST_COMPLETION_COLLECTION = 'questCompletion2';
@@ -166,4 +167,14 @@ export type DB_JSON_Starter = {
     questions: DB_JSON_Question<QuestionType, undefined|string>[],
     readings: (Omit<DBPreQuestReading, "id"|"questId"|"order"|"image"> & {image?: string})[]
   })[],
+}
+
+export type CloudQuery = {
+  where?: {
+    field: FieldPath | string,
+    op: WhereFilterOp,
+    value: unknown,
+  }[],
+  limit?: number,
+  orderBy?: FieldPath | string,
 }
