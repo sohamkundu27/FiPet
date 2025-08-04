@@ -1,10 +1,8 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore, Query } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
-import type { CloudQuery, DBOption, QuestionType } from "types/quest";
+import { CloudQuery, DBOption, QuestionType, OPTIONS_COLLECTION } from "./shared/quest";
 import * as logger from "firebase-functions/logger";
-
-const OPTIONS_COLLECTION = 'options2';
 
 function deleteFields<T extends object, K extends keyof T>(
   object: T,
@@ -29,8 +27,9 @@ export const loadOption = onRequest({ maxInstances: 10 }, async (req, res) => {
   
   // Verify the Firebase ID token and get the user ID
   try {
-//     await getAuth().verifyIdToken(token);
-  } catch {
+    await getAuth().verifyIdToken(token);
+  } catch (err) {
+    logger.error("Could not verify token.", err);
     res.status(401).json({ error: "Invalid authentication token" });
     return;
   }
@@ -67,6 +66,7 @@ export const loadOption = onRequest({ maxInstances: 10 }, async (req, res) => {
   }
 }); 
 
+
 export const loadOptions = onRequest({ maxInstances: 10 }, async (req, res) => {
   // Check if user is authenticated via Authorization header
   const authHeader = req.headers.authorization;
@@ -79,8 +79,9 @@ export const loadOptions = onRequest({ maxInstances: 10 }, async (req, res) => {
   
   // Verify the Firebase ID token and get the user ID
   try {
-  //   await getAuth().verifyIdToken(token);
-  } catch {
+    await getAuth().verifyIdToken(token);
+  } catch (err) {
+    logger.error("Could not verify token.", err);
     res.status(401).json({ error: "Invalid authentication token" });
     return;
   }

@@ -10,11 +10,6 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2017",
-    "rootDir": "src",
-    "baseUrl": ".",
-    "paths": {
-      "types/quest": ["../src/types/quest.ts"]
-    }
   },
   "compileOnSave": true,
   "include": [
