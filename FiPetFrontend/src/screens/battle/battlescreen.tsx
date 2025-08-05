@@ -8,9 +8,9 @@ import { LinearGradient } from 'expo-linear-gradient'
 export default function BattleScreen() {
   const { level, streak, coins } = useGamificationStats();
   const { width, height } = Dimensions.get('window');
-  const isTablet = width >= 768;
-  const isLargeTablet = width >= 1024;
-
+  
+  const scale = width / 375;
+  
   const [loaded] = useFonts({
     PoppinsBold: require('@/src/assets/fonts/Poppins-Bold.ttf'),
     PoppinsMedium: require('@/src/assets/fonts/Poppins-Medium.ttf'),
@@ -22,14 +22,50 @@ export default function BattleScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={[styles.loadingText, { fontSize: 18 * scale }]}>Loading...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
+  const dynamicStyles = {
+    // padding and margins
+    sectionMargin: 20 * scale,
+    sectionGap: 32 * scale,
+    headerMargin: 16 * scale,
+    contentMargin: 12 * scale,
+    horizontalPadding: Math.max(20, (width - 375) * 0.1),
+    
+    // icon sizes
+    sectionIconSize: 55 * scale,
+    buttonIconSize: 24 * scale,
+    xpIconSize: 20 * scale,
+    streakIconSize: 20 * scale,
+    
+    // font sizes
+    sectionTitleSize: 22 * scale,
+    sectionSubtitleSize: 15 * scale,
+    buttonTextSize: 18 * scale,
+    tableHeaderSize: 14 * scale,
+    tableRowSize: 15 * scale,
+    
+    // padding and spacing
+    buttonPaddingVertical: 14 * scale,
+    buttonPaddingHorizontal: 18 * scale,
+    leaderboardPadding: 16 * scale,
+    rowPaddingVertical: 12 * scale,
+    
+    // border radius
+    buttonRadius: 16 * scale,
+    leaderboardRadius: 20 * scale,
+    
+    // shadows
+    shadowRadius: 8 * scale,
+    shadowOffset: { width: 0, height: 4 * scale },
+  };
+
   return (
-    <View style={[styles.container, isTablet && styles.containerTablet]}>
+    <View style={styles.container}>
       <TabHeader
         xp={level.xp}
         coins={coins.coins}
@@ -42,72 +78,236 @@ export default function BattleScreen() {
       />
 
       <ScrollView 
-        contentContainerStyle={[
-          { paddingTop: 20 }, 
-          isTablet && { paddingTop: 40, paddingHorizontal: 60 },
-          isLargeTablet && { paddingHorizontal: 120 }
-        ]}
+        contentContainerStyle={{
+          paddingTop: 20 * scale,
+          paddingBottom: 40 * scale,
+          paddingHorizontal: dynamicStyles.horizontalPadding,
+        }}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.section, isTablet && styles.sectionTablet]}>
-          <View style={[styles.sectionHeader, isTablet && styles.sectionHeaderTablet]}>
+        {/* Live Play Section */}
+        <View style={{
+          marginBottom: dynamicStyles.sectionGap,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: dynamicStyles.headerMargin,
+          }}>
             <Image 
               source={require("@/src/assets/images/daily-streak.png")} 
-              style={[styles.sectionIcon, isTablet && styles.sectionIconTablet]} 
+              style={{
+                width: dynamicStyles.sectionIconSize,
+                height: dynamicStyles.sectionIconSize,
+                marginRight: 12 * scale,
+                resizeMode: 'contain',
+              }} 
             />
-            <View>
-              <Text style={[styles.sectionTitle, isTablet && styles.sectionTitleTablet]}>Live Play</Text>
-              <Text style={[styles.sectionSubtitle, isTablet && styles.sectionSubtitleTablet]}>Play against real users to earn extra XP</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: dynamicStyles.sectionTitleSize,
+                fontFamily: 'PoppinsBold',
+                color: "#1F2937",
+              }}>
+                Live Play
+              </Text>
+              <Text style={{
+                fontSize: dynamicStyles.sectionSubtitleSize,
+                fontFamily: 'PoppinsRegular',
+                color: "#6B7280",
+                marginTop: 2 * scale,
+              }}>
+                Play against real users to earn extra XP
+              </Text>
             </View>
           </View>
 
-          <View style={[styles.sectionContent, isTablet && styles.sectionContentTablet]}>
-            <TouchableOpacity style={[styles.startButton, isTablet && styles.startButtonTablet]}>
-              <View style={[styles.startButtonInner, isTablet && styles.startButtonInnerTablet]}>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            gap: 12 * scale,
+            marginTop: dynamicStyles.contentMargin,
+          }}>
+            <TouchableOpacity 
+              style={{
+                flex: 1,
+                backgroundColor: '#F3F4F6',
+                borderRadius: dynamicStyles.buttonRadius,
+                shadowColor: '#000',
+                shadowOpacity: 0.15,
+                shadowOffset: dynamicStyles.shadowOffset,
+                shadowRadius: dynamicStyles.shadowRadius,
+                elevation: 6,
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: dynamicStyles.buttonPaddingVertical,
+                paddingHorizontal: dynamicStyles.buttonPaddingHorizontal,
+              }}>
                 <Image 
                   source={require("@/src/assets/images/play.png")} 
-                  style={[styles.buttonIcon, isTablet && styles.buttonIconTablet]} 
+                  style={{
+                    width: dynamicStyles.buttonIconSize,
+                    height: dynamicStyles.buttonIconSize,
+                    resizeMode: 'contain',
+                    marginRight: 8 * scale,
+                  }} 
                 />
-                <Text style={[styles.startButtonText, isTablet && styles.startButtonTextTablet]}>Start A Game</Text>
+                <Text style={{
+                  fontFamily: 'PoppinsSemiBold',
+                  fontSize: dynamicStyles.buttonTextSize,
+                  color: '#4F46E5',
+                }}>
+                  Start A Game
+                </Text>
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.findButton, isTablet && styles.findButtonTablet]}>
+            <TouchableOpacity 
+              style={{
+                flex: 1,
+                borderRadius: dynamicStyles.buttonRadius,
+                overflow: 'hidden',
+                shadowColor: '#000',
+                shadowOpacity: 0.2,
+                shadowOffset: dynamicStyles.shadowOffset,
+                shadowRadius: dynamicStyles.shadowRadius,
+                elevation: 6,
+              }}
+              activeOpacity={0.8}
+            >
               <LinearGradient
                 colors={['#A855F7', '#3B82F6']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.findButtonInner, isTablet && styles.findButtonInnerTablet]}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingVertical: dynamicStyles.buttonPaddingVertical,
+                  paddingHorizontal: dynamicStyles.buttonPaddingHorizontal,
+                }}
               >
                 <Image 
                   source={require("@/src/assets/images/play.png")} 
-                  style={[styles.buttonIcon, isTablet && styles.buttonIconTablet]} 
+                  style={{
+                    width: dynamicStyles.buttonIconSize,
+                    height: dynamicStyles.buttonIconSize,
+                    resizeMode: 'contain',
+                    marginRight: 8 * scale,
+                  }} 
                 />
-                <Text style={[styles.findButtonText, isTablet && styles.findButtonTextTablet]}>Find A Game</Text>
+                <Text style={{
+                  fontFamily: 'PoppinsSemiBold',
+                  fontSize: dynamicStyles.buttonTextSize,
+                  color: '#fff',
+                }}>
+                  Find A Game
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={[styles.section, isTablet && styles.sectionTablet]}>
-          <View style={[styles.sectionHeader, isTablet && styles.sectionHeaderTablet]}>
+        {/* Leaderboard Section */}
+        <View style={{
+          marginBottom: dynamicStyles.sectionGap,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: dynamicStyles.headerMargin,
+          }}>
             <Image 
               source={require("@/src/assets/images/daily-streak.png")} 
-              style={[styles.sectionIcon, isTablet && styles.sectionIconTablet]} 
+              style={{
+                width: dynamicStyles.sectionIconSize,
+                height: dynamicStyles.sectionIconSize,
+                marginRight: 12 * scale,
+                resizeMode: 'contain',
+              }} 
             />
-            <View>
-              <Text style={[styles.sectionTitle, isTablet && styles.sectionTitleTablet]}>Leaderboard</Text>
-              <Text style={[styles.sectionSubtitle, isTablet && styles.sectionSubtitleTablet]}>Earn XP to add to your daily streak</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: dynamicStyles.sectionTitleSize,
+                fontFamily: 'PoppinsBold',
+                color: "#1F2937",
+              }}>
+                Leaderboard
+              </Text>
+              <Text style={{
+                fontSize: dynamicStyles.sectionSubtitleSize,
+                fontFamily: 'PoppinsRegular',
+                color: "#6B7280",
+                marginTop: 2 * scale,
+              }}>
+                Earn XP to add to your daily streak
+              </Text>
             </View>
           </View>
 
-          <View style={[styles.leaderboardBox, isTablet && styles.leaderboardBoxTablet]}>
-            <View style={[styles.leaderboardHeader, isTablet && styles.leaderboardHeaderTablet]}>
-              <Text style={[styles.tableHeader, styles.tableHeaderRank, isTablet && styles.tableHeaderTablet]}>Place</Text>
-              <Text style={[styles.tableHeader, styles.tableHeaderUsername, isTablet && styles.tableHeaderTablet]}>Username</Text>
-              <Text style={[styles.tableHeader, styles.tableHeaderXP, isTablet && styles.tableHeaderTablet]}>XP</Text>
-              <Text style={[styles.tableHeader, styles.tableHeaderStreak, isTablet && styles.tableHeaderTablet]}>Streak</Text>
+          <View style={{
+            backgroundColor: '#fff',
+            borderRadius: dynamicStyles.leaderboardRadius,
+            padding: dynamicStyles.leaderboardPadding,
+            shadowColor: '#000',
+            shadowOpacity: 0.08,
+            shadowRadius: dynamicStyles.shadowRadius * 1.5,
+            shadowOffset: dynamicStyles.shadowOffset,
+            elevation: 5,
+          }}>
+            {/* Header */}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              paddingBottom: 12 * scale,
+              borderBottomColor: '#E5E7EB',
+              borderBottomWidth: 1,
+              marginBottom: 8 * scale,
+            }}>
+              <Text style={{
+                width: '18%',
+                fontFamily: 'PoppinsMedium',
+                fontSize: dynamicStyles.tableHeaderSize,
+                color: '#6B7280',
+                textAlign: 'left',
+              }}>
+                Place
+              </Text>
+              <Text style={{
+                width: '32%',
+                fontFamily: 'PoppinsMedium',
+                fontSize: dynamicStyles.tableHeaderSize,
+                color: '#6B7280',
+                textAlign: 'left',
+              }}>
+                Username
+              </Text>
+              <Text style={{
+                width: '25%',
+                fontFamily: 'PoppinsMedium',
+                fontSize: dynamicStyles.tableHeaderSize,
+                color: '#6B7280',
+                textAlign: 'right',
+              }}>
+                XP
+              </Text>
+              <Text style={{
+                width: '25%',
+                fontFamily: 'PoppinsMedium',
+                fontSize: dynamicStyles.tableHeaderSize,
+                color: '#6B7280',
+                textAlign: 'right',
+              }}>
+                Streak
+              </Text>
             </View>
 
+            {/* Leaderboard Rows */}
             {[
               { name: '@userabc1_long_username', score: '10.4M', streak: 1092 },
               { name: '@alfkd', score: '10.4M', streak: 1092 },
@@ -118,55 +318,160 @@ export default function BattleScreen() {
               { name: '@userxz99', score: '9.8M', streak: 931 },
             ].map((user, index) => (
               <View key={index}>
-                <View style={[styles.leaderboardRow, isTablet && styles.leaderboardRowTablet]}>
-                  <Text style={[styles.rank, isTablet && styles.rankTablet]}>{`${index + 4}th`}</Text>
+                <View style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingVertical: dynamicStyles.rowPaddingVertical,
+                  alignItems: 'center',
+                }}>
+                  <Text style={{
+                    width: '18%',
+                    fontSize: dynamicStyles.tableRowSize,
+                    fontFamily: 'PoppinsRegular',
+                    color: '#1F2937',
+                  }}>
+                    {`${index + 4}th`}
+                  </Text>
                   <Text 
-                    style={[styles.username, isTablet && styles.usernameTablet]} 
+                    style={{
+                      width: '32%',
+                      fontSize: dynamicStyles.tableRowSize,
+                      fontFamily: 'PoppinsRegular',
+                      color: '#374151',
+                      overflow: 'hidden',
+                    }} 
                     numberOfLines={1} 
                     ellipsizeMode="tail"
                   >
                     {user.name}
                   </Text>
-                  <View style={[styles.xpCell, isTablet && styles.xpCellTablet]}>
-                    <Text style={[styles.xpText, isTablet && styles.xpTextTablet]}>{user.score}</Text>
+                  <View style={{
+                    width: '25%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                  }}>
+                    <Text style={{
+                      fontSize: dynamicStyles.tableRowSize,
+                      fontFamily: 'PoppinsMedium',
+                      color: '#3B82F6',
+                    }}>
+                      {user.score}
+                    </Text>
                     <Image 
                       source={require("@/src/assets/images/xp.png")} 
-                      style={[styles.xpIcon, isTablet && styles.xpIconTablet]} 
+                      style={{
+                        width: dynamicStyles.xpIconSize,
+                        height: dynamicStyles.xpIconSize,
+                        marginLeft: 6 * scale,
+                        resizeMode: 'contain',
+                      }} 
                     />
                   </View>
-                  <View style={[styles.streakCell, isTablet && styles.streakCellTablet]}>
-                    <Text style={[styles.streakText, isTablet && styles.streakTextTablet]}>{user.streak.toLocaleString()}</Text>
+                  <View style={{
+                    width: '25%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                  }}>
+                    <Text style={{
+                      fontSize: dynamicStyles.tableRowSize,
+                      fontFamily: 'PoppinsMedium',
+                      color: '#F59E0B',
+                    }}>
+                      {user.streak.toLocaleString()}
+                    </Text>
                     <Image 
                       source={require("@/src/assets/images/streak-fire-full.png")} 
-                      style={[styles.streakIcon, isTablet && styles.streakIconTablet]} 
+                      style={{
+                        width: dynamicStyles.streakIconSize,
+                        height: dynamicStyles.streakIconSize,
+                        marginLeft: 6 * scale,
+                        resizeMode: 'contain',
+                      }} 
                     />
                   </View>
                 </View>
-                <View style={[styles.rowDivider, isTablet && styles.rowDividerTablet]} />
+                <View style={{
+                  height: 1,
+                  backgroundColor: '#E5E7EB',
+                  marginVertical: 4 * scale,
+                }} />
               </View>
             ))}
 
-            <View style={[styles.leaderboardRow, isTablet && styles.leaderboardRowTablet]}>
-              <Text style={[styles.rank, { fontFamily: 'PoppinsBold' }, isTablet && styles.rankTablet]}>3,042</Text>
+            {/* User's Row */}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              paddingVertical: dynamicStyles.rowPaddingVertical,
+              alignItems: 'center',
+            }}>
+              <Text style={{
+                width: '18%',
+                fontSize: dynamicStyles.tableRowSize,
+                fontFamily: 'PoppinsBold',
+                color: '#1F2937',
+              }}>
+                3,042
+              </Text>
               <Text 
-                style={[styles.username, { fontFamily: 'PoppinsBold' }, isTablet && styles.usernameTablet]} 
+                style={{
+                  width: '32%',
+                  fontSize: dynamicStyles.tableRowSize,
+                  fontFamily: 'PoppinsBold',
+                  color: '#374151',
+                  overflow: 'hidden',
+                }} 
                 numberOfLines={1} 
                 ellipsizeMode="tail"
               >
                 You
               </Text>
-              <View style={[styles.xpCell, isTablet && styles.xpCellTablet]}>
-                <Text style={[styles.xpText, { fontFamily: 'PoppinsBold' }, isTablet && styles.xpTextTablet]}>32.7K</Text>
+              <View style={{
+                width: '25%',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+              }}>
+                <Text style={{
+                  fontSize: dynamicStyles.tableRowSize,
+                  fontFamily: 'PoppinsBold',
+                  color: '#3B82F6',
+                }}>
+                  32.7K
+                </Text>
                 <Image 
                   source={require("@/src/assets/images/xp.png")} 
-                  style={[styles.xpIcon, isTablet && styles.xpIconTablet]} 
+                  style={{
+                    width: dynamicStyles.xpIconSize,
+                    height: dynamicStyles.xpIconSize,
+                    marginLeft: 6 * scale,
+                    resizeMode: 'contain',
+                  }} 
                 />
               </View>
-              <View style={[styles.streakCell, isTablet && styles.streakCellTablet]}>
-                <Text style={[styles.streakText, { fontFamily: 'PoppinsBold' }, isTablet && styles.streakTextTablet]}>37</Text>
+              <View style={{
+                width: '25%',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+              }}>
+                <Text style={{
+                  fontSize: dynamicStyles.tableRowSize,
+                  fontFamily: 'PoppinsBold',
+                  color: '#F59E0B',
+                }}>
+                  37
+                </Text>
                 <Image 
                   source={require("@/src/assets/images/streak-fire-full.png")} 
-                  style={[styles.streakIcon, isTablet && styles.streakIconTablet]} 
+                  style={{
+                    width: dynamicStyles.streakIconSize,
+                    height: dynamicStyles.streakIconSize,
+                    marginLeft: 6 * scale,
+                    resizeMode: 'contain',
+                  }} 
                 />
               </View>
             </View>
@@ -182,286 +487,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F9FAFB",
   },
-  containerTablet: {
-    backgroundColor: "#F0F9FF",
-  },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 18,
     fontFamily: 'PoppinsRegular',
     color: '#4A5568',
-  },
-  section: {
-    marginHorizontal: 20,
-    marginBottom: 32,
-  },
-  sectionTablet: {
-    marginHorizontal: 0,
-    marginBottom: 48,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionHeaderTablet: {
-    marginBottom: 24,
-  },
-  sectionIcon: {
-    width: 55,
-    height: 55,
-    marginRight: 10,
-    resizeMode: 'contain',
-  },
-  sectionIconTablet: {
-    width: 80,
-    height: 80,
-    marginRight: 16,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontFamily: 'PoppinsBold',
-    color: "#1F2937",
-  },
-  sectionTitleTablet: {
-    fontSize: 32,
-  },
-  sectionSubtitle: {
-    fontSize: 15,
-    fontFamily: 'PoppinsRegular',
-    color: "#6B7280",
-  },
-  sectionSubtitleTablet: {
-    fontSize: 20,
-  },
-  sectionContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
-    marginTop: 12,
-  },
-  sectionContentTablet: {
-    gap: 20,
-    marginTop: 20,
-  },
-  startButton: {
-    flex: 1,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  startButtonTablet: {
-    borderRadius: 24,
-  },
-  startButtonInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-  },
-  startButtonInnerTablet: {
-    paddingVertical: 20,
-    paddingHorizontal: 28,
-  },
-  findButton: {
-    flex: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  findButtonTablet: {
-    borderRadius: 24,
-  },
-  findButtonInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-  },
-  findButtonInnerTablet: {
-    paddingVertical: 20,
-    paddingHorizontal: 28,
-  },
-  buttonIcon: {
-    width: 24,
-    height: 24,
-    resizeMode: 'contain',
-    marginRight: 8,
-  },
-  buttonIconTablet: {
-    width: 36,
-    height: 36,
-    marginRight: 12,
-  },
-  startButtonText: {
-    fontFamily: 'PoppinsSemiBold',
-    fontSize: 18,
-    color: '#4F46E5',
-  },
-  startButtonTextTablet: {
-    fontSize: 24,
-  },
-  findButtonText: {
-    fontFamily: 'PoppinsSemiBold',
-    fontSize: 18,
-    color: '#fff',
-  },
-  findButtonTextTablet: {
-    fontSize: 24,
-  },
-  leaderboardBox: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  leaderboardBoxTablet: {
-    borderRadius: 28,
-    padding: 20,
-  },
-  leaderboardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: 8,
-    borderBottomColor: '#E5E7EB',
-    borderBottomWidth: 1,
-    marginBottom: 6,
-  },
-  leaderboardHeaderTablet: {
-    paddingBottom: 12,
-    marginBottom: 10,
-  },
-  tableHeader: {
-    fontFamily: 'PoppinsMedium',
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  tableHeaderTablet: {
-    fontSize: 18,
-  },
-  tableHeaderRank: {
-    width: '18%',
-    textAlign: 'left',
-  },
-  tableHeaderUsername: {
-    width: '32%',
-    textAlign: 'left',
-  },
-  tableHeaderXP: {
-    width: '25%',
-    textAlign: 'right',
-    paddingRight: 58
-  },
-  tableHeaderStreak: {
-    width: '20%',
-    textAlign: 'right',
-    paddingRight: 16
-  },
-  leaderboardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  leaderboardRowTablet: {
-    paddingVertical: 16,
-  },
-  rowDivider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 2,
-  },
-  rowDividerTablet: {
-    marginVertical: 4,
-  },
-  rank: {
-    width: '18%',
-    fontSize: 15,
-    fontFamily: 'PoppinsRegular',
-    color: '#1F2937',
-  },
-  rankTablet: {
-    fontSize: 20,
-  },
-  username: {
-    width: '32%',
-    fontSize: 15,
-    fontFamily: 'PoppinsRegular',
-    color: '#374151',
-    overflow: 'hidden',
-  },
-  usernameTablet: {
-    fontSize: 20,
-  },
-  xpCell: {
-    width: '25%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingLeft: 25
-  },
-  xpCellTablet: {
-    paddingLeft: 40,
-  },
-  xpText: {
-    fontSize: 15,
-    fontFamily: 'PoppinsMedium',
-    color: '#3B82F6',
-  },
-  xpTextTablet: {
-    fontSize: 20,
-  },
-  xpIcon: {
-    width: 20,
-    height: 20,
-    marginLeft: 4,
-    resizeMode: 'contain',
-  },
-  xpIconTablet: {
-    width: 28,
-    height: 28,
-    marginLeft: 6,
-  },
-  streakCell: {
-    width: '25%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingLeft: 30
-  },
-  streakCellTablet: {
-    paddingLeft: 45,
-  },
-  streakText: {
-    fontSize: 15,
-    fontFamily: 'PoppinsMedium',
-    color: '#F59E0B',
-  },
-  streakTextTablet: {
-    fontSize: 20,
-  },
-  streakIcon: {
-    width: 20,
-    height: 20,
-    marginLeft: 4,
-    resizeMode: 'contain',
-  },
-  streakIconTablet: {
-    width: 28,
-    height: 28,
-    marginLeft: 6,
   },
 })
