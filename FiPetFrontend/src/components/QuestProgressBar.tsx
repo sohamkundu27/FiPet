@@ -8,22 +8,34 @@ type QuestProgressBarProps = (
     questions: Question[],
     questionID: string,
     currentQuestion?: Question,
+    hasPreQuest?: boolean,
+    preQuestCompleted?: boolean,
+    isPreQuest?: boolean,
   } |
   {
     numSteps: number,
     currentStep: number,
+    isPreQuest?: boolean,
+    questions?: Question[],
+    hasPreQuest?: boolean,
   }
 ) & {style?: ViewStyle};
 
-export default function QuestProgressBar({questions, questionID, currentQuestion, style}: {
+export default function QuestProgressBar({questions, questionID, currentQuestion, hasPreQuest, preQuestCompleted, isPreQuest, style}: {
   questions: Question[],
   questionID: string,
   currentQuestion?: Question,
+  hasPreQuest?: boolean,
+  preQuestCompleted?: boolean,
+  isPreQuest?: boolean,
   style?: ViewStyle
 }): React.JSX.Element;
-export default function QuestProgressBar({numSteps, currentStep, style}: {
+export default function QuestProgressBar({numSteps, currentStep, isPreQuest, questions, hasPreQuest, style}: {
   numSteps: number,
   currentStep: number,
+  isPreQuest?: boolean,
+  questions?: Question[],
+  hasPreQuest?: boolean,
   style?: ViewStyle,
 }): React.JSX.Element;
 
@@ -32,7 +44,15 @@ export default function QuestProgressBar(args: QuestProgressBarProps): React.JSX
   const style = args.style;
   let numSteps: number = 0;
   let currentStep: number = 0;
+  let hasPreQuest: boolean = false;
+  let preQuestCompleted: boolean = false;
+  let isPreQuest: boolean = false;
+  
   if ( "questionID" in args ) {
+    hasPreQuest = args.hasPreQuest || false;
+    preQuestCompleted = args.preQuestCompleted || false;
+    isPreQuest = args.isPreQuest || false;
+    
     // Use the passed currentQuestion if available, otherwise find it
     const currentQuestion = args.currentQuestion || args.questions.find((q) => q.id === args.questionID);
     
@@ -53,20 +73,70 @@ export default function QuestProgressBar(args: QuestProgressBarProps): React.JSX
   } else {
     numSteps = args.numSteps;
     currentStep = args.currentStep;
+    isPreQuest = args.isPreQuest || false;
+    hasPreQuest = args.hasPreQuest || false;
   }
 
-  const stepList: React.JSX.Element[] = [];
+  // For pre-quest reading screen (uses numSteps/currentStep format)
+  if (isPreQuest) {
+    const progressPercentage = ((currentStep + 1) / numSteps) * 100;
+    const questionCount = (args as any).questions?.length || 3; // Fallback to 3 if questions not provided
+    
+    return (
+      <View style={{...style, ...styles.progressBarSteps}}>
+        <View style={[styles.progressStep, styles.progressStepLarge, styles.progressStepInactive]}>
+          <View
+            style={[
+              styles.progressStepFill,
+              {
+                width: `${progressPercentage}%`,
+              }
+            ]}
+          />
+        </View>
+        {/* Add small bars for questions that will appear later */}
+        {Array.from({ length: questionCount }, (_, index) => (
+          <View
+            key={`future-question-${index}`}
+            style={[
+              styles.progressStep,
+              styles.progressStepSmall,
+              styles.progressStepInactive,
+            ]}
+          />
+        ))}
+      </View>
+    );
+  }
 
-  for (let step = 0; step < numSteps; step ++) {
+  // For question screens with pre-quest support
+  const stepList: React.JSX.Element[] = [];
+  
+  // Add pre-quest section if it exists
+  if (hasPreQuest) {
     stepList.push(
-        <View
-          key={step}
-          style={[
-            styles.progressStep,
-            step === 0 ? styles.progressStepFirst : styles.progressStepSmall,
-            step <= currentStep ? styles.progressStepActive : styles.progressStepInactive,
-          ]}
-        />
+      <View
+        key="prequest"
+        style={[
+          styles.progressStep,
+          styles.progressStepLarge,
+          preQuestCompleted ? styles.progressStepActive : styles.progressStepInactive,
+        ]}
+      />
+    );
+  }
+
+  // Add question sections
+  for (let step = 0; step < numSteps; step++) {
+    stepList.push(
+      <View
+        key={hasPreQuest ? `question-${step}` : step}
+        style={[
+          styles.progressStep,
+          hasPreQuest ? styles.progressStepSmall : styles.progressStepSmall,
+          step <= currentStep ? styles.progressStepActive : styles.progressStepInactive,
+        ]}
+      />
     );
   }
 
@@ -86,8 +156,13 @@ const styles = StyleSheet.create({
   progressStep: {
     borderRadius: 4,
     marginHorizontal: 4,
+    position: 'relative',
   },
   progressStepFirst: {
+    flex: 3,
+    height: 10,
+  },
+  progressStepLarge: {
     flex: 3,
     height: 10,
   },
@@ -100,5 +175,13 @@ const styles = StyleSheet.create({
   },
   progressStepInactive: {
     backgroundColor: '#ccc',
+  },
+  progressStepFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: '100%',
+    backgroundColor: '#6C63FF',
+    borderRadius: 4,
   },
 });
