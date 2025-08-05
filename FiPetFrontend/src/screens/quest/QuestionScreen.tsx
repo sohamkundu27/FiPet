@@ -62,6 +62,11 @@ export default function QuestionScreen() {
 
   const questions = quest.getQuestions();
   const question = quest.getQuestion(questionID);
+  
+  // Check if quest has pre-quest readings
+  const readings = quest.getReadings();
+  const hasPreQuest = readings.length > 0;
+  const preQuestCompleted = true; // Since we're in a question, pre-quest must be completed
 
   return (
     <ThemedView style={styles.container}>
@@ -74,7 +79,13 @@ export default function QuestionScreen() {
             resizeMode="contain"
           />
         </TouchableOpacity>
-        <QuestProgressBar questions={questions} questionID={question.id} currentQuestion={question}/>
+        <QuestProgressBar 
+          questions={questions} 
+          questionID={question.id} 
+          currentQuestion={question}
+          hasPreQuest={hasPreQuest}
+          preQuestCompleted={preQuestCompleted}
+        />
       </View>
 
       {/* Scrollable Content Area */}

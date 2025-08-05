@@ -84,7 +84,7 @@ export default function PreQuestReadingScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
             <Text style={{ fontSize: 38, textAlign: 'center', lineHeight: 40 }}>×</Text>
           </TouchableOpacity>
-          <QuestProgressBar currentStep={page} numSteps={totalPages}/>
+          <QuestProgressBar currentStep={page} numSteps={totalPages} isPreQuest={true}/>
         </View>
         
         {/* Scrollable content */}
