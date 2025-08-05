@@ -16,6 +16,8 @@ type QuestProgressBarProps = (
     numSteps: number,
     currentStep: number,
     isPreQuest?: boolean,
+    questions?: Question[],
+    hasPreQuest?: boolean,
   }
 ) & {style?: ViewStyle};
 
@@ -28,10 +30,12 @@ export default function QuestProgressBar({questions, questionID, currentQuestion
   isPreQuest?: boolean,
   style?: ViewStyle
 }): React.JSX.Element;
-export default function QuestProgressBar({numSteps, currentStep, isPreQuest, style}: {
+export default function QuestProgressBar({numSteps, currentStep, isPreQuest, questions, hasPreQuest, style}: {
   numSteps: number,
   currentStep: number,
   isPreQuest?: boolean,
+  questions?: Question[],
+  hasPreQuest?: boolean,
   style?: ViewStyle,
 }): React.JSX.Element;
 
@@ -70,11 +74,13 @@ export default function QuestProgressBar(args: QuestProgressBarProps): React.JSX
     numSteps = args.numSteps;
     currentStep = args.currentStep;
     isPreQuest = args.isPreQuest || false;
+    hasPreQuest = args.hasPreQuest || false;
   }
 
   // For pre-quest reading screen (uses numSteps/currentStep format)
   if (isPreQuest) {
     const progressPercentage = ((currentStep + 1) / numSteps) * 100;
+    const questionCount = (args as any).questions?.length || 3; // Fallback to 3 if questions not provided
     
     return (
       <View style={{...style, ...styles.progressBarSteps}}>
@@ -88,6 +94,17 @@ export default function QuestProgressBar(args: QuestProgressBarProps): React.JSX
             ]}
           />
         </View>
+        {/* Add small bars for questions that will appear later */}
+        {Array.from({ length: questionCount }, (_, index) => (
+          <View
+            key={`future-question-${index}`}
+            style={[
+              styles.progressStep,
+              styles.progressStepSmall,
+              styles.progressStepInactive,
+            ]}
+          />
+        ))}
       </View>
     );
   }
@@ -116,7 +133,7 @@ export default function QuestProgressBar(args: QuestProgressBarProps): React.JSX
         key={hasPreQuest ? `question-${step}` : step}
         style={[
           styles.progressStep,
-          hasPreQuest ? styles.progressStepSmall : (step === 0 ? styles.progressStepLarge : styles.progressStepSmall),
+          hasPreQuest ? styles.progressStepSmall : styles.progressStepSmall,
           step <= currentStep ? styles.progressStepActive : styles.progressStepInactive,
         ]}
       />
