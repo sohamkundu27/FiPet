@@ -129,14 +129,18 @@ export default function HomeScreen() {
                   }}
                 >
                   <View style={{ alignItems: 'center' }}>
-                    {mood.moodClassification === "Happy" ?
+                    {mood.moodClassification === "Excited" ?
                       <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
-                      mood.moodClassification === "Bored" ?
+                      mood.moodClassification === "Happy" ?
                         <Image source={require("@/src/assets/images/fox_no_shadow.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", marginTop: ((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 8, zIndex: 1, marginLeft: petCircleSize * .88 * 0.095454 }} /> :
+                        mood.moodClassification === "Neutral" ?
+                          <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
+                          mood.moodClassification === "Sad" ?
+                            <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
 
-                        <Image source={require("@/src/assets/images/sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} />
+                            <Image source={require("@/src/assets/images/sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} />
                     }
-                    {mood.moodClassification === "Bored" ?
+                    {mood.moodClassification === "Happy" ?
                       <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, height: petCircleSize * .09, resizeMode: 'contain', position: 'absolute', bottom: -((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 18 }} /> :
 
                       <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, height: petCircleSize * .09, resizeMode: 'contain', position: 'absolute', bottom: -((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 8 }} />

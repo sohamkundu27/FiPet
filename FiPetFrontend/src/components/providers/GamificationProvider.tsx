@@ -41,12 +41,16 @@ function startOfDay ( date: Date ): Date {
 }
 
 function getMoodClassification(mood: number): MoodClassification {
-  if (mood < 33) {
+  if (mood < 21) {
+    return "Asleep";
+  } else if (mood < 41) {
     return "Sad";
-  } else if (mood < 66) {
-    return "Bored";
-  } else {
+  } else if (mood < 61) {
+    return "Neutral";
+  } else if (mood < 81) {
     return "Happy";
+  } else {
+    return "Excited";
   }
 }
 
