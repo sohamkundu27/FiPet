@@ -1,74 +1,19 @@
 import { useAuth } from "@/src/hooks/useRequiresAuth";
 import { UserSingleSelectOption } from "@/src/services/quest/UserOption";
 import { UserSingleSelectQuestion } from "@/src/services/quest/UserQuestion";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import { QuestionProps } from "./QuestionRenderer";
-import { useLocalSearchParams } from "expo-router";
 
 type SingleSelectProps = QuestionProps & {
   question: UserSingleSelectQuestion,
 };
 
-// Helper function to call the answeredQuestion Firebase function
-const recordAnsweredQuestion = async (
-  userId: string,
-  questId: string,
-  questionId: string,
-  isCorrect: boolean,
-  answer: any
-) => {
-  try {
-    // Use emulator URL since the project is using Firebase emulators
-    const functionUrl = 'http://10.0.2.2:5001/fipet-521d1/us-central1/answeredQuestion';
-    
-    console.log('Calling Firebase function with data:', {
-      userId,
-      questId,
-      questionId,
-      isCorrect,
-      answer
-    });
-
-    const response = await fetch(functionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId,
-        questId,
-        questionId,
-        isCorrect,
-        answer,
-      }),
-    });
-
-    console.log('Firebase function response status:', response.status);
-    console.log('Firebase function response headers:', response.headers);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Firebase function error response:', errorText);
-      throw new Error(`Failed to record answered question: ${response.status} ${errorText}`);
-    }
-
-    const responseData = await response.text();
-    console.log('Firebase function success response:', responseData);
-  } catch (error) {
-    console.error('Error recording answered question:', error);
-    throw error;
-  }
-};
-
-export default function SingleSelect({question, onSubmit, rewardHook, ref, preSubmit, onError, onReadyForSubmit, onUnreadyForSubmit}: SingleSelectProps) {
+export default function SingleSelect({question, onSubmit, ref, preSubmit, onError, onReadyForSubmit, onUnreadyForSubmit}: SingleSelectProps) {
 
   const {user} = useAuth();
-  const { questID } = useLocalSearchParams<{ questID: string }>();
 
-  const incorrectOptions = question.getOptions();
-  const correctOption = question.getCorrectOption();
-  const options = useMemo(() => [...incorrectOptions, correctOption], [incorrectOptions,correctOption]);
+  const options = question.getOptions();
 
   useEffect(() => {
     options.sort(() => Math.random() - 0.5);
@@ -83,42 +28,12 @@ export default function SingleSelect({question, onSubmit, rewardHook, ref, preSu
         onError("No option selected!");
         return;
       }
-
-      try {
-        // Use Firebase function instead of direct Firestore write
-        const isCorrect = selectedOption.correct;
-        
-        // Call the Firebase function to record the answer
-        if (user && questID) {
-          await recordAnsweredQuestion(
-            user.uid,
-            questID,
-            question.id,
-            isCorrect,
-            {
-              optionId: selectedOption.id,
-              optionText: selectedOption.text,
-              correct: selectedOption.correct,
-              correctOptionId: question.getCorrectOption().id
-            }
-          );
-        }
-
-        // Calculate reward (similar to original logic)
-        let reward = question.reward;
-        if (rewardHook) {
-          reward = await rewardHook(isCorrect, question.reward);
-        }
-
-        // Mark the question as answered locally so the UI can show feedback
-        question.markAsAnswered(selectedOption, reward);
-
-        // Call onSubmit with the results
-        onSubmit(isCorrect, reward);
-      } catch (err) {
+      question.answer(selectedOption, user).then((results) => {
+        onSubmit(results.correct, results.reward);
+      }).catch((err) => {
         console.error(err);
         onError("An error occurred when attempting to answer the question.");
-      }
+      });
     },
   };
 

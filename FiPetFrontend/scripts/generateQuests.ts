@@ -3,6 +3,8 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { AdminQuest } from "@/src/services/quest/AdminQuest";
 import { createPracticeQuestionJSON, createQuestionJSON } from "@/src/types/quest";
 
+process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+
 // Initialize Firebase
 //const app = initializeApp({
 //  credential: cert("./serviceAccountKey.json")

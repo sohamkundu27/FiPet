@@ -15,7 +15,6 @@ export type QuestionProps = {
   onError: (err: string) => void,
   onReadyForSubmit?: () => void,
   onUnreadyForSubmit?: () => void,
-  rewardHook?: (correct: boolean, reward: Reward|null) => Promise<Reward>,
 }
 
 

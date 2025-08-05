@@ -5,6 +5,7 @@
   "scripts": {
     "start": "expo start",
     "runScript": "npx ts-node -r tsconfig-paths/register",
+    "startEmulator": "cd functions; npm run build; cd ..; firebase emulators:start --log-verbosity=DEBUG --import=.emulatorExports --export-on-exit=.emulatorExports",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
