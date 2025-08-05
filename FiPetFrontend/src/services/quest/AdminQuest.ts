@@ -354,31 +354,50 @@ export class AdminQuest implements AdminQuestInterface {
    * Recommended to run @see _loadAnsweredQuestions beforehand.
    */
   private async _loadQuestions(since: number=-1): Promise<void> {
-    return new Promise(async (res) => {
+    return new Promise(async (res, rej) => {
       const factory = new AdminQuestionFactory(this._db);
 
-      const questionsSnap = await this._db
-      .collection(QUESTIONS_COLLECTION)
-      .where("questId", "==", this._dbData.id)
-      .orderBy("order")
-      .where("order", ">", since)
-      .get();
+      try {
 
-      if (questionsSnap.size === 0) {
-        res();
-      }
+        const questionsSnap = await this._db
+        .collection(QUESTIONS_COLLECTION)
+        .where("questId", "==", this._dbData.id)
+        .orderBy("order")
+        .where("order", ">", since)
+        .get();
 
-      questionsSnap.forEach(async (doc) => {
-        const questionType = doc.get("type") as QuestionType; // @ts-ignore
-        const questionData = doc.data({serverTimestamps: "estimate"}) as DBQuestion<typeof questionType>;
-        const question = await factory.fromFirebaseData(questionData);
-        this._questions.push(question);
-        if (this._questions.length >= questionsSnap.size) {
+        if (questionsSnap.size === 0) {
           res();
         }
-      });
 
-    })
+        const questionsLoaded: {[key: number]: AdminQuestion} = {};
+        let callbacksStarted = 0;
+
+        questionsSnap.forEach(async (doc) => {
+          callbacksStarted++;
+          const questionIndex = callbacksStarted - 1;
+          const questionType = doc.get("type") as QuestionType; // @ts-ignore
+          const questionData = doc.data({serverTimestamps: "estimate"}) as DBQuestion<typeof questionType>;
+
+          factory.fromFirebaseData(questionData).then((question) => {
+            questionsLoaded[questionIndex] = question;
+            if (Object.keys(questionsLoaded).length >= questionsSnap.size) {
+              this._questions = Object.keys(questionsLoaded)
+              .sort((a, b) => Number(a) - Number(b) )
+              .map((key) => questionsLoaded[Number(key)]);
+              res();
+            }
+          }).catch((err) => {
+            rej(err);
+          });
+
+        });
+
+      } catch (err) {
+        rej(err);
+      }
+
+    });
   }
 
   private async _loadReadings(): Promise<void> {
