@@ -2,12 +2,7 @@ import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import * as logger from "firebase-functions/logger";
-
-// Collection constants (matching the types)
-const QUEST_COLLECTION = 'quests2';
-const QUESTIONS_COLLECTION = 'questions2';
-const QUEST_COMPLETION_COLLECTION = 'questCompletion2';
-const ANSWER_COLLECTION = 'questAnswers2';
+import { QUEST_COLLECTION, QUESTIONS_COLLECTION, QUEST_COMPLETION_COLLECTION, ANSWER_COLLECTION } from "./shared/quest";
 
 export const completeQuest = onRequest({ maxInstances: 10 }, async (req, res) => {
   // Check if user is authenticated via Authorization header

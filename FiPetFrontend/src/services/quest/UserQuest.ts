@@ -172,7 +172,7 @@ export class UserQuest implements UserQuestInterface {
    */
   private async _loadQuestions(since: number=-1): Promise<void> {
     return new Promise(async (res, rej) => {
-      const factory = new UserQuestionFactory(this._db);
+      const factory = new UserQuestionFactory(this._db, this._user);
 
       const questionsRef = collection(this._db, QUESTIONS_COLLECTION);
       const questionsQuery = query(
@@ -191,11 +191,17 @@ export class UserQuest implements UserQuestInterface {
         questionsSnap.forEach(async (doc) => {
           const questionType = doc.get("type") as QuestionType; // @ts-ignore
           const questionData = doc.data({serverTimestamps: "estimate"}) as DBQuestion<typeof questionType>;
-            const question = await factory.fromFirebaseData(questionData);
-            this._questions.push(question);
-            if (this._questions.length >= questionsSnap.size) {
-              res();
-            }
+          let question: UserQuestion;
+          try {
+            question = await factory.fromFirebaseData(questionData);
+          } catch(err) {
+            rej(err);
+            return;
+          }
+          this._questions.push(question);
+          if (this._questions.length >= questionsSnap.size) {
+            res();
+          }
         });
       } catch(err) {
         rej(err);
@@ -242,7 +248,7 @@ export class UserQuest implements UserQuestInterface {
    */
   private async _loadAnsweredQuestions(): Promise<number> {
 
-    const factory = new UserQuestionFactory(this._db);
+    const factory = new UserQuestionFactory(this._db, this._user);
     let highestQuestionOrder = -1;
 
     const answersRef = collection(this._db, 'users', this._user.uid, ANSWER_COLLECTION);
@@ -402,7 +408,10 @@ export class UserQuest implements UserQuestInterface {
     if (!latestQuestion.hasAnswer()) {
       return latestQuestion;
     } else {
-      if (!latestQuestion.getAnswer().correct && latestQuestion.hasPracticeQuestion()) {
+      if (!latestQuestion.getCorrectOption()) {
+        throw "Assertion Error: Answered question does not have correct option set.";
+      }
+      if ((latestQuestion.getCorrectOption()?.id !== latestQuestion.getAnswer().id) && latestQuestion.hasPracticeQuestion()) {
         const p = latestQuestion.getPracticeQuestion();
         if (!p.hasAnswer()) {
           return p;
@@ -434,7 +443,10 @@ export class UserQuest implements UserQuestInterface {
       if (!q.hasAnswer()) {
         throw "Question has not been answered!";
       } else {
-        if (q.getAnswer().correct) {
+        if (!q.getCorrectOption()) {
+          throw "Assertion failed: Answered question has correct option set.";
+        }
+        if (q.getCorrectOption()?.id === q.getAnswer().id) {
           return index >= this._questions.length - 1 ? false : this._questions[index + 1];
         } else {
           return q.hasPracticeQuestion() ? q.getPracticeQuestion() : (index >= this._questions.length - 1 ? false : this._questions[index + 1]);

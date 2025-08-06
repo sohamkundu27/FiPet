@@ -46,7 +46,7 @@ export default function QuestScreen() {
         } finally {
             setLoading(false);
         }
-    }, [lastFetchTime, user.uid, quests]);
+    }, [lastFetchTime, user, quests]);
 
     // Only refresh on focus if we don't have any quest data yet
     useFocusEffect(

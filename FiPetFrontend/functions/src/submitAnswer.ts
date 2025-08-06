@@ -2,11 +2,7 @@ import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import * as logger from "firebase-functions/logger";
-
-// Collection constants (matching the types)
-const QUESTIONS_COLLECTION = 'questions2';
-const OPTIONS_COLLECTION = 'options2';
-const ANSWER_COLLECTION = 'questAnswers2';
+import { QUESTIONS_COLLECTION, OPTIONS_COLLECTION, ANSWER_COLLECTION } from "./shared/quest";
 
 export const submitAnswer = onRequest({ maxInstances: 10 }, async (req, res) => {
 
@@ -100,6 +96,7 @@ export const submitAnswer = onRequest({ maxInstances: 10 }, async (req, res) => 
     res.json({
       success: true,
       correct: selectedOptionCorrect,
+      correctOptionId: correctOptionId,
       reward: selectedOptionCorrect ? questionData?.reward || null : null,
     });
 

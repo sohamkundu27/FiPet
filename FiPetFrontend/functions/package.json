@@ -2,7 +2,8 @@
   "name": "functions",
   "scripts": {
     "lint": "eslint ./src",
-    "build": "tsc",
+    "updateShared": "cp ../src/types/quest.ts ./src/shared/; cp ../src/types/item.ts ./src/shared/",
+    "build": "npm run updateShared; tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",

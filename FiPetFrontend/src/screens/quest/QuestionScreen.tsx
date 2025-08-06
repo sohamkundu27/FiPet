@@ -26,8 +26,6 @@ export default function QuestionScreen() {
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showIncorrectModal, setShowIncorrectModal] = useState(false);
 
-  const {addXP, addCoins} = useGamificationStats();
-
   // UI rendering
   if (loading || !quest) {
     return (
@@ -99,10 +97,6 @@ export default function QuestionScreen() {
               ref={questionRef as RefObject<QuestionRef>}
               onSubmit={(correct: boolean, reward: Reward|null) => {
                 if (correct) {
-                  if (reward) {
-                    addXP(reward.xp);
-                    addCoins(reward.coins);
-                  }
                   setShowCorrectModal(true);
                 } else {
                   setShowIncorrectModal(true);

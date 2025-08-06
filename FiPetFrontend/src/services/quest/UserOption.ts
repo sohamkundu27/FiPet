@@ -1,21 +1,20 @@
-import { doc, Firestore, getDoc, getDocs, Query } from "@firebase/firestore";
-import { DBOption, OptionId, OPTIONS_COLLECTION, QuestId, QuestionId, QuestionType } from "@/src/types/quest";
+import { CloudQuery, DBOption, OptionId, QuestId, QuestionId, QuestionType } from "@/src/types/quest";
+import { User } from "@firebase/auth";
 
 export interface UserOptionInterface {
   get id(): QuestionId;
   get questionId(): QuestId|null;
   get type(): QuestionType;
   get feedback(): string;
-  get correct(): boolean;
 }
 
 export class UserSingleSelectOption implements UserOptionInterface {
 
   readonly type: QuestionType = "singleSelect";
 
-  private _dbData: DBOption<"singleSelect">;
+  private _dbData: Omit<DBOption<"singleSelect">, "correct">;
 
-  constructor(data: DBOption<"singleSelect">) {
+  constructor(data: Omit<DBOption<"singleSelect">, "correct">) {
     this._dbData = data;
   };
 
@@ -28,9 +27,6 @@ export class UserSingleSelectOption implements UserOptionInterface {
   get text() {
     return this._dbData.text;
   }
-  get correct() {
-    return this._dbData.correct;
-  }
   get feedback() {
     return this._dbData.feedback;
   }
@@ -40,13 +36,13 @@ export type UserOption = UserSingleSelectOption;
 
 export class UserOptionFactory {
 
-  private _db: Firestore;
+  private _user: User;
 
-  constructor(db: Firestore) {
-    this._db = db;
+  constructor(user: User) {
+    this._user = user;
   }
 
-  fromFirebaseData<T extends QuestionType>(data: DBOption<T>) {
+  fromFirebaseData<T extends QuestionType>(data: Omit<DBOption<T>, "correct">) {
     const questionType = data.type as QuestionType;
     switch (questionType) {
       case "singleSelect":
@@ -58,27 +54,50 @@ export class UserOptionFactory {
   }
 
   async fromFirebaseId<T extends QuestionType>(id: OptionId[T]) {
-    const optionRef = doc(this._db, OPTIONS_COLLECTION, id);
-    const optionDoc = await getDoc(optionRef);
-    if (!optionDoc.exists()) {
-      throw `Option (${id}) does not exist!`;
+    const token = await this._user.getIdToken();
+    const funcUrl = process.env.EXPO_PUBLIC_USE_EMULATOR === "true" ?
+      `http://${process.env.EXPO_PUBLIC_EMULATOR_IP}:5001/fipet-521d1/us-central1/loadOption` :
+      "https://loadOption-45en4vdieq-uc.a.run.app";
+    const res = await fetch(funcUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        questionId: id,
+      })
+    });
+
+    if (res.status !== 200) {
+      throw "Could not load option.";
     }
-    const optionData = {
-      ...optionDoc.data({serverTimestamps: "estimate"}),
-      questionId: optionDoc.get("questionId") || null
-    } as DBOption<T>;
+
+    const optionData: Omit<DBOption<T>, "correct"> = await res.json();
     return this.fromFirebaseData(optionData);
   }
 
-  async fromFirebaseQuery<T extends QuestionType>(query: Query) {
+  async fromFirebaseQuery<T extends QuestionType>(query: CloudQuery) {
+    const token = await this._user.getIdToken();
+    const funcUrl = process.env.EXPO_PUBLIC_USE_EMULATOR === "true" ?
+      `http://${process.env.EXPO_PUBLIC_EMULATOR_IP}:5001/fipet-521d1/us-central1/loadOptions` :
+      "https://loadOptions-45en4vdieq-uc.a.run.app";
+    const res = await fetch(funcUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(query)
+    });
+
+    if (res.status !== 200) {
+      console.log(await res.text());
+      throw "Could not load options.";
+    }
+
+    const optionData: Omit<DBOption<T>, "correct">[] = await res.json();
     const options: UserOption[] = [];
-    const optionDocs = await getDocs(query);
-    optionDocs.forEach((optionDoc) => {
-      const optionData = {
-        ...optionDoc.data({serverTimestamps: "estimate"}),
-        questionId: optionDoc.get("questionId") || null
-      } as DBOption<T>;
-      options.push(this.fromFirebaseData(optionData));
+    optionData.forEach((optionDatum) => {
+      options.push(this.fromFirebaseData(optionDatum));
     });
     return options;
   }

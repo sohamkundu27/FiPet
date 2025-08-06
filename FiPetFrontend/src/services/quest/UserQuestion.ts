@@ -1,5 +1,5 @@
 import { collection, CollectionReference, FieldValue, Firestore, getDocs, limit, query, serverTimestamp, Timestamp, where } from "@firebase/firestore";
-import { DBPracticeQuestion, DBQuestAnswer, DBQuestion, OPTIONS_COLLECTION, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, Reward } from "@/src/types/quest";
+import { CloudQuery, DBPracticeQuestion, DBQuestAnswer, DBQuestion, QUEST_COMPLETION_COLLECTION, QuestId, QuestionId, QUESTIONS_COLLECTION, QuestionType, Reward } from "@/src/types/quest";
 import { UserOption, UserOptionFactory, UserSingleSelectOption } from "./UserOption";
 import { User } from "@firebase/auth";
 
@@ -24,7 +24,7 @@ export interface UserQuestionWithOptionsInterface extends UserQuestionInterface 
   ): Promise<{correct: boolean, reward: Reward|null}>;
   hasAnswer(): boolean;
   getAnswer(): UserOption;
-  getCorrectOption(): UserOption;
+  getCorrectOption(): UserOption|null;
   getOptions(): UserOption[];
 }
 
@@ -37,13 +37,13 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
   private _options: UserSingleSelectOption[];// All options except for the correct one.
   private _practiceQuestion?: UserQuestion;
   private _answer?: UserSingleSelectOption;
-  private _correctOption: UserSingleSelectOption;
+  private _correctOption: UserSingleSelectOption | null;
   private _isPractice: boolean = false;
 
   constructor(
     data: DBQuestion<"singleSelect">,
     options: UserSingleSelectOption[],
-    correctOption: UserSingleSelectOption,
+    correctOption: UserSingleSelectOption | null,
     practiceQuestion?: UserQuestion,
     answer?: UserSingleSelectOption,
     completionData?: DBQuestAnswer<"singleSelect">
@@ -131,7 +131,7 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
       questId: this._dbData.questId,
       questionId: this._dbData.id,
       order: this._dbData.order,
-      correctOptionId: this._correctOption.id,
+      correctOptionId: json.correctOptionId,
       selectedOptionId: option.id,
       correct: json.correct,
       reward: json.reward,
@@ -142,6 +142,7 @@ export class UserSingleSelectQuestion implements UserQuestionWithOptionsInterfac
       answeredAt: new Timestamp(Date.now() / 1000, 0)
     };
     this._answer = option;
+    this._correctOption = this._options.find((_option) => _option.id === json.correctOptionId) || null;
 
     return {
       correct: json.correct,
@@ -178,16 +179,14 @@ export class UserQuestionFactory {
 
   private _db: Firestore;
   private optionFactory: UserOptionFactory;
-  private optionCollection: CollectionReference;
   private questionCollection: CollectionReference;
   private completionCollection: CollectionReference;
 
-  constructor(db: Firestore) {
+  constructor(db: Firestore, user: User) {
     this._db = db;
-    this.optionCollection = collection(this._db, OPTIONS_COLLECTION);
     this.questionCollection = collection(this._db, QUESTIONS_COLLECTION);
     this.completionCollection = collection(this._db, QUEST_COMPLETION_COLLECTION);
-    this.optionFactory = new UserOptionFactory(this._db);
+    this.optionFactory = new UserOptionFactory(user);
   }
 
   /**
@@ -195,19 +194,14 @@ export class UserQuestionFactory {
    * data or the question.
    */
   async _findCorrectOption<T extends QuestionType>(
-    questionId: QuestionId,
     options: UserOption[],
     completionData?: DBQuestAnswer<T>
-  ): Promise<UserOption> {
-    let correctOption = options.find((option) => {
-      return (completionData && completionData?.correctOptionId === option.id) ||
-        (!completionData && option.correct);
-    });
+  ): Promise<UserOption|null> {
+    let correctOption: UserOption|null = options.find((option) => {
+      return (completionData && completionData?.correctOptionId === option.id)
+    }) || null;
 
-    if (!correctOption) {
-      if (!completionData) {
-        throw `Could not determine correct option for question (${questionId})`;
-      }
+    if (!correctOption && completionData) {
       correctOption = await this.optionFactory.fromFirebaseId(completionData.correctOptionId);
     }
 
@@ -222,7 +216,7 @@ export class UserQuestionFactory {
     completionData: DBQuestAnswer<T>
   ): Promise<UserOption> {
     let answer = options.find((option) => {
-      return option.id === completionData.correctOptionId;
+      return option.id === completionData.selectedOptionId;
     });
 
     if (!answer) {
@@ -276,14 +270,18 @@ export class UserQuestionFactory {
     switch (questionType) {
 
       case "singleSelect":
-        const optionsQuery = query(
-          this.optionCollection,
-          where("questionId", "==",data.id)
-        );
+        const optionsQuery:CloudQuery = {
+          where: [
+            {
+              field: "questionId",
+              op: "==",
+              value: data.id,
+            }
+          ]
+        };
         let options = await this.optionFactory.fromFirebaseQuery<"singleSelect">(optionsQuery);
 
-        const correctOption = await this._findCorrectOption(data.id, options, completionData);
-        options = options.filter((option) => !option.correct);
+        const correctOption = await this._findCorrectOption(options, completionData);
         let answer;
         if (completionData) {
           answer = await this._findAnswer(options, completionData);
@@ -292,7 +290,8 @@ export class UserQuestionFactory {
         const practiceQuestion = await this._findPracticeQuestion(data.id) || undefined;
 
         return new UserSingleSelectQuestion(
-          data, options,
+          data,
+          options,
           correctOption,
           practiceQuestion,
           answer,

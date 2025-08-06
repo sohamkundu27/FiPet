@@ -4,6 +4,7 @@
 serviceAccountKey.json
 firebase-debug.log
 firestore-debug.log
+.emulatorExports
 
 # dependencies
 node_modules/
