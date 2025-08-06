@@ -41,7 +41,7 @@ export type StreakProgress = {
   currentStreak: number,
 }
 
-export type MoodClassification = "Sad" | "Bored" | "Happy";
+export type MoodClassification = "Asleep" | "Sad" | "Neutral" | "Happy" | "Excited";
 
 export type MoodInfo = {
   current: number,
