@@ -45,9 +45,9 @@ export default function HomeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       async function fetchQuest() {
-        const questQuery = query(collection(db, QUEST_COLLECTION), limit(2));
+        const questQuery = query(collection(db, QUEST_COLLECTION));
         const quests = await Quest.fromFirebaseQuery(db, questQuery, false, false, user.uid);
-        setQuests(quests.filter((quest) => !quest.isComplete));
+        setQuests(quests.filter((quest) => !quest.isComplete).slice(0, 3));
       }
       fetchQuest();
     }, [user])
@@ -130,15 +130,15 @@ export default function HomeScreen() {
                 >
                   <View style={{ alignItems: 'center' }}>
                     {mood.moodClassification === "Excited" ?
-                      <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
+                      <Image source={require("@/src/assets/images/Evo1-happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
                       mood.moodClassification === "Happy" ?
                         <Image source={require("@/src/assets/images/fox_no_shadow.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", marginTop: ((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 8, zIndex: 1, marginLeft: petCircleSize * .88 * 0.095454 }} /> :
                         mood.moodClassification === "Neutral" ?
-                          <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
+                          <Image source={require("@/src/assets/images/Evo1-happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
                           mood.moodClassification === "Sad" ?
-                            <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
+                            <Image source={require("@/src/assets/images/Evo1-happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
 
-                            <Image source={require("@/src/assets/images/sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} />
+                            <Image source={require("@/src/assets/images/Evo1-sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} />
                     }
                     {mood.moodClassification === "Happy" ?
                       <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, height: petCircleSize * .09, resizeMode: 'contain', position: 'absolute', bottom: -((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 18 }} /> :

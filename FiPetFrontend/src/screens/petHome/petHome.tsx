@@ -405,7 +405,17 @@ export default function PetHouse() {
 
         {/* Fox image with size restrictions */}
         <Image
-          source={require('@/src/assets/images/fox_no_shadow.png')}
+          source={
+            mood.moodClassification === "Excited"
+              ? require("@/src/assets/images/fox_no_shadow.png")
+              : mood.moodClassification === "Happy"
+                ? require("@/src/assets/images/fox_no_shadow.png")
+                : mood.moodClassification === "Neutral"
+                  ? require("@/src/assets/images/fox_no_shadow.png")
+                  : mood.moodClassification === "Sad"
+                    ? require("@/src/assets/images/fox_no_shadow.png")
+                    : require("@/src/assets/images/fox_no_shadow.png")
+          }
           style={{
             position: 'absolute',
             bottom: foxBottomPosition,
