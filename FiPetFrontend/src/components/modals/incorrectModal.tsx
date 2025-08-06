@@ -32,7 +32,7 @@ export default function IncorrectModal({
           <Text style={styles.title}>{title || 'Not Quite'}</Text>
           <View style={styles.foxContainer}>
             <Image
-              source={require('@/src/assets/images/sad-fox.png')}
+              source={require('@/src/assets/images/Evo1-sad-fox.png')}
               style={styles.foxImage}
               resizeMode="contain"
             />

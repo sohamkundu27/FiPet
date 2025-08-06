@@ -86,7 +86,8 @@ export default function QuestComplete() {
 
         <View style={styles.foxContainer}>
           <Image
-            source={mood === 'Sad' ? require('@/src/assets/images/sad-fox.png') : require('@/src/assets/images/happy-fox.png')}
+            source={
+              mood === 'Sad' ? require('@/src/assets/images/Evo1-sad-fox.png') : require('@/src/assets/images/Evo1-happy-fox.png')}
             style={styles.foxImage}
             resizeMode="contain"
           />
@@ -100,7 +101,7 @@ export default function QuestComplete() {
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.outlineButton} onPress={() => {
             router.replace('/(tabs)/quests')
-            router.replace('/(tabs)/home')
+            router.replace({ pathname: '/home', params: { refetch: Date.now().toString() } });
           }}>
             <Text style={styles.outlineButtonText}>RETURN HOME</Text>
           </TouchableOpacity>
