@@ -310,7 +310,6 @@ export default function WelcomeScreen() {
 
         const userData = {
           age: parseInt(age),
-          current_level: 1,
           current_xp: 0,
           username: username.trim(),
           pet_name: petName.trim(),
