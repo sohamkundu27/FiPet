@@ -100,7 +100,7 @@ export default function QuestComplete() {
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.outlineButton} onPress={() => {
             router.replace('/(tabs)/quests')
-            router.replace({ pathname: '/home', params: { refetch: Date.now().toString() } });
+            router.replace({ pathname: '/home', params: { showNotificationPrompt: 'true' } });
           }}>
             <Text style={styles.outlineButtonText}>RETURN HOME</Text>
           </TouchableOpacity>

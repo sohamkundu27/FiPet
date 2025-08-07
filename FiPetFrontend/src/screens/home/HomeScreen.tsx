@@ -1,7 +1,6 @@
 "use client"
-import React from 'react';
-import { useEffect, useRef, useState } from "react"
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, SafeAreaView, Pressable } from "react-native"
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, SafeAreaView, Pressable, Alert, Platform, Linking } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import { AnimatedCircularProgress } from 'react-native-circular-progress'
 import { useFonts } from 'expo-font';
@@ -14,6 +13,7 @@ import { useAuth } from '@/src/hooks/useRequiresAuth';
 import { collection, limit, query } from '@firebase/firestore';
 import { db } from '@/src/config/firebase';
 import { QUEST_COLLECTION } from '@/src/types/quest';
+import * as Notifications from 'expo-notifications';
 
 export default function HomeScreen() {
 
@@ -23,6 +23,8 @@ export default function HomeScreen() {
   const levelProgress = useRef<AnimatedCircularProgress>(null);
 
   const router = useRouter();
+  const params = useLocalSearchParams();
+
   const pathname = usePathname();
   const oldPathName = useRef<string>("");
   const currentPathName = useRef<string>(pathname);
@@ -40,8 +42,52 @@ export default function HomeScreen() {
     PoppinsSemiBold: require('@/src/assets/fonts/Poppins-SemiBold.ttf'),
   });
 
+  useFocusEffect(
+    React.useCallback(() => {
+      if (params.showNotificationPrompt !== 'true') return;
+
+      async function requestNotificationPermission() {
+        const settings = await Notifications.getPermissionsAsync();
+
+        if (!settings.granted) {
+          if (settings.canAskAgain) {
+            const { status } = await Notifications.requestPermissionsAsync();
+            if (status !== 'granted') {
+              showSettingsAlert();
+            }
+          } else {
+            showSettingsAlert();
+          }
+        }
+      }
+
+      function showSettingsAlert() {
+        Alert.alert(
+          'Enable Notifications',
+          'To receive streak and mood reminders, please enable notifications in settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Open Settings',
+              onPress: () => {
+                if (Platform.OS === 'ios') {
+                  Linking.openURL('app-settings:');
+                } else {
+                  Linking.openSettings();
+                }
+              },
+            },
+          ]
+        );
+      }
+
+      requestNotificationPermission();
+
+      router.setParams({ showNotificationPrompt: undefined });
+    }, [params.showNotificationPrompt])
+  );
+
   const { user } = useAuth();
-  const { refetch } = useLocalSearchParams();
 
   useFocusEffect(
     React.useCallback(() => {
