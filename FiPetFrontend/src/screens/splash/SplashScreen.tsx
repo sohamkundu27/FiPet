@@ -24,9 +24,16 @@ export default function SplashScreen({
     if (ready && timerDone) {
       // added delay to make sure navigation is ready
       const navTimer = setTimeout(() => {
-        router.replace(redirect); // Use replace instead of navigate to avoid back stack issues
+        if (redirect == "/home") {
+          router.replace({
+            pathname: '/home',
+            params: { showNotificationPrompt: 'true' },
+          })
+        } else {
+          router.replace(redirect); // Use replace instead of navigate to avoid back stack issues
+        }
       }, 100);
-      
+
       return () => clearTimeout(navTimer);
     }
   }, [ready, timerDone, redirect, router]);
@@ -57,8 +64,8 @@ export default function SplashScreen({
     <SafeAreaView style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <View style={styles.logoContainer}>
-          <Image 
-            source={require('@/src/assets/images/foxHead.png')} 
+          <Image
+            source={require('@/src/assets/images/foxHead.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
