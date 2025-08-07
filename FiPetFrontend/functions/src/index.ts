@@ -18,8 +18,6 @@ initializeApp({
 // Export cloud functions
 export { submitAnswer } from "./submitAnswer";
 export { completeQuest } from "./completeQuest";
-export { updateMood } from "./updateMood";
-export { updateStreak } from "./updateStreak";
 export { loadOption, loadOptions } from "./loadOptions";
 
 // Start writing functions

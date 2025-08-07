@@ -345,7 +345,7 @@ export default function PetHouse() {
             color: '#333',
             fontFamily: 'Poppins-Regular',
             textAlign: 'center'
-          }}>{streak.minutesUsed}/{streak.minutesRequired} min</Text>
+          }}>{streak.questsDone}/{streak.questsRequired} quests</Text>
         </View>
 
 
