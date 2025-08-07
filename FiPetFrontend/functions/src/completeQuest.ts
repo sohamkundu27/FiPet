@@ -111,6 +111,7 @@ export const completeQuest = onRequest({ maxInstances: 10 }, async (req, res) =>
     let correctAnswers = 0;
     let totalQuestions = questionIds.length;
     
+    userAnswersQuery.forEach((doc: any) => {
       const answerData = doc.data();
       if (answerData.correct) {
         correctAnswers++;
