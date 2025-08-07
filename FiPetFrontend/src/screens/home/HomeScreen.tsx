@@ -8,7 +8,7 @@ import { useFonts } from 'expo-font';
 import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
 import { getFontSize } from '@/src/hooks/useFont';
-import { useRouter, usePathname, useFocusEffect } from 'expo-router';
+import { useRouter, usePathname, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Quest } from '@/src/services/quest/Quest';
 import { useAuth } from '@/src/hooks/useRequiresAuth';
 import { collection, limit, query } from '@firebase/firestore';
@@ -41,6 +41,7 @@ export default function HomeScreen() {
   });
 
   const { user } = useAuth();
+  const { refetch } = useLocalSearchParams();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -49,6 +50,7 @@ export default function HomeScreen() {
         const quests = await Quest.fromFirebaseQuery(db, questQuery, false, false, user.uid);
         setQuests(quests.filter((quest) => !quest.isComplete).slice(0, 3));
       }
+
       fetchQuest();
     }, [user])
   );
@@ -169,6 +171,7 @@ export default function HomeScreen() {
               <Text style={styles.sectionSubtitle}>Earn XP to add to your daily streak</Text>
             </View>
           </View>
+
           <LinearGradient
             colors={["#D26AFF", "#2D8EFF"]}
             start={{ x: 0, y: 0 }}
