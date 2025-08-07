@@ -7,5 +7,5 @@ export function getStreakMinuteRequirement(streakInfo: StreakData) {
 }
 
 export function getLevelXPRequirement(level: number) {
-  return Math.round( 10 * Math.pow(level, 3) );
+  return 5 * Math.pow(level - 1, 2);
 }

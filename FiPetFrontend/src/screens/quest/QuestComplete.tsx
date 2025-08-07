@@ -86,8 +86,7 @@ export default function QuestComplete() {
 
         <View style={styles.foxContainer}>
           <Image
-            source={
-              mood === 'Sad' ? require('@/src/assets/images/Evo1-sad-fox.png') : require('@/src/assets/images/Evo1-happy-fox.png')}
+            source={mood === 'Sad' ? require('@/src/assets/images/Evo1-sad-fox.png') : require('@/src/assets/images/Evo1-happy-fox.png')}
             style={styles.foxImage}
             resizeMode="contain"
           />

@@ -48,7 +48,7 @@ export default function HomeScreen() {
       async function fetchQuest() {
         const questQuery = query(collection(db, QUEST_COLLECTION));
         const quests = await Quest.fromFirebaseQuery(db, questQuery, false, false, user.uid);
-        setQuests(quests.filter(quest => !quest.isComplete).slice(0, 3));
+        setQuests(quests.filter((quest) => !quest.isComplete).slice(0, 3));
       }
 
       fetchQuest();

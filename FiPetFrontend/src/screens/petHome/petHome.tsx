@@ -414,8 +414,9 @@ export default function PetHouse() {
                   ? require("@/src/assets/images/fox_no_shadow.png")
                   : mood.moodClassification === "Sad"
                     ? require("@/src/assets/images/fox_no_shadow.png")
-                    : require("@/src/assets/images/fox_no_shadow.png") 
-          } style={{
+                    : require("@/src/assets/images/fox_no_shadow.png")
+          }
+          style={{
             position: 'absolute',
             bottom: foxBottomPosition,
             alignSelf: 'center',
