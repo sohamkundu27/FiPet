@@ -1,0 +1,21 @@
+assets - contains fonts, images, and GIFs used throughout the app
+
+components - contains custom React components used throughout the app
+ - Includes designs for modals, questions, providers, etc.
+
+config - contains the firebase.ts initialization file
+
+constants - contains colors for light and dark color schemes
+
+functions - contains implementations of utility functions used in the app
+ - Includes validateUsername() and getStreakMinuteRequirement()
+
+hooks - contains custom React hooks for colors and font
+
+screens - contains all the screen designs that are imported into the app directory
+ - These screens implement styling and app logic inside
+
+services - contains Firebase API calls and handles data processing 
+
+types - contains custom types
+ - Implementations of essential types are located here
