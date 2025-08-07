@@ -30,7 +30,7 @@ export default function CorrectModal({
           <Text style={styles.title}>{title}</Text>
           <View style={styles.foxContainer}>
             <Image
-              source={require('@/src/assets/images/happy-fox.png')}
+              source={require('@/src/assets/images/Evo1-happy-fox.png')}
               style={styles.foxImage}
               resizeMode="contain"
             />
