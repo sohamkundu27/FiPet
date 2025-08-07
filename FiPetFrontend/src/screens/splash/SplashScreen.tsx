@@ -21,13 +21,21 @@ export default function SplashScreen({
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
 
   useEffect(() => {
-    if ( ready && !timerDone ) {
-      router.prefetch(redirect);
-    }
-    if ( ready && timerDone ) {
-      router.navigate(redirect);
+    if (ready && timerDone) {
+      // added delay to make sure navigation is ready
+      const navTimer = setTimeout(() => {
+        router.replace(redirect); // Use replace instead of navigate to avoid back stack issues
+      }, 100);
+      
+      return () => clearTimeout(navTimer);
     }
   }, [ready, timerDone, redirect, router]);
+
+  useEffect(() => {
+    if (ready) {
+      router.prefetch(redirect);
+    }
+  }, [ready, redirect, router]);
 
   useEffect(() => {
     // Fade in animation
@@ -43,7 +51,7 @@ export default function SplashScreen({
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [fadeAnim]);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
