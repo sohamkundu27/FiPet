@@ -8,7 +8,6 @@ import CorrectModal from '@/src/components/modals/correctModal';
 import IncorrectModal from '@/src/components/modals/incorrectModal';
 import { Reward } from "@/src/types/quest";
 import FeedbackRenderer from "@/src/components/questionFeedback/FeedbackRenderer";
-import { useGamificationStats } from "@/src/hooks/useGamificationStats";
 import QuestProgressBar from "@/src/components/QuestProgressBar";
 
 export default function QuestionScreen() {

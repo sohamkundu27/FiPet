@@ -16,7 +16,7 @@ import { QUEST_COLLECTION } from '@/src/types/quest';
 
 export default function HomeScreen() {
 
-  const { level, streak, mood, coins, addMood } = useGamificationStats();
+  const { level, streak, mood, coins } = useGamificationStats();
   const [quests, setQuests] = useState<UserQuest[]|null>(null);
   const moodProgress = useRef<AnimatedCircularProgress>(null);
   const levelProgress = useRef<AnimatedCircularProgress>(null);
@@ -124,7 +124,6 @@ export default function HomeScreen() {
               <View style={styles.petCircle}>
                 <Pressable
                   onPress={() => {
-                    addMood(5);
                   }}
                 >
                   <View style={{ alignItems: 'center' }}>

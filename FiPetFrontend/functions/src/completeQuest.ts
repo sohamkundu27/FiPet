@@ -3,6 +3,8 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import * as logger from "firebase-functions/logger";
 import { QUEST_COLLECTION, QUESTIONS_COLLECTION, QUEST_COMPLETION_COLLECTION, ANSWER_COLLECTION } from "./shared/quest";
+import { updateMoodLogic } from "./updateMood";
+import { updateStreakLogic } from "./updateStreak";
 
 export const completeQuest = onRequest({ maxInstances: 10 }, async (req, res) => {
   // Check if user is authenticated via Authorization header
@@ -103,6 +105,43 @@ export const completeQuest = onRequest({ maxInstances: 10 }, async (req, res) =>
         current_xp: FieldValue.increment(questData.reward.xp || 0),
         current_coins: FieldValue.increment(questData.reward.coins || 0),
       });
+    }
+
+    // Calculate quest accuracy for mood adjustment
+    let correctAnswers = 0;
+    let totalQuestions = questionIds.length;
+    
+    userAnswersQuery.forEach((doc: any) => {
+      const answerData = doc.data();
+      if (answerData.correct) {
+        correctAnswers++;
+      }
+    });
+    
+    const accuracyPercentage = (correctAnswers / totalQuestions) * 100;
+    let moodIncrease = 0;
+    
+    if (accuracyPercentage >= 80) {
+      moodIncrease = 10; // 80-100% correct = +10 mood
+    } else if (accuracyPercentage >= 50) {
+      moodIncrease = 5;  // 50-79% correct = +5 mood
+    }
+    // Below 50% = no mood increase
+    
+    // Update mood and streak after quest completion
+    try {
+      if (moodIncrease > 0) {
+        await updateMoodLogic(userId, moodIncrease);
+        logger.info(`Mood increased by ${moodIncrease} for user ${userId} (${accuracyPercentage.toFixed(1)}% accuracy)`);
+      }
+      
+      // Update streak based on quest completions
+      await updateStreakLogic(userId);
+      
+      logger.info(`Mood and streak updated for user ${userId} after quest completion`);
+    } catch (error) {
+      logger.error("Error updating mood/streak after quest completion:", error);
+      // Don't fail the quest completion if mood/streak update fails
     }
 
     logger.info(`Quest completed for user ${userId}, quest ${questId}`);
