@@ -20,10 +20,10 @@ setGlobalOptions({
 });
 
 // Get environment variables
-const CLIENT_ID = "365751870741-n1cod8lipj7f3o0sqs9rf4qmd0r0747f.apps.googleusercontent.com";
-const CLIENT_SECRET = "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";
+const CLIENT_ID = "Your client ID here";
+const CLIENT_SECRET = "Your client secret here";
 const REDIRECT_URL = "https://developers.google.com/oauthplayground";
-const REFRESH_TOKEN = "1//04JOfpCaq3eOCCgYIARAAGAQSNwF-L9IrYqL4jPJWjxeFvnqAUfAFXrSt2DRt6S45NGxrYPxGjZV1QXF1HFmMOigAyAGLNXxne2o";
+const REFRESH_TOKEN = "Your refresh token here";
 const GMAIL_USER = "fipetapp@gmail.com";
 
 // Create the OAuth2 client
