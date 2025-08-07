@@ -1,0 +1,15 @@
+FiPetApp.xcodeproj - contains the IOS-specific code and configuration
+ - The Podfile inside this folder specifies minimal version (e.g. IOS 16) and imports IOS dependencies for the IOS version
+
+FiPetFrontend - contains the rest of the project's code
+
+node_modules - This directory is not used 
+ - In most Node projects, the node_modules folder contains libraries for the project
+
+package-lock.json - contains the information about dependencies of packages
+ - Lists versions, licenses, source-URLs, and sub-dependencies for each dependency. "Locks" versions in place
+ - Auto-generated, do not touch!
+
+package.json - contains version information for packages
+ - You can adjust what version of a package (e.g. confetti) is being used by changing the value of the package's key-value pair and running "npm install"
+ - For updating packages regularly, run "npm update [package_name]"

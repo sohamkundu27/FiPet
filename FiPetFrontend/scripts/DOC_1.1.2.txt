@@ -1,0 +1,3 @@
+generateItems.ts - seeds Firebase with shop items
+
+generateQuests.ts - seeds Firebase with quests
