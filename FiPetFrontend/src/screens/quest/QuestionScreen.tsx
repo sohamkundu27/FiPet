@@ -11,6 +11,7 @@ import FeedbackRenderer from "@/src/components/questionFeedback/FeedbackRenderer
 import { useAuth } from "@/src/hooks/useRequiresAuth";
 import { useGamificationStats } from "@/src/hooks/useGamificationStats";
 import QuestProgressBar from "@/src/components/QuestProgressBar";
+import { Question } from "@/src/services/quest/Question";
 
 export default function QuestionScreen() {
 
@@ -31,13 +32,17 @@ export default function QuestionScreen() {
 
   const {addXP, addCoins} = useGamificationStats();
 
-  // Reset feedback state when question changes
+  // New local navigation state like preQuestReading
+  const [currentPracticeQuestion, setCurrentPracticeQuestion] = useState<Question | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+
+  // Reset feedback state when question changes or local nav changes
   useEffect(() => {
     setShowFeedback(false);
     setShowCorrectModal(false);
     setShowIncorrectModal(false);
     setReadyForSubmit(false);
-  }, [questionID]);
+  }, [questionID, currentQuestionIndex, currentPracticeQuestion?.id]);
 
   // UI rendering
   if (loading || !quest) {
@@ -60,8 +65,18 @@ export default function QuestionScreen() {
     );
   }
 
+  // After loading: set index based on questionID if not already
   const questions = quest.getQuestions();
-  const question = quest.getQuestion(questionID);
+  useEffect(() => {
+    const idx = questions.findIndex(q => q.id === questionID);
+    if (idx !== -1 && idx !== currentQuestionIndex) {
+      setCurrentQuestionIndex(idx);
+      setCurrentPracticeQuestion(null);
+    }
+  }, [questionID, questions.map(q=>q.id).join(',' )]);
+
+  const getCurrentQuestion = (): Question => currentPracticeQuestion || questions[currentQuestionIndex];
+  const question = getCurrentQuestion();
   
   // Check if quest has pre-quest readings
   const readings = quest.getReadings();
@@ -139,10 +154,29 @@ export default function QuestionScreen() {
               const next = quest.getNextQuestion(question);
               if (next === false) {
                 quest.complete(user.uid).then((reward) => {
+                  if (reward) {
+                    addXP(reward.xp);
+                    addCoins(reward.coins);
+                  }
                   router.replace(`/(tabs)/quests/${quest.id}`);
                 });
               } else {
-                router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
+                if (next.isPractice) {
+                  setCurrentPracticeQuestion(next);
+                  setShowFeedback(false);
+                  setShowCorrectModal(false);
+                  setShowIncorrectModal(false);
+                  setReadyForSubmit(false);
+                } else {
+                  setCurrentPracticeQuestion(null);
+                  const nextIdx = questions.findIndex(q => q.id === next.id);
+                  if (nextIdx !== -1) {
+                    setCurrentQuestionIndex(nextIdx);
+                  } else {
+                    // Fallback: still navigate if not found locally
+                    router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
+                  }
+                }
               }
             } else {
               questionRef.current?.submit();
@@ -151,10 +185,15 @@ export default function QuestionScreen() {
           disabled={!question.isAnswered && !readyForSubmit}
         >
           <Text style={styles.checkAnswerText}>
-            {question.isAnswered 
-              ? (question.hasPracticeQuestion() ? 'PRACTICE MORE' : 'CONTINUE')
-              : 'CHECK ANSWER'
-            }
+            {(() => {
+              if (!question.isAnswered) return 'Check Answer';
+              if (showFeedback && !question.isPractice && question.hasPracticeQuestion() && !question.getAnswer().correct) {
+                return 'PRACTICE MORE';
+              }
+              if (question.isPractice) return 'Continue';
+              const next = quest.getNextQuestion(question);
+              return next === false ? 'Finish Quest' : 'Continue';
+            })()}
           </Text>
         </TouchableOpacity>
       </View>
@@ -179,7 +218,16 @@ export default function QuestionScreen() {
               router.replace(`/(tabs)/quests/${quest.id}`);
             });
           } else {
-            router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
+            if (next.isPractice) {
+              setCurrentPracticeQuestion(next);
+            } else {
+              setCurrentPracticeQuestion(null);
+              const nextIdx = questions.findIndex(q => q.id === next.id);
+              if (nextIdx !== -1) {
+                setCurrentQuestionIndex(nextIdx);
+              }
+            }
+            setReadyForSubmit(false);
           }
         }}
       />
@@ -399,4 +447,4 @@ const styles = StyleSheet.create({
     top: 137,
     alignItems: 'center',
   },
-}); 
+});
