@@ -11,7 +11,6 @@ import FeedbackRenderer from "@/src/components/questionFeedback/FeedbackRenderer
 import { useAuth } from "@/src/hooks/useRequiresAuth";
 import { useGamificationStats } from "@/src/hooks/useGamificationStats";
 import QuestProgressBar from "@/src/components/QuestProgressBar";
-import { Question } from "@/src/services/quest/Question";
 
 export default function QuestionScreen() {
 
@@ -24,8 +23,6 @@ export default function QuestionScreen() {
   const { quest, loading } = useQuest();
   const {user} = useAuth();
   const [readyForSubmit, setReadyForSubmit] = useState<boolean>(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [currentPracticeQuestion, setCurrentPracticeQuestion] = useState<Question | null>(null);
 
   // State for both types
   const [showCorrectModal, setShowCorrectModal] = useState(false);
@@ -40,76 +37,7 @@ export default function QuestionScreen() {
     setShowCorrectModal(false);
     setShowIncorrectModal(false);
     setReadyForSubmit(false);
-    setCurrentPracticeQuestion(null);
   }, [questionID]);
-
-  // Initialize currentQuestionIndex based on questionID when quest loads
-  useEffect(() => {
-    if (quest) {
-      const questions = quest.getQuestions();
-      const index = questions.findIndex(q => q.id === questionID);
-      if (index !== -1) {
-        setCurrentQuestionIndex(index);
-      }
-    }
-  }, [quest, questionID]);
-
-  // Helper function to get the current question (could be practice or regular)
-  const getCurrentQuestion = () => {
-    if (currentPracticeQuestion) {
-      return currentPracticeQuestion;
-    }
-    if (!quest) {
-      throw new Error("Quest not loaded");
-    }
-    const questions = quest.getQuestions();
-    return questions[currentQuestionIndex];
-  };
-
-  // Handle continue/practice logic
-  const handleQuestionContinue = () => {
-    if (!quest) return;
-    
-    setShowCorrectModal(false);
-    setShowIncorrectModal(false);
-    setShowFeedback(false);
-    
-    const currentQuestion = getCurrentQuestion();
-    const next = quest.getNextQuestion(currentQuestion);
-    
-    if (next === false) {
-      // All questions completed, finish quest
-      quest.complete(user.uid).then((reward) => {
-        if (reward) {
-          addXP(reward.xp);
-          addCoins(reward.coins);
-        }
-        router.replace(`/(tabs)/quests/${quest.id}`);
-      });
-    } else {
-      // Check if next is a practice question
-      if (next.isPractice) {
-        // Practice question - handle locally by setting as current practice question
-        setCurrentPracticeQuestion(next);
-        // Reset states for new question
-        setShowFeedback(false);
-        setShowCorrectModal(false);
-        setShowIncorrectModal(false);
-        setReadyForSubmit(false);
-      } else {
-        // Regular question - clear practice question and find next regular question
-        setCurrentPracticeQuestion(null);
-        const questions = quest.getQuestions();
-        const nextQuestionIndex = questions.findIndex(q => q.id === next.id);
-        if (nextQuestionIndex !== -1) {
-          setCurrentQuestionIndex(nextQuestionIndex);
-        } else {
-          // Question not found, should not happen in normal flow
-          console.warn("Next question not found in questions array");
-        }
-      }
-    }
-  };
 
   // UI rendering
   if (loading || !quest) {
@@ -133,7 +61,7 @@ export default function QuestionScreen() {
   }
 
   const questions = quest.getQuestions();
-  const question = getCurrentQuestion();
+  const question = quest.getQuestion(questionID);
   
   // Check if quest has pre-quest readings
   const readings = quest.getReadings();
@@ -144,6 +72,13 @@ export default function QuestionScreen() {
     <ThemedView style={styles.container}>
       {/* Progress Bar Header */}
       <View style={styles.progressHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
+          <Image
+            source={require('@/src/assets/images/arrow.png')}
+            style={styles.backArrow}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
         <QuestProgressBar 
           questions={questions} 
           questionID={question.id} 
@@ -201,7 +136,14 @@ export default function QuestionScreen() {
           ]}
           onPress={() => {
             if (question.isAnswered) {
-              handleQuestionContinue();
+              const next = quest.getNextQuestion(question);
+              if (next === false) {
+                quest.complete(user.uid).then((reward) => {
+                  router.replace(`/(tabs)/quests/${quest.id}`);
+                });
+              } else {
+                router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
+              }
             } else {
               questionRef.current?.submit();
             }
@@ -210,7 +152,7 @@ export default function QuestionScreen() {
         >
           <Text style={styles.checkAnswerText}>
             {question.isAnswered 
-              ? (showFeedback && question.hasPracticeQuestion() && !question.getAnswer().correct ? 'PRACTICE MORE' : 'CONTINUE')
+              ? (question.hasPracticeQuestion() ? 'PRACTICE MORE' : 'CONTINUE')
               : 'CHECK ANSWER'
             }
           </Text>
@@ -225,7 +167,20 @@ export default function QuestionScreen() {
           setShowFeedback(true);
         }}
         onContinue={() => {
-          handleQuestionContinue();
+          setShowCorrectModal(false);
+          setShowFeedback(false);
+          const next = quest.getNextQuestion(question);
+          if (next === false) {
+            quest.complete(user.uid).then((reward) => {
+              if (reward) {
+                addXP(reward.xp);
+                addCoins(reward.coins);
+              }
+              router.replace(`/(tabs)/quests/${quest.id}`);
+            });
+          } else {
+            router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
+          }
         }}
       />
       {/* Incorrect Modal */}
@@ -261,7 +216,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingTop: 87,
     paddingHorizontal: 24,
-    justifyContent: 'center',
   },
   backArrowContainer: {
     padding: 8,
