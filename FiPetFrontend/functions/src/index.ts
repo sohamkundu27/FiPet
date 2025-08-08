@@ -6,9 +6,11 @@ import { setGlobalOptions } from "firebase-functions/v2";
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import path from "path";
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+console.log("CLIENT_ID is", process.env.CLIENT_ID);
 
 // Initialize Firebase
 initializeApp();
@@ -20,11 +22,11 @@ setGlobalOptions({
 });
 
 // Get environment variables
-const CLIENT_ID = "Your client ID here";
-const CLIENT_SECRET = "Your client secret here";
-const REDIRECT_URL = "https://developers.google.com/oauthplayground";
-const REFRESH_TOKEN = "Your refresh token here";
-const GMAIL_USER = "fipetapp@gmail.com";
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET =  process.env.CLIENT_SECRET;
+const REDIRECT_URL =  process.env.REDIRECT_URL;
+const REFRESH_TOKEN =  process.env.REFRESH_TOKEN;
+const GMAIL_USER =  process.env.GMAIL_USER;
 
 // Create the OAuth2 client
 function getOAuth2Client() {
