@@ -1,4 +1,4 @@
-import { SingleSelectQuestion, UserQuestionInterface } from "@/src/services/quest/Question";
+import { UserSingleSelectQuestion, UserQuestionInterface } from "@/src/services/quest/UserQuestion";
 import { QuestionType } from "@/src/types/quest";
 import SingleSelectFeedback from "./SingleSelectFeedback";
 
@@ -13,7 +13,7 @@ export default function FeedbackRenderer(props: FeedbackProps) {
   switch (questionType) {
     case "singleSelect":
       return (
-        <SingleSelectFeedback {...props} question={props.question as SingleSelectQuestion} />
+        <SingleSelectFeedback {...props} question={props.question as UserSingleSelectQuestion} />
       );
 
     default:

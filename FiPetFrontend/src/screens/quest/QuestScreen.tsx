@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image, RefreshControl, Dimensions } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -7,7 +6,7 @@ import Svg, { Polygon, Circle, Line, Defs, LinearGradient as SvgLinearGradient, 
 import { useAuth } from '@/src/hooks/useRequiresAuth';
 import TabHeader from '@/src/components/TabHeader';
 import { useGamificationStats } from '@/src/hooks/useGamificationStats';
-import { Quest } from '@/src/services/quest/Quest';
+import { UserQuest } from '@/src/services/quest/UserQuest';
 import { db } from '@/src/config/firebase';
 import { collection } from '@firebase/firestore';
 import { QUEST_COLLECTION } from '@/src/types/quest';
@@ -35,7 +34,7 @@ export default function QuestScreen() {
 
     const {level, coins, streak} = useGamificationStats();
     const router = useRouter();
-    const [quests, setQuests] = useState<Quest[] | null>(null);
+    const [quests, setQuests] = useState<UserQuest[] | null>(null);
     const [loading, setLoading] = useState(true);
     const [lastFetchTime, setLastFetchTime] = useState<number>(0);
     const {user} = useAuth();
@@ -55,7 +54,7 @@ export default function QuestScreen() {
         try {
             setLoading(true);
             const questQuery = collection(db, QUEST_COLLECTION);
-            const quests = await Quest.fromFirebaseQuery(db, questQuery, false, false, user.uid);
+            const quests = await UserQuest.fromFirebaseQuery(db, questQuery, user, false, false);
             setQuests(quests.filter((quest) => !quest.isComplete));
             setLastFetchTime(now);
         } catch (error) {
@@ -63,7 +62,7 @@ export default function QuestScreen() {
         } finally {
             setLoading(false);
         }
-    }, [lastFetchTime, user.uid, quests]);
+    }, [lastFetchTime, user, quests]);
 
     // Only refresh on focus if we don't have any quest data yet
     useFocusEffect(
@@ -73,7 +72,7 @@ export default function QuestScreen() {
     );
 
     // Component to show correct answers for a quest
-    const CorrectAnswersCounter = ({ quest }: { quest: Quest }) => {
+    const CorrectAnswersCounter = ({ quest }: { quest: UserQuest }) => {
         const questions = quest.getQuestions();
         const answeredQuestions = questions.reduce(
           (value, question) => value+(question.hasAnswer() ? 1 : 0),

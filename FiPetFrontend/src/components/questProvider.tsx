@@ -14,7 +14,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
-import { Quest, UserQuestInterface } from "../services/quest/Quest";
+import { UserQuest, UserQuestInterface } from "../services/quest/UserQuest";
 import { db } from '../config/firebase';
 import { useAuth } from "../hooks/useRequiresAuth";
 
@@ -30,14 +30,14 @@ type QuestContextType = {
 export const QuestContext = React.createContext<QuestContextType>(null!);
 
 export const QuestProvider = ({ children, questID }: { children: any, questID: string }) => {
-  const [quest, setQuest] = useState<Quest | null>(null);
+  const [quest, setQuest] = useState<UserQuest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
   // Fetch quest and questions on mount
   useEffect(() => {
-    Quest.fromFirebaseId(db, questID, true, true, user.uid).then((quest) => {
+    UserQuest.fromFirebaseId(db, questID, user, true, true).then((quest) => {
       setQuest(quest);
       setLoading(false);
     }).catch((err) => {

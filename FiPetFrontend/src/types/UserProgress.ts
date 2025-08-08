@@ -13,8 +13,8 @@ export type CoinInfo = {
 
 export type StreakInfo = {
   current: number,
-  minutesUsed: number,
-  minutesRequired: number,
+  questsDone: number,
+  questsRequired: number,
   progress: number,
   previousProgress: number,
   days: StreakDay[],

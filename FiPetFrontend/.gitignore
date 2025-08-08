@@ -1,8 +1,10 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+# firebase
 serviceAccountKey.json
 firebase-debug.log
 firestore-debug.log
+.emulatorExports
 
 # dependencies
 node_modules/

@@ -1,9 +1,10 @@
 
 import { db } from "@/src/config/firebase";
-import { getLevelXPRequirement, getStreakMinuteRequirement } from "@/src/functions/getXPRequirement";
+import { getLevelXPRequirement } from "@/src/functions/getXPRequirement";
 import { useAuth } from "@/src/hooks/useRequiresAuth";
+import { QUEST_COMPLETION_COLLECTION } from "@/src/types/quest";
 import { CoinInfo, dayAbbreviations, LevelInfo, MoodClassification, MoodInfo, StreakDay, StreakInfo } from "@/src/types/UserProgress";
-import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp, where, getDocs, updateDoc, DocumentReference, DocumentData } from "@firebase/firestore";
+import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, Timestamp, where, updateDoc, DocumentReference, DocumentData } from "@firebase/firestore";
 import { createContext, useEffect, useMemo, useRef, useState } from "react";
 
 type GamificationContextType = {
@@ -11,9 +12,6 @@ type GamificationContextType = {
   mood: MoodInfo,
   coins: CoinInfo,
   streak: StreakInfo,
-  addMood: (percentage: number) => void,
-  addXP: (xp: number) => boolean,
-  addCoins: (coins: number) => void,
 };
 
 export const GamificationContext = createContext<GamificationContextType>(null!);
@@ -58,7 +56,6 @@ export type UserData = {
   current_xp: number,
   pet_mood: number,
   current_coins: number,
-  minutes_logged_in: number,
   last_date_logged_in: Timestamp,
 }
 
@@ -89,7 +86,6 @@ export const GamificationProvider = ({ children }: { children: any }) => {
     current_coins: 0,
     current_xp: 0,
     pet_mood: 0,
-    minutes_logged_in: 0,
     last_date_logged_in: new Timestamp(Date.now() / 1000, 0),
   });
   const [streakData, setStreakData] = useState<StreakData>({
@@ -97,57 +93,34 @@ export const GamificationProvider = ({ children }: { children: any }) => {
     days: [],
     current: 0,
   });
+  const [today, setToday] = useState<Date>(startOfDay(new Date()));
+  const [questsCompleteToday, setQuestsCompleteToday] = useState<number>(0);
 
-  const minutesLoggedInRef = useRef(0);
   const timerRef = useRef<Date>(new Date());
 
-
-  //#### Minutes Logged In #####
+  //### Today ###
   useEffect(() => {
-    const userDocRef = doc(db, 'users', user.uid);
-    const intervalRef = setInterval(() => {
-      const minutesPassed = (Date.now() - timerRef.current.valueOf()) / (1000 * 60);
-      timerRef.current = new Date();
-      minutesLoggedInRef.current += minutesPassed;
-      updateDoc(userDocRef, {
-        minutes_logged_in: minutesLoggedInRef.current + minutesPassed,
-      });
-    }, 1000 * 60 * 1);
-
+    const timeoutRef = setTimeout(() => {
+      const newToday = startOfDay(new Date());
+      setToday(newToday);
+    }, MILLIS_IN_DAY - (getMillis(new Date()) - today.valueOf()));
     return () => {
-      clearInterval(intervalRef);
+      clearTimeout(timeoutRef);
     }
-  }, [user.uid]);
+  }, [today]);
 
 
   //#### Last Date Logged In ####
   useEffect(() => {
     const userDocRef = doc(db, 'users', user.uid);
 
-    if (startOfDay(userData.last_date_logged_in.toDate()).valueOf() !== startOfDay(new Date()).valueOf()) {
-      minutesLoggedInRef.current = 0;
+    if (startOfDay(userData.last_date_logged_in.toDate()).valueOf() !== today.valueOf()) {
       timerRef.current = new Date();
       updateDoc(userDocRef, {
         last_date_logged_in: serverTimestamp(),
-        minutes_logged_in: 0,
       });
     }
-
-    const timeoutRef = setTimeout(() => {
-      if (startOfDay(userData.last_date_logged_in.toDate()).valueOf() !== startOfDay(new Date()).valueOf()) {
-        minutesLoggedInRef.current = 0;
-        timerRef.current = new Date();
-        updateDoc(userDocRef, {
-          last_date_logged_in: serverTimestamp(),
-          minutes_logged_in: 0,
-        });
-      }
-    }, MILLIS_IN_DAY - (getMillis(new Date()) - (startOfDay(new Date()).valueOf())));
-
-    return () => {
-      clearTimeout(timeoutRef);
-    }
-  }, [userData.last_date_logged_in, user.uid]);
+  }, [userData.last_date_logged_in, user.uid, today]);
 
 
   //#### Coins ####
@@ -214,18 +187,18 @@ export const GamificationProvider = ({ children }: { children: any }) => {
   //#### Streaks ####
   const streakProgress = useRef<number>(0);
   const streak = useMemo<StreakInfo>(() => {
-    const minutesRequired = getStreakMinuteRequirement(streakData);
+    const questsRequired = 2;
     const previousStreakProgress = streakProgress.current;
-    streakProgress.current = constrain(100 * userData.minutes_logged_in / minutesRequired, 0, 100);
+    streakProgress.current = constrain(100 * questsCompleteToday / questsRequired, 0, 100);
     return {
       current: streakData.current,
       previousProgress: previousStreakProgress,
       days: streakData.days,
-      minutesRequired: minutesRequired,
-      minutesUsed: Math.floor(userData.minutes_logged_in),
+      questsRequired: questsRequired,
+      questsDone: questsCompleteToday,
       progress: streakProgress.current,
     }
-  }, [streakData, userData.minutes_logged_in]);
+  }, [streakData, questsCompleteToday]);
 
 
   /**
@@ -242,8 +215,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
           current_coins: _userData?.current_coins || 0,
           current_xp: _userData?.current_xp || 0,
           pet_mood: _userData?.pet_mood || 0,
-          minutes_logged_in: _userData?.minutes_logged_in || minutesLoggedInRef.current,
-          last_date_logged_in: _userData?.last_date_logged_in || new Timestamp(Date.now() / 1000, 0),
+          last_date_logged_in: _userData?.last_date_logged_in || new Timestamp(Date.now()/1000, 0),
         });
       },
       error: (err) => {
@@ -261,9 +233,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
    */
   function loadStreakData() {
 
-    const today = startOfDay(new Date());
-
-    const displayStartDate = new Date(today.valueOf() - ((STREAK_DISPLAY_LEN - 1) * MILLIS_IN_DAY));
+    const displayStartDate = new Date(today.valueOf() - ((STREAK_DISPLAY_LEN-1) * MILLIS_IN_DAY));
     const displayStartTimestamp = new Timestamp(displayStartDate.getSeconds(), displayStartDate.getMilliseconds());
     const streakCollection = collection(db, 'users', user.uid, 'streakData');
     const streakQuery = query(
@@ -272,7 +242,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
       orderBy("endTime", "asc")
     );
 
-    getDocs(streakQuery).then(async (snapshot) => {
+    onSnapshot(streakQuery, async (snapshot) => {
       const _streakData: StreakData = {
         records: [],
         days: [],
@@ -290,9 +260,8 @@ export const GamificationProvider = ({ children }: { children: any }) => {
       let currentDate = new Date(displayStartDate);
       let days: StreakDay[] = [];
       const records = _streakData.records;
-      const streakCollection = collection(db, 'users', user.uid, 'streakData');
 
-      while (currentDate.valueOf() < today.valueOf()) {
+      while( currentDate.valueOf() <= today.valueOf() ) {
 
         const currentDay = currentDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -326,87 +295,31 @@ export const GamificationProvider = ({ children }: { children: any }) => {
         }
       }
 
-      let _currentStreak;
-      const currentDay = today.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
-      if (i < records.length) {
-        const streakStart = records[i].startTime;
-        _currentStreak = ((today.valueOf() - startOfDay(streakStart.toDate()).valueOf()) / MILLIS_IN_DAY) + 1;
-        await updateDoc(records[i].ref, {
-          endTime: serverTimestamp(),
-          duration: _currentStreak,
-        });
-        days.push({
-          dayAbbreviation: dayAbbreviations[currentDay],
-          achieved: true
-        });
-      } else {
-        const refName = `${today.getMonth().toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}-${today.getFullYear()}`;
-        const streakDocRef = doc(streakCollection, refName);
-        await setDoc(streakDocRef, {
-          startTime: serverTimestamp(),
-          endTime: serverTimestamp(),
-          duration: 1,
-        });
-        _currentStreak = 1;
-        days.push({
-          dayAbbreviation: dayAbbreviations[currentDay],
-          achieved: true
-        });
-      }
+      let _currentStreak = records.length === 0 ? 0 : records[records.length - 1].duration;
 
       _streakData.days = days;
       _streakData.current = _currentStreak;
 
       setStreakData(_streakData);
-    }).catch((error) => {
-      console.error(error);
     });
   }
-  useEffect(loadStreakData, [user]);
+  useEffect(loadStreakData, [user, today]);
 
 
-  /**
-   * Percentage is 0-100.
-   */
-  function addMood(percentage: number) {
-    const userDocRef = doc(db, 'users', user.uid);
-    let _mood = constrain(mood.current + percentage, 0, 100);
-    updateDoc(userDocRef, {
-      pet_mood: _mood,
+  // Quests Completed today
+  function loadQuestsCompletedToday() {
+    const todayTimestamp = new Timestamp(today.valueOf() / 1000, 0);
+    const questsCompletedQuery = query(collection(db, 'users', user.uid, QUEST_COMPLETION_COLLECTION), where('completedAt', '>', todayTimestamp))
+    const unsub = onSnapshot(questsCompletedQuery, (snap) => {
+      setQuestsCompleteToday(snap.size);
     });
+    return unsub;
   }
-
-  function addCoins(amount: number) {
-    const userDocRef = doc(db, 'users', user.uid);
-    updateDoc(userDocRef, {
-      current_coins: coins.coins + amount,
-    });
-  }
-
-  /**
-   * Returns true if the pet leveled up.
-   */
-  function addXP(xp: number): boolean {
-    const userDocRef = doc(db, 'users', user.uid);
-    let _xp = level.xp + xp; // Add the XP parameter to current XP
-    let _level = level.current;
-    let leveledUp = false;
-
-    if (_xp >= level.requiredXP) { // Changed > to >= for proper level up condition
-      _level += 1;
-      leveledUp = true;
-    }
-
-    updateDoc(userDocRef, {
-      current_xp: _xp,
-    });
-
-    return leveledUp;
-  }
+  useEffect(loadQuestsCompletedToday, [today, user])
 
 
   return (
-    <GamificationContext.Provider value={{ coins, streak, mood, level, addMood, addXP, addCoins }}>
+    <GamificationContext.Provider value={{ coins, streak, mood, level }}>
       {children}
     </GamificationContext.Provider>
   );

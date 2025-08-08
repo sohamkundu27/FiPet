@@ -1,13 +1,13 @@
 import { View, StyleSheet, ViewStyle } from "react-native";
 import React from "react";
-import { Question } from "../services/quest/Question";
+import { UserQuestion } from "../services/quest/UserQuestion";
 
 
 type QuestProgressBarProps = (
   {
-    questions: Question[],
+    questions: UserQuestion[],
     questionID: string,
-    currentQuestion?: Question,
+    currentQuestion?: UserQuestion,
     hasPreQuest?: boolean,
     preQuestCompleted?: boolean,
     isPreQuest?: boolean,
@@ -16,15 +16,15 @@ type QuestProgressBarProps = (
     numSteps: number,
     currentStep: number,
     isPreQuest?: boolean,
-    questions?: Question[],
+    questions?: UserQuestion[],
     hasPreQuest?: boolean,
   }
 ) & {style?: ViewStyle};
 
 export default function QuestProgressBar({questions, questionID, currentQuestion, hasPreQuest, preQuestCompleted, isPreQuest, style}: {
-  questions: Question[],
+  questions: UserQuestion[],
   questionID: string,
-  currentQuestion?: Question,
+  currentQuestion?: UserQuestion,
   hasPreQuest?: boolean,
   preQuestCompleted?: boolean,
   isPreQuest?: boolean,
@@ -34,7 +34,7 @@ export default function QuestProgressBar({numSteps, currentStep, isPreQuest, que
   numSteps: number,
   currentStep: number,
   isPreQuest?: boolean,
-  questions?: Question[],
+  questions?: UserQuestion[],
   hasPreQuest?: boolean,
   style?: ViewStyle,
 }): React.JSX.Element;

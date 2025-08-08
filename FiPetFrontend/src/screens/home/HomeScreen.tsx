@@ -8,7 +8,7 @@ import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
 import { getFontSize } from '@/src/hooks/useFont';
 import { useRouter, usePathname, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { Quest } from '@/src/services/quest/Quest';
+import { UserQuest } from '@/src/services/quest/UserQuest';
 import { useAuth } from '@/src/hooks/useRequiresAuth';
 import { collection, limit, query } from '@firebase/firestore';
 import { db } from '@/src/config/firebase';
@@ -17,8 +17,8 @@ import * as Notifications from 'expo-notifications';
 
 export default function HomeScreen() {
 
-  const { level, streak, mood, coins, addMood } = useGamificationStats();
-  const [quests, setQuests] = useState<Quest[] | null>(null);
+  const { level, streak, mood, coins } = useGamificationStats();
+  const [quests, setQuests] = useState<UserQuest[]|null>(null);
   const moodProgress = useRef<AnimatedCircularProgress>(null);
   const levelProgress = useRef<AnimatedCircularProgress>(null);
 
@@ -92,9 +92,9 @@ export default function HomeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       async function fetchQuest() {
-        const questQuery = query(collection(db, QUEST_COLLECTION));
-        const quests = await Quest.fromFirebaseQuery(db, questQuery, false, false, user.uid);
-        setQuests(quests.filter((quest) => !quest.isComplete).slice(0, 3));
+        const questQuery = query(collection(db,QUEST_COLLECTION), limit(3));
+        const quests = await UserQuest.fromFirebaseQuery(db, questQuery, user, false, false);
+        setQuests(quests.filter((quest) => !quest.isComplete));
       }
 
       fetchQuest();
@@ -173,7 +173,6 @@ export default function HomeScreen() {
               <View style={styles.petCircle}>
                 <Pressable
                   onPress={() => {
-                    addMood(5);
                   }}
                 >
                   <View style={{ alignItems: 'center' }}>

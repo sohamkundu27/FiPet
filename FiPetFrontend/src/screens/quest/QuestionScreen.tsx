@@ -8,8 +8,6 @@ import CorrectModal from '@/src/components/modals/correctModal';
 import IncorrectModal from '@/src/components/modals/incorrectModal';
 import { Reward } from "@/src/types/quest";
 import FeedbackRenderer from "@/src/components/questionFeedback/FeedbackRenderer";
-import { useAuth } from "@/src/hooks/useRequiresAuth";
-import { useGamificationStats } from "@/src/hooks/useGamificationStats";
 import QuestProgressBar from "@/src/components/QuestProgressBar";
 
 export default function QuestionScreen() {
@@ -21,15 +19,12 @@ export default function QuestionScreen() {
   }>();
   const router = useRouter();
   const { quest, loading } = useQuest();
-  const {user} = useAuth();
   const [readyForSubmit, setReadyForSubmit] = useState<boolean>(false);
 
   // State for both types
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showIncorrectModal, setShowIncorrectModal] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-
-  const {addXP, addCoins} = useGamificationStats();
 
   // Reset feedback state when question changes
   useEffect(() => {
@@ -111,10 +106,6 @@ export default function QuestionScreen() {
             ref={questionRef as RefObject<QuestionRef>}
             onSubmit={(correct: boolean, reward: Reward|null) => {
               if (correct) {
-                if (reward) {
-                  addXP(reward.xp);
-                  addCoins(reward.coins);
-                }
                 setShowCorrectModal(true);
               } else {
                 setShowIncorrectModal(true);
@@ -138,7 +129,7 @@ export default function QuestionScreen() {
             if (question.isAnswered) {
               const next = quest.getNextQuestion(question);
               if (next === false) {
-                quest.complete(user.uid).then((reward) => {
+                quest.complete().then((reward) => {
                   router.replace(`/(tabs)/quests/${quest.id}`);
                 });
               } else {
@@ -171,11 +162,7 @@ export default function QuestionScreen() {
           setShowFeedback(false);
           const next = quest.getNextQuestion(question);
           if (next === false) {
-            quest.complete(user.uid).then((reward) => {
-              if (reward) {
-                addXP(reward.xp);
-                addCoins(reward.coins);
-              }
+            quest.complete().then((reward) => {
               router.replace(`/(tabs)/quests/${quest.id}`);
             });
           } else {

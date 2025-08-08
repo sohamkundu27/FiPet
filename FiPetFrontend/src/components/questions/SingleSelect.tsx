@@ -1,40 +1,38 @@
 import { useAuth } from "@/src/hooks/useRequiresAuth";
-import { SingleSelectOption } from "@/src/services/quest/Option";
-import { SingleSelectQuestion } from "@/src/services/quest/Question";
-import { useEffect, useState, useMemo } from "react";
+import { UserSingleSelectOption } from "@/src/services/quest/UserOption";
+import { UserSingleSelectQuestion } from "@/src/services/quest/UserQuestion";
+import { useEffect, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import { QuestionProps } from "./QuestionRenderer";
 
 type SingleSelectProps = QuestionProps & {
-  question: SingleSelectQuestion,
+  question: UserSingleSelectQuestion,
 };
 
-export default function SingleSelect({question, onSubmit, rewardHook, ref, preSubmit, onError, onReadyForSubmit, onUnreadyForSubmit}: SingleSelectProps) {
+export default function SingleSelect({question, onSubmit, ref, preSubmit, onError, onReadyForSubmit, onUnreadyForSubmit}: SingleSelectProps) {
 
   const {user} = useAuth();
 
-  const incorrectOptions = question.getOptions();
-  const correctOption = question.getCorrectOption();
-  const options = useMemo(() => [...incorrectOptions, correctOption], [incorrectOptions,correctOption]);
+  const options = question.getOptions();
 
   useEffect(() => {
     options.sort(() => Math.random() - 0.5);
   }, [options]);
 
-  const [selectedOption, setSelected] = useState<SingleSelectOption|null>(null);
+  const [selectedOption, setSelected] = useState<UserSingleSelectOption|null>(null);
 
   ref.current = {
-    submit: () => {
+    submit: async () => {
       preSubmit();
       if (!selectedOption) {
         onError("No option selected!");
         return;
       }
-      question.answer(selectedOption, user.uid, rewardHook).then((results) => {
+      question.answer(selectedOption, user).then((results) => {
         onSubmit(results.correct, results.reward);
       }).catch((err) => {
         console.error(err);
-        onError("An error occured when attempting to answer the question.");
+        onError("An error occurred when attempting to answer the question.");
       });
     },
   };
