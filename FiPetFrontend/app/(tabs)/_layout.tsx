@@ -6,30 +6,33 @@ import { Colors } from '@/src/constants/Colors';
 import { useThemeColor } from '@/src/hooks/useThemeColor';
 
 export default function TabLayout() {
-  const headerBG = useThemeColor({light: Colors.primary.default, dark: Colors.primary.darker}, 'background')
-  const headerText = useThemeColor({light: "#000", dark: "#FFF"}, 'background')
+  const headerBG = useThemeColor({ light: Colors.primary.default, dark: Colors.primary.darker }, 'background')
+  const headerText = useThemeColor({ light: "#000", dark: "#FFF" }, 'background')
   const segments = useSegments() as string[];
-  const hiddenTabBarRoutes  = [['[questID]'], ['petHome', 'level']];
+  const hiddenTabBarRoutes = [['[questID]'], ['petHome', 'level']];
   let shouldHideTabBar = false;
   for (let route of hiddenTabBarRoutes) {
     let includesAll = true;
-    for ( let segment of route ) {
+    for (let segment of route) {
       if (!segments.includes(segment)) { // @ts-ignore
         includesAll = false;
       }
     }
-    if (includesAll) {
-        shouldHideTabBar = true;
+    if (route.includes('[questID]') && includesAll) {
+      // Hide tab bar for all quest-related routes, including quest completion
+      shouldHideTabBar = true;
+    } else if (includesAll) {
+      shouldHideTabBar = true;
     }
   }
 
   const settingsOptions = {
-      headerStyle: {
-        backgroundColor: headerBG,
-      },
-      headerShadowVisible: false,
-      headerTitleAlign: "center",
-      headerTintColor: headerText,
+    headerStyle: {
+      backgroundColor: headerBG,
+    },
+    headerShadowVisible: false,
+    headerTitleAlign: "center",
+    headerTintColor: headerText,
   }
 
   return (

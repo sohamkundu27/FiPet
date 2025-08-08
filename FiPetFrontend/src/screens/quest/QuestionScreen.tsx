@@ -1,7 +1,7 @@
 import { StyleSheet, View, TouchableOpacity, Text, Image, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuest } from "@/src/hooks/useQuest";
-import { useState, useRef, RefObject } from "react";
+import { useState, useRef, RefObject, useEffect } from "react";
 import { ThemedView } from "@/src/components/ThemedView";
 import QuestionRenderer, { QuestionRef } from "@/src/components/questions/QuestionRenderer";
 import CorrectModal from '@/src/components/modals/correctModal';
@@ -24,39 +24,71 @@ export default function QuestionScreen() {
   // State for both types
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showIncorrectModal, setShowIncorrectModal] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  // Reset feedback state when question changes
+  useEffect(() => {
+    setShowFeedback(false);
+    setShowCorrectModal(false);
+    setShowIncorrectModal(false);
+    setReadyForSubmit(false);
+  }, [questionID]);
 
   // UI rendering
   if (loading || !quest) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#6C63FF" />
-        <Text style={{ marginTop: 10, fontSize: 16 }}>Loading question...</Text>
+        <Text style={{ marginTop: 10, fontSize: 16, marginBottom: 20 }}>Loading question...</Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            paddingVertical: 12,
+            paddingHorizontal: 32,
+            backgroundColor: '#FF7A00',
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   const questions = quest.getQuestions();
   const question = quest.getQuestion(questionID);
+  
+  // Check if quest has pre-quest readings
+  const readings = quest.getReadings();
+  const hasPreQuest = readings.length > 0;
+  const preQuestCompleted = true; // Since we're in a question, pre-quest must be completed
 
   return (
     <ThemedView style={styles.container}>
+      {/* Progress Bar Header */}
+      <View style={styles.progressHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
+          <Image
+            source={require('@/src/assets/images/arrow.png')}
+            style={styles.backArrow}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+        <QuestProgressBar 
+          questions={questions} 
+          questionID={question.id} 
+          currentQuestion={question}
+          hasPreQuest={hasPreQuest}
+          preQuestCompleted={preQuestCompleted}
+        />
+      </View>
+
+      {/* Scrollable Content Area */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Progress Bar Header */}
-        <View style={styles.progressHeader}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
-            <Image
-              source={require('@/src/assets/images/arrow.png')}
-              style={styles.backArrow}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          <QuestProgressBar questions={questions} questionID={question.id}/>
-        </View>
-
         {/* Question Number */}
         {question.isPractice ? (
           <Text style={styles.questionNumber}>Practice Question</Text>
@@ -66,69 +98,68 @@ export default function QuestionScreen() {
         {/* Question Text */}
         <Text style={styles.questionText}>{question.prompt}</Text>
 
-        {question.isAnswered ? (
-          <>
-            <FeedbackRenderer question={question}/>
-            <View style={styles.checkAnswerContainer}>
-              <TouchableOpacity
-                style={styles.checkAnswerButton}
-                onPress={() => {
-                  const next = quest.getNextQuestion(question);
-                  if (next === false) {
-                    quest.complete().then((reward) => {
-                      router.replace(`/(tabs)/quests/${quest.id}`);
-                    });
-                  } else {
-                    router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
-                  }
-                }}
-              >
-                <Text style={styles.checkAnswerText}>
-                  {question.hasPracticeQuestion() ? 'PRACTICE MORE' : 'CONTINUE'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </>
+        {question.isAnswered && showFeedback ? (
+          <FeedbackRenderer question={question}/>
         ) : (
-          <>
-            <QuestionRenderer
-              question={question}
-              ref={questionRef as RefObject<QuestionRef>}
-              onSubmit={(correct: boolean, reward: Reward|null) => {
-                if (correct) {
-                  setShowCorrectModal(true);
-                } else {
-                  setShowIncorrectModal(true);
-                }
-              }}
-              onError={(err: string) => {}}
-              preSubmit={() => {}}
-              onReadyForSubmit={() => setReadyForSubmit(true)}
-            />
-            <View style={styles.checkAnswerContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.checkAnswerButton,
-                  !readyForSubmit
-                    ? styles.disabledCheckAnswerButton
-                    : null,
-                ]}
-                onPress={() => {questionRef.current?.submit()}}
-                disabled={!readyForSubmit}
-              >
-                <Text style={styles.checkAnswerText}>CHECK ANSWER</Text>
-              </TouchableOpacity>
-            </View>
-          </>
+          <QuestionRenderer
+            question={question}
+            ref={questionRef as RefObject<QuestionRef>}
+            onSubmit={(correct: boolean, reward: Reward|null) => {
+              if (correct) {
+                setShowCorrectModal(true);
+              } else {
+                setShowIncorrectModal(true);
+              }
+            }}
+            onError={(err: string) => {}}
+            preSubmit={() => {}}
+            onReadyForSubmit={() => setReadyForSubmit(true)}
+          />
         )}
       </ScrollView>
+
+      {/* Fixed Bottom Button Container */}
+      <View style={styles.checkAnswerContainer}>
+        <TouchableOpacity
+          style={[
+            styles.checkAnswerButton,
+            question.isAnswered ? null : (!readyForSubmit ? styles.disabledCheckAnswerButton : null),
+          ]}
+          onPress={() => {
+            if (question.isAnswered) {
+              const next = quest.getNextQuestion(question);
+              if (next === false) {
+                quest.complete().then((reward) => {
+                  router.replace(`/(tabs)/quests/${quest.id}`);
+                });
+              } else {
+                router.replace(`/(tabs)/quests/${quest.id}/questions/${next.id}`);
+              }
+            } else {
+              questionRef.current?.submit();
+            }
+          }}
+          disabled={!question.isAnswered && !readyForSubmit}
+        >
+          <Text style={styles.checkAnswerText}>
+            {question.isAnswered 
+              ? (question.hasPracticeQuestion() ? 'PRACTICE MORE' : 'CONTINUE')
+              : 'CHECK ANSWER'
+            }
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Correct Modal */}
       <CorrectModal
         isVisible={showCorrectModal}
-        onClose={() => setShowCorrectModal(false)}
+        onClose={() => {
+          setShowCorrectModal(false);
+          setShowFeedback(true);
+        }}
         onContinue={() => {
           setShowCorrectModal(false);
+          setShowFeedback(false);
           const next = quest.getNextQuestion(question);
           if (next === false) {
             quest.complete().then((reward) => {
@@ -142,11 +173,18 @@ export default function QuestionScreen() {
       {/* Incorrect Modal */}
       <IncorrectModal
         isVisible={showIncorrectModal}
-        onClose={() => setShowIncorrectModal(false)}
+        onClose={() => {
+          setShowIncorrectModal(false);
+          setShowFeedback(true);
+        }}
         onConfirm={() => {
           setShowIncorrectModal(false);
+          setShowFeedback(true);
         }}
-        onCancel={() => setShowIncorrectModal(false)}
+        onCancel={() => {
+          setShowIncorrectModal(false);
+          setShowFeedback(true);
+        }}
         title="Not Quite"
         text=""
       />
@@ -159,30 +197,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 24,
-    paddingBottom: 100, // Extra space for fixed button
-  },
-  checkAnswerContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    paddingBottom: 34, // Safe area bottom
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
   progressHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 16,
     paddingTop: 87,
+    paddingHorizontal: 24,
   },
   backArrowContainer: {
     padding: 8,
@@ -190,6 +210,27 @@ const styles = StyleSheet.create({
   backArrow: {
     width: 32,
     height: 24,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 24,
+    paddingTop: 0,
+    paddingBottom: 20,
+  },
+  checkAnswerContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    paddingBottom: 34, // Safe area bottom
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   progressBarSteps: {
     flexDirection: 'row',

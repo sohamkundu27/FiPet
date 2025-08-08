@@ -14,6 +14,18 @@ export default function PreQuestReadingScreen() {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6C63FF" />
         <Text style={styles.loadingText}>Loading...</Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            marginTop: 20,
+            paddingVertical: 12,
+            paddingHorizontal: 32,
+            backgroundColor: '#FF7A00', // App's orange
+            borderRadius: 24,
+          }}
+        >
+          <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -52,9 +64,9 @@ export default function PreQuestReadingScreen() {
     } else {
       const latestQuestion = quest.getLatestQuestion();
       if (!latestQuestion) {
-        router.replace(`/quests/${quest.id}/questions/${quest.getQuestions()[0]}`);
+        router.replace(`/(tabs)/quests/${quest.id}/questions/${quest.getQuestions()[0].id}`);
       } else {
-        router.replace(`/quests/${quest.id}/questions/${latestQuestion.id}`);
+        router.replace(`/(tabs)/quests/${quest.id}/questions/${latestQuestion.id}`);
       }
     }
   };
@@ -70,13 +82,19 @@ export default function PreQuestReadingScreen() {
         {/* Fixed progress bar and back arrow at the top */}
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backArrowContainer}>
-            <Image source={require('@/src/assets/images/arrow.png')} style={styles.backArrow} />
+            <Text style={{ fontSize: 38, textAlign: 'center', lineHeight: 40 }}>×</Text>
           </TouchableOpacity>
-          <QuestProgressBar currentStep={page} numSteps={totalPages}/>
+          <QuestProgressBar 
+            currentStep={page} 
+            numSteps={totalPages} 
+            isPreQuest={true}
+            questions={quest.getQuestions()}
+            hasPreQuest={true}
+          />
         </View>
         
         {/* Scrollable content */}
-        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           <Text style={styles.topText}>{String(readings[page].topText || '')}</Text>
           
           <View style={styles.imageContainer}>
@@ -84,7 +102,10 @@ export default function PreQuestReadingScreen() {
           </View>
           
           <Text style={styles.bottomText}>{String(readings[page].bottomText || '')}</Text>
-          
+        </ScrollView>
+        
+        {/* Fixed button row at the bottom */}
+        <View style={styles.footerContainer}>
           <View style={styles.buttonRow}>
             {!isFirstPage && (
               <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -95,7 +116,7 @@ export default function PreQuestReadingScreen() {
               <Text style={styles.nextButtonText}>{isLastPage ? 'Start Quest' : 'Next'}</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </View>
       </View>
     </>
   );
@@ -145,12 +166,16 @@ const styles = StyleSheet.create({
     height: 24,
     tintColor: '#333',
   },
+  scrollContainer: {
+    flex: 1,
+  },
   container: {
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
     paddingVertical: 40,
+    paddingBottom: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -196,16 +221,22 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
     lineHeight: 26,
-    marginBottom: 60,
+    marginBottom: 40,
     paddingHorizontal: 16,
+  },
+  footerContainer: {
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    paddingBottom: 40,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
-    paddingHorizontal: 20,
-    marginBottom: 40,
   },
   backButton: {
     backgroundColor: '#E8E8E8',

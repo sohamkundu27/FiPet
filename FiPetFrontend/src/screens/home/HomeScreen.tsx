@@ -7,7 +7,7 @@ import { useFonts } from 'expo-font';
 import TabHeader from "@/src/components/TabHeader"
 import { useGamificationStats } from "@/src/hooks/useGamificationStats"
 import { getFontSize } from '@/src/hooks/useFont';
-import { useRouter, usePathname, useFocusEffect } from 'expo-router';
+import { useRouter, usePathname, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { UserQuest } from '@/src/services/quest/UserQuest';
 import { useAuth } from '@/src/hooks/useRequiresAuth';
 import { collection, limit, query } from '@firebase/firestore';
@@ -40,14 +40,16 @@ export default function HomeScreen() {
   });
 
   const { user } = useAuth();
+  const { refetch } = useLocalSearchParams();
 
   useFocusEffect(
     React.useCallback(() => {
       async function fetchQuest() {
-        const questQuery = query(collection(db,QUEST_COLLECTION), limit(2));
+        const questQuery = query(collection(db,QUEST_COLLECTION), limit(3));
         const quests = await UserQuest.fromFirebaseQuery(db, questQuery, user, false, false);
         setQuests(quests.filter((quest) => !quest.isComplete));
       }
+
       fetchQuest();
     }, [user])
   );
@@ -127,14 +129,18 @@ export default function HomeScreen() {
                   }}
                 >
                   <View style={{ alignItems: 'center' }}>
-                    {mood.moodClassification === "Happy" ?
-                      <Image source={require("@/src/assets/images/happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
-                      mood.moodClassification === "Bored" ?
+                    {mood.moodClassification === "Excited" ?
+                      <Image source={require("@/src/assets/images/Evo1-happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
+                      mood.moodClassification === "Happy" ?
                         <Image source={require("@/src/assets/images/fox_no_shadow.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", marginTop: ((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 8, zIndex: 1, marginLeft: petCircleSize * .88 * 0.095454 }} /> :
+                        mood.moodClassification === "Neutral" ?
+                          <Image source={require("@/src/assets/images/Evo1-happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
+                          mood.moodClassification === "Sad" ?
+                            <Image source={require("@/src/assets/images/Evo1-happy-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} /> :
 
-                        <Image source={require("@/src/assets/images/sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} />
+                            <Image source={require("@/src/assets/images/Evo1-sad-fox.png")} style={{ width: petCircleSize * .88, height: petCircleSize * .88, resizeMode: "contain", zIndex: 1 }} />
                     }
-                    {mood.moodClassification === "Bored" ?
+                    {mood.moodClassification === "Happy" ?
                       <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, height: petCircleSize * .09, resizeMode: 'contain', position: 'absolute', bottom: -((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 18 }} /> :
 
                       <Image source={require("@/src/assets/images/fox-shadow.png")} style={{ width: petCircleSize * .75, height: petCircleSize * .09, resizeMode: 'contain', position: 'absolute', bottom: -((Dimensions.get("window").width * .85) - (Dimensions.get("window").width * .65)) / 8 }} />
@@ -163,6 +169,7 @@ export default function HomeScreen() {
               <Text style={styles.sectionSubtitle}>Earn XP to add to your daily streak</Text>
             </View>
           </View>
+
           <LinearGradient
             colors={["#D26AFF", "#2D8EFF"]}
             start={{ x: 0, y: 0 }}
@@ -210,35 +217,59 @@ export default function HomeScreen() {
               <Text style={styles.sectionSubtitle}>Complete quests to earn extra XP</Text>
             </View>
           </View>
-          {quests?.map((quest) => {
-            return (
-              <LinearGradient
-                key={quest.id}
-                colors={["#F97216", "#F9C116"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.quest}
-              >
-                <View style={styles.questContent}>
-                  <Text style={styles.questTitle}>
-                    {quest.title}
-                  </Text>
-                  <Text style={styles.questSubtitle}>
-                    {quest.description}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.playButton}
-                  onPress={() => {
-                    router.push(`/quests/${quest.id}`);
-                  }}
+          {quests && quests.length > 0 ? (
+            quests?.map((quest) => {
+              return (
+                <LinearGradient
+                  key={quest.id}
+                  colors={["#F97216", "#F9C116"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.quest}
                 >
-                  <Image source={require("@/src/assets/images/play.png")} style={{ width: Dimensions.get("window").width / 6.8, height: Dimensions.get("window").width / 6.8 }} />
-                  <Text style={styles.playText}>Play</Text>
-                </TouchableOpacity>
-              </LinearGradient>
+                  <View style={styles.questContent}>
+                    <Text style={styles.questTitle}>
+                      {quest.title}
+                    </Text>
+                    <Text style={styles.questSubtitle}>
+                      {quest.description}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.playButton}
+                    onPress={() => {
+                      router.push(`/quests/${quest.id}`);
+                    }}
+                  >
+                    <Image source={require("@/src/assets/images/play.png")} style={{ width: Dimensions.get("window").width / 6.8, height: Dimensions.get("window").width / 6.8 }} />
+                    <Text style={styles.playText}>Play</Text>
+                  </TouchableOpacity>
+                </LinearGradient>
               );
-          })}
+            })
+          ) : (
+            <LinearGradient
+              colors={["#F97216", "#F9C116"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.quest}
+            >
+              <View style={styles.questContent}>
+                <Text style={styles.questTitle}>
+                  Quest Completed!
+                </Text>
+                <Text style={styles.questSubtitle}>
+                  You’ve finished all available quests.
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.playButton}
+              >
+                <Image source={require("@/src/assets/images/done.png")} style={{ width: Dimensions.get("window").width / 6.8, height: Dimensions.get("window").width / 6.8 }} />
+                <Text style={styles.playText}>Done</Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -349,6 +380,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 25,
     shadowRadius: 4,
     elevation: 3,
+    marginBottom: 10
   },
   questContent: {
     flex: 1,

@@ -32,7 +32,7 @@ export default function IncorrectModal({
           <Text style={styles.title}>{title || 'Not Quite'}</Text>
           <View style={styles.foxContainer}>
             <Image
-              source={require('@/src/assets/images/sad-fox.png')}
+              source={require('@/src/assets/images/Evo1-sad-fox.png')}
               style={styles.foxImage}
               resizeMode="contain"
             />
@@ -54,15 +54,17 @@ export default function IncorrectModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: '#FF6384',
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
-    backgroundColor: 'rgba(255, 99, 132, 0.95)',
-    borderRadius: 24,
-    padding: 32,
+    backgroundColor: '#FF6384',
+    borderRadius: 0,
+    paddingHorizontal: 32,
+    paddingVertical: 60,
     alignItems: 'center',
+    justifyContent: 'space-between',
     width: '100%',
     height: '100%',
   },
@@ -70,20 +72,15 @@ const styles = StyleSheet.create({
     fontSize: 35,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 30,
     textAlign: 'center',
-    position: 'absolute',
-    top: 137,
+    marginTop: 40,
   },
   foxContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 30,
+    flex: 1,
     width: 267.01,
     height: 250,
-    position: 'absolute',
-    top: 260,
-
   },
   foxImage: {
     width: 267.01,
@@ -104,13 +101,16 @@ const styles = StyleSheet.create({
   },
   explanationButton: {
     backgroundColor: '#fff',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    marginTop: 40,
+    paddingHorizontal: 40,
+    paddingVertical: 18,
+    borderRadius: 30,
     alignSelf: 'center',
-    position: 'absolute',
-    top: 600,
+    marginBottom: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   explanationButtonText: {
     color: '#FF6384',

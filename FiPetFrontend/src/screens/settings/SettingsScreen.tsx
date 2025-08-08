@@ -123,7 +123,6 @@ export default function SettingsScreen() {
         onConfirm={()=>{
           if (userdoc) {
             updateDoc(userdoc, {
-              "current_level": 0,
               "current_xp": 0,
             }).then(()=>{
               router.navigate("/welcome")

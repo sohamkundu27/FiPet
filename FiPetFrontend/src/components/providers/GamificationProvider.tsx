@@ -4,7 +4,7 @@ import { getLevelXPRequirement } from "@/src/functions/getXPRequirement";
 import { useAuth } from "@/src/hooks/useRequiresAuth";
 import { QUEST_COMPLETION_COLLECTION } from "@/src/types/quest";
 import { CoinInfo, dayAbbreviations, LevelInfo, MoodClassification, MoodInfo, StreakDay, StreakInfo } from "@/src/types/UserProgress";
-import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp, where, getDocs, updateDoc, DocumentReference, DocumentData } from "@firebase/firestore";
+import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, Timestamp, where, updateDoc, DocumentReference, DocumentData } from "@firebase/firestore";
 import { createContext, useEffect, useMemo, useRef, useState } from "react";
 
 type GamificationContextType = {
@@ -22,14 +22,14 @@ const MILLIS_IN_DAY = MILLIS_IN_HOUR * 24;
 const MOOD_INCREASE_PER_DAY = 10;
 const MOOD_DECREASE_PER_DAY = 20;
 
-function constrain( num: number, min: number, max: number ) {
+function constrain(num: number, min: number, max: number) {
   return Math.min(Math.max(num, min), max);
 }
 
 /**
  * Modifies the date passed in to be the timestamp at the start of the day.
  */
-function startOfDay ( date: Date ): Date {
+function startOfDay(date: Date): Date {
   let sod = new Date(date);
   sod.setHours(0);
   sod.setMinutes(0);
@@ -39,17 +39,20 @@ function startOfDay ( date: Date ): Date {
 }
 
 function getMoodClassification(mood: number): MoodClassification {
-  if (mood < 33) {
+  if (mood < 21) {
+    return "Asleep";
+  } else if (mood < 41) {
     return "Sad";
-  } else if (mood < 66) {
-    return "Bored";
-  } else {
+  } else if (mood < 61) {
+    return "Neutral";
+  } else if (mood < 81) {
     return "Happy";
+  } else {
+    return "Excited";
   }
 }
 
 export type UserData = {
-  current_level: number,
   current_xp: number,
   pet_mood: number,
   current_coins: number,
@@ -78,11 +81,10 @@ function getMillis(date: Date) {
 
 export const GamificationProvider = ({ children }: { children: any }) => {
 
-  const {user} = useAuth();
+  const { user } = useAuth();
   const [userData, setUserData] = useState<UserData>({
     current_coins: 0,
     current_xp: 0,
-    current_level: 0,
     pet_mood: 0,
     last_date_logged_in: new Timestamp(Date.now() / 1000, 0),
   });
@@ -110,7 +112,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
 
   //#### Last Date Logged In ####
   useEffect(() => {
-    const userDocRef = doc( db, 'users', user.uid );
+    const userDocRef = doc(db, 'users', user.uid);
 
     if (startOfDay(userData.last_date_logged_in.toDate()).valueOf() !== today.valueOf()) {
       timerRef.current = new Date();
@@ -122,29 +124,29 @@ export const GamificationProvider = ({ children }: { children: any }) => {
 
 
   //#### Coins ####
-  const coins = useMemo<CoinInfo>(() => {return {coins: userData.current_coins}}, [userData.current_coins]);
+  const coins = useMemo<CoinInfo>(() => { return { coins: userData.current_coins } }, [userData.current_coins]);
 
 
   //#### Levels/xp ####
   const levelProgress = useRef<number>(0);
   const level = useMemo<LevelInfo>(() => {
-    const requiredLevelXP = getLevelXPRequirement(userData.current_level);
-    const previousRequiredLevelXP = getLevelXPRequirement(userData.current_level-1);
+    const userLevel = Math.floor(1 + Math.pow(userData.current_xp / 5, 1 / 2))
+    const requiredLevelXP = getLevelXPRequirement(userLevel + 1);
+    const previousRequiredLevelXP = getLevelXPRequirement(userLevel);
     const earnedXP = userData.current_xp - previousRequiredLevelXP;
     const earnRequired = requiredLevelXP - previousRequiredLevelXP;
-
     const previousLevelProgress = levelProgress.current;
     levelProgress.current = constrain(100 * earnedXP / earnRequired, 0, 100);
 
     return {
-      current: userData.current_level,
+      current: userLevel,
       xp: userData.current_xp,
       progress: constrain(100 * earnedXP / earnRequired, 0, 100),
       earnedXP: earnedXP,
       requiredXP: requiredLevelXP,
       previousProgress: previousLevelProgress,
     }
-  }, [userData.current_xp, userData.current_level]);
+  }, [userData.current_xp]);
 
 
   //#### Mood ####
@@ -156,7 +158,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
     let _mood = userData.pet_mood;
 
     if (updateTime.valueOf() !== currentTime.valueOf()) {
-      const userDocRef = doc( db, 'users', user.uid );
+      const userDocRef = doc(db, 'users', user.uid);
       const daysNotLoggedIn = Math.max(
         ((currentTime.valueOf() - updateTime.valueOf()) / MILLIS_IN_DAY) - 1,
         0
@@ -165,7 +167,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
       change -= daysNotLoggedIn * MOOD_DECREASE_PER_DAY;
 
       _mood += change;
-      
+
       updateDoc(userDocRef, {
         current_mood: constrain(_mood, 0, 100),
       });
@@ -204,21 +206,20 @@ export const GamificationProvider = ({ children }: { children: any }) => {
    */
   function loadUserData() {
 
-    const userDocRef = doc( db, 'users', user.uid );
+    const userDocRef = doc(db, 'users', user.uid);
 
-    const progressUnsub = onSnapshot( userDocRef, {
+    const progressUnsub = onSnapshot(userDocRef, {
       next: (snapshot) => {
         const _userData = snapshot.data();
         setUserData({
           current_coins: _userData?.current_coins || 0,
-          current_level: _userData?.current_level || 0,
           current_xp: _userData?.current_xp || 0,
           pet_mood: _userData?.pet_mood || 0,
           last_date_logged_in: _userData?.last_date_logged_in || new Timestamp(Date.now()/1000, 0),
         });
       },
       error: (err) => {
-        console.error( err );
+        console.error(err);
       }
     });
 
@@ -234,7 +235,7 @@ export const GamificationProvider = ({ children }: { children: any }) => {
 
     const displayStartDate = new Date(today.valueOf() - ((STREAK_DISPLAY_LEN-1) * MILLIS_IN_DAY));
     const displayStartTimestamp = new Timestamp(displayStartDate.getSeconds(), displayStartDate.getMilliseconds());
-    const streakCollection = collection( db, 'users', user.uid, 'streakData' );
+    const streakCollection = collection(db, 'users', user.uid, 'streakData');
     const streakQuery = query(
       streakCollection,
       where("endTime", ">=", displayStartTimestamp),
@@ -247,10 +248,10 @@ export const GamificationProvider = ({ children }: { children: any }) => {
         days: [],
         current: 0,
       };
-      for (let i = 0; i < snapshot.docs.length; i ++) {
+      for (let i = 0; i < snapshot.docs.length; i++) {
         _streakData.records.push({
           ref: snapshot.docs[i].ref,
-          startTime: snapshot.docs[i].get("startTime", {serverTimestamps: "estimate"}) as Timestamp,
+          startTime: snapshot.docs[i].get("startTime", { serverTimestamps: "estimate" }) as Timestamp,
           duration: snapshot.docs[i].get("duration") as number,
         });
       }
@@ -264,12 +265,12 @@ export const GamificationProvider = ({ children }: { children: any }) => {
 
         const currentDay = currentDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-        if ( i >= records.length ) {
+        if (i >= records.length) {
           days.push({
             dayAbbreviation: dayAbbreviations[currentDay],
             achieved: false
           });
-          currentDate = new Date( currentDate.valueOf() + MILLIS_IN_DAY );
+          currentDate = new Date(currentDate.valueOf() + MILLIS_IN_DAY);
           continue;
         }
 
@@ -277,20 +278,20 @@ export const GamificationProvider = ({ children }: { children: any }) => {
         const streakStartDate = startOfDay(streakStartTimestamp.toDate());
         const streakDuration = records[i].duration;
 
-        if ( currentDate.valueOf() <  streakStartDate.valueOf() ) {
+        if (currentDate.valueOf() < streakStartDate.valueOf()) {
           days.push({
             dayAbbreviation: dayAbbreviations[currentDay],
             achieved: false
           });
-          currentDate = new Date( currentDate.valueOf() + MILLIS_IN_DAY );
-        } else if ( currentDate.valueOf() > streakStartDate.valueOf() + ((streakDuration - 1) * MILLIS_IN_DAY ) ) {
-          i ++;
+          currentDate = new Date(currentDate.valueOf() + MILLIS_IN_DAY);
+        } else if (currentDate.valueOf() > streakStartDate.valueOf() + ((streakDuration - 1) * MILLIS_IN_DAY)) {
+          i++;
         } else {
           days.push({
             dayAbbreviation: dayAbbreviations[currentDay],
             achieved: true
           });
-          currentDate = new Date( currentDate.valueOf() + MILLIS_IN_DAY );
+          currentDate = new Date(currentDate.valueOf() + MILLIS_IN_DAY);
         }
       }
 

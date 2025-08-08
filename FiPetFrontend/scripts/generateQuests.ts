@@ -3,12 +3,11 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { AdminQuest } from "@/src/services/quest/AdminQuest";
 import { createPracticeQuestionJSON, createQuestionJSON } from "@/src/types/quest";
 
-process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+if (process.env.EXPO_PUBLIC_USE_EMULATOR === "true") {
+  process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+}
 
 // Initialize Firebase
-//const app = initializeApp({
-//  credential: cert("./serviceAccountKey.json")
-//});
 let app;
 if (process.env.FIRESTORE_EMULATOR_HOST) {
   app = initializeApp({ projectId: "fipet-521d1" });
@@ -270,8 +269,4 @@ async function create() {
   });
   console.log("Done!");
 }
-async function test() {
-
-}
-
 create();
