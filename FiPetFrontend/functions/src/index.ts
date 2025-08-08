@@ -19,7 +19,9 @@ initializeApp({
 export { submitAnswer } from "./submitAnswer";
 export { completeQuest } from "./completeQuest";
 export { loadOption, loadOptions } from "./loadOptions";
-
+export { updateStreakLogic } from "./updateStreak";
+export { updateMoodLogic } from "./updateMood";
+export { dailyLogin } from "./dailyLogin";
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
