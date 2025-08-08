@@ -1,0 +1,29 @@
+NOTE: This directory contains wrapper screens that import screen designs from .\src\screens
+
+(tabs) - contains sub-directories with layouts and screens for each tab
+ - Main tabs: Pet Home, Quests, Settings, Battle, Home, and Store
+ - Three of these tabs have their own folders and layouts because they have internal navigation
+
++not-found.tsx - error screen
+
+index.tsx - first screen upon opening app, defaults to splash screen
+ - Serves as the entry point and initial screen for the FiPet app
+ - If user is logged in, redirects to "Home" screen, otherwise, redirects to "Landing" screen
+
+landing.tsx - landing screen, prompts user sign in upon "landing" into the app
+ - Returning users click accordingly and go to the "Login" screen
+ - New users can be redirected to the "Welcome" Screen where they create a new account
+
+login.tsx - login screen, asks for email and password
+ - User can also reset password by clicking into the "Password Reset" screen
+
+password-reset.tsx - password reset screen, sends email to user via Firebase
+ - User can click back to login screen once password is set-up
+ - Password Reset Screen → Enter Email → Firebase Sends Email → User Clicks Link → Firebase Reset Page → Set New Password → Return to App → Login with New Password
+
+splash.tsx - splash screen
+
+welcome.tsx - welcome screen, helps new users create accounts
+ - New users are asked to enter an email, password, and username
+ - New users are also asked about their financial goals, referral source, help options, etc. , which are stored in Firebase
+ - Returning users who accidentally clicked into this page are allowed to go to back to "Login" screen

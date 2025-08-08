@@ -1,0 +1,59 @@
+app - serves as the main navigation hub for Expo Router
+ - Screen designs are imported into the .tsx files located here
+ - Some files have navigation logic (e.g index.tsx, layout.tsx)
+ - https://docs.expo.dev/router/introduction/
+
+FiPetFrontend - contains the package-lock.json file for the project
+
+functions - contains Firestore functions
+ - Includes implementation of a function to push answered questions to the Cloud
+
+scripts - contains seeder scripts for shop items and quests
+
+src - contains the main application source code for reusable UI components, app screens, API services, hooks, configuration, etc.
+
+app.json - tells Expo Router how to build and run the FiPet app
+ - Enables Expo Router for navigation
+ - Includes basic app info (e.g. App name, version, orientation mode), 
+   platform-specific settings (e.g. bundle-ID for IOS, adaptive icons for Android), plugins (e.g. Firebase Authentication), etc.
+ - Online documentation: https://docs.expo.dev/versions/latest/config/app/
+
+eas.json - sets build settings for the app when running EAS (Expo Application
+   Services) CLI commands
+ - Online documentation: https://docs.expo.dev/build/eas-json/
+
+.env - specifies environment variables
+ - These variables determine whether or not to run the app on an emulator
+
+eslint.config.js - contains configuration code for ESLint
+ - ESLint is a code checker, it enforces best practices and catches bugs (e.g. syntax errors, missing imports)
+
+firebase.json - contains general configuration code for Firestore
+ - You can configure ports for different local emulators here
+
+firestore.indexes.json - defines the composite indexes for Cloud Firestore
+ - FiPet uses sorted queries, which means indexes for those queries need to be made
+
+firestore.rules - contains security rules for using Firestore
+
+google-services.json - contains configuration code for Firebase on Android devices
+ - Contains API keys and specifies Firebase project-ID for Android devices
+
+GoogleService-Info.plist - contains configuration code for Firebase on IOS devices
+ - Contains API keys and specifies Firebase project-ID (among other IDs) for IOS devices
+
+metro.config.js - contains configuration code for Metro
+ - Metro is React Native's JavaScript bundler, it takes all of the .js/.ts files and packages + dependencies and combines it, making it usable on devices (phones don't know how to run projects)
+ - Metro bundles .js/.ts + packages + dependencies → React Native converts these JavaScript files into native components → Xcode/Android Studio compiles these components into actual native apps
+
+node_modules - contains the libraries used in the project
+ - These libraries are downloaded by npm after looking at package.json
+
+package.json - contains configuration code for the React Native/Expo project
+ - This file tells npm what packages to install and how to run the app on different platforms
+ - This is also where scripts are selected for various uses (e.g. running on Android, starting Expo)
+
+serviceAccountKey.json - a secret, hidden file that allows a developer to run scripts
+ - The key for this file must be asked for from senior developers
+
+tsconfig.json - contains configuration code for Typescript's use in the project

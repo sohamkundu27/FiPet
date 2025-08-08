@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { StyleSheet, View, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Platform, Text, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { sendPasswordResetEmail } from '@firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@/src/hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
+import { getFunctions, httpsCallable } from '@firebase/functions';
+import { useAuth } from '@/src/hooks/useAuth';
 
 export default function PasswordResetScreen() {
   const [email, setEmail] = useState('');
@@ -13,7 +13,7 @@ export default function PasswordResetScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
   const router = useRouter();
-  const {auth} = useAuth();
+  const { auth } = useAuth();
 
   const [loaded] = useFonts({
     Poppins: require('@/src/assets/fonts/Poppins-Regular.ttf'),
@@ -50,33 +50,24 @@ export default function PasswordResetScreen() {
     const isEmailValid = validateEmail(email);
 
     if (isEmailValid) {
-      if (!auth) {
-        Alert.alert('Password Reset Error', 'Authentication service is not available.');
-        return;
-      }
       setIsLoading(true);
       try {
-        await sendPasswordResetEmail(auth, email);
-        setIsEmailSent(true);
-        Alert.alert(
-          'Password Reset Email Sent',
-          'Check your email for a link to reset your password. If you don\'t see it, check your spam folder.',
-          [{ text: 'OK' }]
-        );
+        const functions = getFunctions();
+        const sendPasswordResetCode = httpsCallable(functions, 'sendPasswordResetCode');
+        
+        const result = await sendPasswordResetCode({ email });
+        
+        // Navigate to password reset code screen
+        router.push({
+          pathname: '/password-reset-code',
+          params: { email }
+        });
       } catch (error: any) {
         console.error('Password reset error:', error);
         let errorMessage = 'An error occurred. Please try again.';
         
-        switch (error.code) {
-          case 'auth/invalid-email':
-            errorMessage = 'Invalid email address.';
-            break;
-          case 'auth/user-not-found':
-            errorMessage = 'No account found with this email address.';
-            break;
-          case 'auth/too-many-requests':
-            errorMessage = 'Too many requests. Please try again later.';
-            break;
+        if (error.message) {
+          errorMessage = error.message;
         }
         
         Alert.alert('Password Reset Error', errorMessage);
