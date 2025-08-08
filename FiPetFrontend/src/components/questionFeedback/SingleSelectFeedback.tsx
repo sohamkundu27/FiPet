@@ -78,6 +78,42 @@ const styles = StyleSheet.create({
   disabledOption: {
     opacity: 0.6,
   },
+  feedbackContainer: {
+    marginTop: 16,
+    marginBottom: 24,
+    paddingHorizontal: 16,
+  },
+  feedbackText: {
+    fontSize: 16,
+    color: "#333",
+    lineHeight: 24,
+    textAlign: "center",
+  },
+  practiceButtonContainer: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  practiceButton: {
+    backgroundColor: "#6C63FF",
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 25,
+    minWidth: 160,
+    shadowColor: "#6C63FF",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  practiceButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
   image: {
     width: 200,
     height: 150,
